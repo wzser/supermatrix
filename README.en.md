@@ -2,20 +2,20 @@
 
 **Language:** [中文](README.md) | English
 
-Connect Claude Code, Codex CLI, Kimi, and similar agent CLIs to Feishu/Lark,
-with communication between sessions, so local AI tools that used to require
-sitting at a terminal become workers you can call from your phone, chat groups,
-and team workflows.
+Personal agents help one person get work done. Organizational agents need shared
+context, rules, workspaces, handoffs, and visibility so people and agents can
+work together in the same operating system.
 
-You can draft a plan with Codex in Feishu/Lark, send Claude to implement the
-code change, then ask Kimi to review it. You do not need to copy and paste
-prompts between tools; you can tell session A, in natural language, to ask
-session B to handle a problem in B's own workspace.
+Super Matrix upgrades Claude Code, Codex CLI, Kimi, and similar agent CLIs from
+personal terminal tools into an organizational agent collaboration system. Each
+agent session has its own Feishu/Lark chat, workspace, identity, status, and
+task history. People can assign, track, hand off, and review work in Feishu,
+while multiple agents collaborate inside the same session framework.
 
-You can also use Feishu Bitable as the interaction surface for logs, config,
-project data, or operational information, so agents become part of your
-organization's Feishu workflow like a collaborative local operating system
-instead of isolated terminals.
+Execution still happens on your own machine. Code, data, and credentials stay
+local; Feishu/Lark becomes the shared entry point and collaboration surface, so
+agents on a personal computer become an organizational capability your team can
+use, manage, and improve together.
 
 ## Why Use It
 
@@ -32,10 +32,10 @@ practical problems show up quickly:
   manually passing context around.
 
 Super Matrix puts the entry point in Feishu/Lark, keeps execution local, and
-turns collaboration rules into sessions, scheduler jobs, watchdog checks, and
-shared skills. It is not trying to replace your AI coding tools; it connects
-the tools you already use to a manageable, collaborative, auditable operating
-surface.
+turns collaboration rules into an organizational capability: sessions, scheduler
+jobs, watchdog checks, handoffs, and shared skills. It is not trying to replace
+your AI coding tools; it connects the tools you already use to a manageable,
+collaborative, auditable operating surface.
 
 ## What You Can Do With It
 
