@@ -1,0 +1,3 @@
+{"_type":"notif","method":"session/update","params":{"update":{"sessionUpdate":"agent_thought_chunk","content":{"type":"text","text":"Thinking through the fixture. "}}}}
+{"_type":"notif","method":"session/update","params":{"update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"Fixture "}}}}
+{"_type":"notif","method":"session/update","params":{"update":{"sessionUpdate":"agent_message_chunk","content":{"type":"text","text":"answer."}}}}

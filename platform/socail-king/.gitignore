@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.env
+.env.*
+.DS_Store
+*.log
+NOTES.md
+.attachments/
+reports/*.md
+reports/*.txt
+reports/context/*.json
+reports/review/*.txt
+state/*.json
+
+# Repo-local runtime artifacts from ad hoc SQLite/schema inspection.
+/.schema *
+/state/*.db
+/state/*.db-shm
+/state/*.db-wal
+/state/*.sqlite
+/state/*.sqlite-shm
+/state/*.sqlite-wal
+/state/heal-decisions/

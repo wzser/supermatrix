@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.supermatrix.direct</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__SUPERMATRIX_LAUNCH__</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>30</integer>
+  <key>StandardOutPath</key><string>__LOG_DIR__/supermatrix.stdout.log</string>
+  <key>StandardErrorPath</key><string>__LOG_DIR__/supermatrix.stderr.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key><string>__HOME__</string>
+    <key>LARK_CLI_NO_PROXY</key><string>1</string>
+  </dict>
+</dict>
+</plist>

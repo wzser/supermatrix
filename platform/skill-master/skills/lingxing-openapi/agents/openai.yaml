@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lingxing OpenAPI"
+  short_description: "Fetch Lingxing API data through the whitelisted server"
+  default_prompt: "Use $lingxing-openapi to fetch Lingxing API data, download ABA or ad reports, run ASIN diagnostics and ranking probes, and update Amazon listing titles, bullets, descriptions, and image slots through the whitelisted server."

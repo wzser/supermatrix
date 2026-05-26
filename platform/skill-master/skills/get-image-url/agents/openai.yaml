@@ -1,0 +1,4 @@
+interface:
+  display_name: "Get Image URL"
+  short_description: "Upload local images to S.EE and return full upload metadata"
+  default_prompt: "Use $get-image-url to upload a local image or file to S.EE and return the direct URL, page URL, delete URL, file ID, hash, and source path."

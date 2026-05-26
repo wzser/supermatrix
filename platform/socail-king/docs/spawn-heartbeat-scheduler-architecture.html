@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spawn / Heartbeat / Scheduler 架构现状图</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d2991d;
+    --purple: #bc8cff;
+    --orange: #db6d28;
+    --pink: #db61a2;
+    --cyan: #39d2c0;
+    --spawn: #58a6ff;
+    --heartbeat: #3fb950;
+    --scheduler: #d2991d;
+    --framework: #bc8cff;
+    --sk: #f85149;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container { max-width: 1400px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    padding: 30px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 30px;
+  }
+  header h1 { font-size: 28px; color: #fff; }
+  header p { color: var(--muted); margin-top: 8px; font-size: 14px; }
+  .version-badge {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--text); border-color: var(--muted); }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 { font-size: 18px; margin-bottom: 12px; color: #fff; }
+  .card h3 { font-size: 15px; margin: 16px 0 8px; color: var(--text); }
+  .card p, .card li { font-size: 13px; color: var(--text); }
+  .card ul { padding-left: 20px; }
+  .card li { margin-bottom: 4px; }
+  .card code {
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+
+  /* Flow diagram */
+  .flow-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 30px;
+    overflow-x: auto;
+  }
+
+  .flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 1200px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .flow-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 140px;
+  }
+
+  .flow-box {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    position: relative;
+  }
+  .flow-box.spawn { border-color: var(--spawn); background: rgba(88,166,255,0.08); }
+  .flow-box.fw { border-color: var(--framework); background: rgba(188,140,255,0.08); }
+  .flow-box.hb { border-color: var(--heartbeat); background: rgba(63,185,80,0.08); }
+  .flow-box.sch { border-color: var(--scheduler); background: rgba(210,153,29,0.08); }
+  .flow-box.sk { border-color: var(--red); background: rgba(248,81,73,0.08); }
+  .flow-box.table { border-style: dashed; font-weight: 400; }
+
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 14px;
+    min-width: 40px;
+    padding: 0 4px;
+  }
+  .flow-arrow.down { writing-mode: vertical-rl; min-width: auto; min-height: 20px; }
+
+  .flow-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 2px;
+  }
+
+  .flow-section-title {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px;
+  }
+  .tag.red { background: rgba(248,81,73,0.15); color: var(--red); }
+  .tag.green { background: rgba(63,185,80,0.15); color: var(--green); }
+  .tag.yellow { background: rgba(210,153,29,0.15); color: var(--yellow); }
+  .tag.purple { background: rgba(188,140,255,0.15); color: var(--purple); }
+  .tag.blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  td { color: var(--text); }
+
+  /* Coupling grid */
+  .coupling-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .coupling-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .coupling-item h4 { font-size: 14px; margin-bottom: 6px; color: #fff; }
+  .coupling-item .from-to { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .coupling-item p { font-size: 12px; color: var(--text); }
+
+  /* Legend */
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; margin-bottom: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* Decision tree */
+  .decision-tree { font-family: "SF Mono", "Fira Code", monospace; font-size: 11px; line-height: 1.8; white-space: pre; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px; overflow-x: auto; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+  .muted-note { font-size: 11px; color: var(--muted); margin-top: 8px; font-style: italic; }
+
+  .issue-flag {
+    display: inline-block;
+    background: rgba(248,81,73,0.12);
+    border: 1px solid rgba(248,81,73,0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--red);
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Spawn · Heartbeat · Scheduler 架构现状</h1>
+  <p>跨 session 通讯闭环机制的三大组件及其耦合关系 — 2026-05-22 快照</p>
+  <div class="version-badge">v3 · 校准 heartbeat drain / D1 / D4 真实机制 (2026-05-22)</div>
+</header>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('overview')">总览流程图</div>
+  <div class="tab" onclick="switchTab('spawn')">Spawn 三段检查</div>
+  <div class="tab" onclick="switchTab('watcher')">Watcher 分流逻辑</div>
+  <div class="tab" onclick="switchTab('coupling')">耦合关系矩阵</div>
+  <div class="tab" onclick="switchTab('tables')">数据表 & 状态</div>
+  <div class="tab" onclick="switchTab('exceptions')">异常模式 (EP)</div>
+  <div class="tab" onclick="switchTab('issues')">已知问题 & 待修项</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PANEL: Overview -->
+<!-- ============================================================ -->
+<div class="panel active" id="panel-overview">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--spawn)"></div> Spawn / 调用方</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--framework)"></div> 框架 (SuperMatrix)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--scheduler)"></div> Scheduler</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--heartbeat)"></div> Heartbeat</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> socail-king (SK)</div>
+  </div>
+
+  <div class="card">
+    <h2>一条 Spawn 的完整生命周期</h2>
+
+    <div class="flow-container">
+      <div class="flow">
+
+        <!-- Phase 1: Spawn -->
+        <div class="flow-col">
+          <div class="flow-section-title">① 发起</div>
+          <div class="flow-box spawn">Caller A<br><span style="font-weight:400;font-size:10px">POST /api/spawn</span></div>
+          <div class="flow-label">HTTP →</div>
+        </div>
+        <div class="flow-arrow">→</div>
+
+        <!-- Phase 2: Framework sync -->
+        <div class="flow-col" style="min-width:200px">
+          <div class="flow-section-title">② 框架同步路径</div>
+          <div class="flow-box fw">受理 & 校验<br><span style="font-weight:400;font-size:10px">from 必填 / sink 声明 / 节流入队</span></div>
+          <div class="flow-arrow down" style="text-align:center">↓</div>
+          <div class="flow-box fw">通讯段<br><span style="font-weight:400;font-size:10px">B 起来了?</span></div>
+          <div class="flow-arrow down" style="text-align:center">↓</div>
+          <div class="flow-box fw">执行段<br><span style="font-weight:400;font-size:10px">产出非空? (fire&forget 除外)</span></div>
+          <div class="flow-arrow down" style="text-align:center">↓</div>
+          <div class="flow-box fw">投递段<br><span style="font-weight:400;font-size:10px">送到声明地址了?</span></div>
+          <div class="flow-label" style="margin-top:6px">全过→返回 A (闭环)</div>
+          <div class="flow-label" style="color:var(--red)">任一不过→同步重试 1 次</div>
+          <div class="flow-label" style="color:var(--red)">重试还不过→登记 async</div>
+        </div>
+
+        <div class="flow-arrow">→</div>
+
+        <!-- Phase 3: Async registration -->
+        <div class="flow-col">
+          <div class="flow-section-title">③ 异步登记</div>
+          <div class="flow-box table">spawn_async_items<br><span style="font-weight:400;font-size:10px">status=pending</span></div>
+          <div class="flow-label">返回 A: switched_async</div>
+        </div>
+
+        <div class="flow-arrow">→</div>
+
+        <!-- Phase 4: Watcher -->
+        <div class="flow-col" style="min-width:180px">
+          <div class="flow-section-title">④ Watcher 巡查</div>
+          <div class="flow-box sch">spawn-closure-watcher<br><span style="font-weight:400;font-size:10px">scheduler cron 任务</span></div>
+          <div class="flow-label" style="font-size:10px">每 tick: 孤儿扫描[待实施] → 扫 async_items → 分流</div>
+          <div class="flow-arrow down" style="text-align:center">↓</div>
+          <div class="flow-box sch" style="font-size:11px">
+            <span class="tag green">D 类</span> 直接处理<br>
+            <span class="tag red">J 类</span> 升级裁决
+          </div>
+        </div>
+
+        <div class="flow-arrow">→</div>
+
+        <!-- Phase 5: Actions -->
+        <div class="flow-col" style="min-width:200px">
+          <div class="flow-section-title">⑤ 兜底动作</div>
+          <div class="flow-box hb" style="font-size:11px">
+            <strong>D1 补送</strong><br>
+            <span style="font-weight:400;font-size:10px">→ heartbeat 待办池<br>带完整 B 结果</span>
+          </div>
+          <div class="flow-box fw" style="font-size:11px">
+            <strong>D2/D3 redrive（重发） · D4 redeliver（重投）</strong><br>
+            <span style="font-weight:400;font-size:10px">→ D2/D3 程序化重调 /api/spawn<br>D4 只重投声明的 resultSinks（结果投递地址）</span>
+          </div>
+          <div class="flow-box sk" style="font-size:11px">
+            <strong>J1-J5 裁决</strong><br>
+            <span style="font-weight:400;font-size:10px">→ spawn SK 子 session<br>按 SOP 判 verdict</span>
+          </div>
+        </div>
+
+      </div><!-- /flow -->
+
+      <!-- Phase 6: Heartbeat delivery -->
+      <div style="display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:16px;border-top:1px dashed var(--border)">
+        <div class="flow-section-title" style="min-width:80px">⑥ 投递</div>
+        <div class="flow-box hb" style="flex:1;max-width:280px">
+          Heartbeat 待办池<br><span style="font-weight:400;font-size:10px">session_todos · UNIQUE(target_session, logical_key)<br>status: pending/claimed/injected/failed</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box hb" style="flex:1;max-width:220px">
+          Heartbeat Patrol<br><span style="font-weight:400;font-size:10px">按 session 构造 packet → prefilter → LLM 决策<br>idle 时 drain 待办 (claim→注入→标 injected/failed)</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box spawn" style="flex:1;max-width:200px">
+          目标 Session 被唤醒<br><span style="font-weight:400;font-size:10px">lark-cli user send 注入群消息 → 框架 Feishu ingress → message_run</span>
+        </div>
+      </div>
+
+      <!-- Phase 7: SK judgment -->
+      <div style="display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)">
+        <div class="flow-section-title" style="min-width:80px">⑦ 裁决</div>
+        <div class="flow-box sk" style="flex:1;max-width:280px">
+          SK 裁决子 session<br><span style="font-weight:400;font-size:10px">SOP: spawn-exception-transaction</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div style="flex:1;font-size:12px;color:var(--text)">
+          <span class="tag red">retrying</span>
+          <span class="tag green">escalated</span>
+          <span class="tag yellow">false_alarm</span>
+          <span class="tag purple">parked</span>
+          <span class="tag blue">contract_fixed</span>
+          <span class="tag" style="background:rgba(57,210,192,0.15);color:var(--cyan)">late_result_delivered</span>
+        </div>
+      </div>
+
+    </div><!-- /flow-container -->
+  </div>
+
+  <!-- Roles summary -->
+  <div class="two-col">
+    <div class="card">
+      <h2>三个组件的职责</h2>
+      <table>
+        <tr><th>组件</th><th>拥有什么</th><th>运行在哪</th></tr>
+        <tr>
+          <td><span class="tag purple">框架</span></td>
+          <td>/api/spawn、三段检查、spawn_async_items 表、resultSinkEngine、childSession 生命周期、spawn_queue 表</td>
+          <td>SuperMatrix node 进程 (localhost:3501)</td>
+        </tr>
+        <tr>
+          <td><span class="tag" style="background:rgba(210,153,29,0.15);color:var(--yellow)">Scheduler</span></td>
+          <td>cron 定时任务引擎 (http executor 点火)、spawn-closure-watcher 任务、cross-session-review 任务</td>
+          <td>localhost:3500</td>
+        </tr>
+        <tr>
+          <td><span class="tag green">Heartbeat</span></td>
+          <td>待办池 (session_todos)、patrol 巡逻 (每 ~10min, pause→prefilter→LLM controller→注入)、enqueue-heartbeat-todo CLI、session 唤醒</td>
+          <td>独立工作区 + patrol 定时任务</td>
+        </tr>
+        <tr>
+          <td><span class="tag red">SK</span></td>
+          <td>watcher 分流逻辑 (spawnClosureClassify)、裁决 SOP、异常模式沉淀 (rules/)、孤儿扫描设计</td>
+          <td>本工作区 (socail-king)</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>近期新增机制 (2026-05-18 ~ 05-21)</h2>
+      <table>
+        <tr><th>机制</th><th>日期</th><th>状态</th></tr>
+        <tr><td>快递员模型 — redrive（重发）/ deliver（补送）/ redeliver（重投）三个动作</td><td>05-19</td><td><span class="tag green">已部署</span></td></tr>
+        <tr><td>from 必填</td><td>05-19</td><td><span class="tag green">已部署</span></td></tr>
+        <tr><td>补送一次即关项</td><td>05-19</td><td><span class="tag green">已部署</span></td></tr>
+        <tr><td>sink = audit_only 契约</td><td>05-21</td><td><span class="tag green">已部署</span></td></tr>
+        <tr><td>节流入队 (spawn_queue)</td><td>05-20</td><td><span class="tag yellow">设计中</span><span class="tag red">待实施</span></td></tr>
+        <tr><td>孤儿 comm 回收 (orphan sweep)</td><td>05-21</td><td><span class="tag yellow">设计中</span><span class="tag red">待实施</span></td></tr>
+        <tr><td>假警报减少 — client_request_id 去重</td><td>05-21</td><td><span class="tag yellow">设计中</span><span class="tag red">待实施</span></td></tr>
+        <tr><td>假警报减少 — fire-and-forget 跳过空产出</td><td>05-21</td><td><span class="tag yellow">设计中</span><span class="tag red">待实施</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /panel-overview -->
+
+<!-- ============================================================ -->
+<!-- PANEL: Spawn -->
+<!-- ============================================================ -->
+<div class="panel" id="panel-spawn">
+
+  <div class="card">
+    <h2>/api/spawn 三段检查 (快递员模型)</h2>
+    <p style="color:var(--muted);margin-bottom:16px">一条 spawn = 通讯(揽件) + 执行(打包) + 投递(送达)。快递员只判空不空, 不拆包裹看内容。</p>
+
+    <table>
+      <tr><th>阶段</th><th>判据</th><th>失败形态</th><th>failure_kind</th></tr>
+      <tr>
+        <td><strong>通讯</strong><br><span style="color:var(--muted)">Communication</span></td>
+        <td>/api/spawn 调用成功, B 的 child session 创建成功</td>
+        <td>B 没起来 / child_session_id 为空</td>
+        <td><code>spawn_not_started</code></td>
+      </tr>
+      <tr>
+        <td><strong>执行</strong><br><span style="color:var(--muted)">Execution</span></td>
+        <td>run status=completed + final_message 非空<br><span style="color:var(--muted)">例外: callerInvocation=fire_and_forget 跳过空产出<br>例外: 所有 sink 都是 audit_only → 空回合法</span></td>
+        <td>run error / timeout / 产出为空</td>
+        <td><code>run_error</code> / <code>run_timeout</code> / <code>empty_output</code></td>
+      </tr>
+      <tr>
+        <td><strong>投递</strong><br><span style="color:var(--muted)">Delivery</span></td>
+        <td>结果送到了声明的地址 (result_sink_attempts 有成功记录)</td>
+        <td>投递动作失败 / 无投递记录</td>
+        <td><code>delivery_missing</code> / <code>late_result</code></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h2>同步路径 (happy path)</h2>
+      <ol style="font-size:13px;padding-left:20px;">
+        <li>A 调 <code>POST /api/spawn</code> (from 必填), 阻塞等待</li>
+        <li>框架受理: 校验 from / sink 声明 / 节流检查 → 创 child B</li>
+        <li>B 跑完 → 框架依次查三段</li>
+        <li>全过 → 返回 A 验证过的结果, 闭环</li>
+        <li>任一不过 → 框架同步重试 B 一次 (复查后重 spawn)</li>
+        <li>重试过 → 闭环; 还不过 → 登记 async, 返回 <code>{ok:false, status:"switched_async"}</code></li>
+        <li><strong>超时特例</strong>: 超时不做同步重试 (重试大概率也超时), 直接转 async</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>异步路径 (兜底)</h2>
+      <ol style="font-size:13px;padding-left:20px;">
+        <li>框架登记 <code>spawn_async_items</code> 一行 (status=pending)</li>
+        <li>A 收到 switched_async 回执, 不再阻塞</li>
+        <li>Watcher 每 tick 扫描 pending 项 → 分流 D/J</li>
+        <li><strong>D 类</strong>: watcher 直接处理 (deliver 补送 / redrive 重发 / redeliver 重投)</li>
+        <li><strong>J 类</strong>: watcher spawn SK 裁决子 session</li>
+        <li>SK 裁决 → 写 verdict → close async 项</li>
+        <li><strong>补送一次即关项</strong>: 待办写入 heartbeat 池就关闭, 靠去重键防重复</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>节流入队 (spawn_queue)</h2>
+    <table>
+      <tr><th>参数</th><th>值</th><th>说明</th></tr>
+      <tr><td>per-parent 并发上限</td><td>5 (maxBusyChildrenPerParent)</td><td>沿用旧值, 不改</td></tr>
+      <tr><td>超出上限行为</td><td>入队 (不再 throw)</td><td>返回 <code>{ok:true, status:"queued", ref, comm_id}</code></td></tr>
+      <tr><td>队列容量上限</td><td>100 / parent</td><td>超出仍 throw (真瓶颈)</td></tr>
+      <tr><td>调度策略</td><td>FIFO per-parent</td><td>child terminate 时自动拉下一个</td></tr>
+      <tr><td>TTL</td><td>默认 24h</td><td>过期 → 标失败 → 补送失败消息回 caller</td></tr>
+      <tr><td>持久化</td><td>DB (spawn_queue 表)</td><td>框架重启不丢</td></tr>
+    </table>
+  </div>
+
+</div><!-- /panel-spawn -->
+
+<!-- ============================================================ -->
+<!-- PANEL: Watcher -->
+<!-- ============================================================ -->
+<div class="panel" id="panel-watcher">
+
+  <div class="card">
+    <h2>Watcher 巡查流程</h2>
+    <p style="color:var(--muted);margin-bottom:12px">spawn-closure-watcher 是一个 scheduler cron 任务, 周期性扫描并处理 async 项。脚本位于 <code>scripts/watcher-tick.sh</code>, 通过 scheduler http executor 调 <code>localhost:3501/api/spawn</code>。</p>
+
+    <div class="decision-tree">
+每个 tick:
+│
+├─ ① 孤儿扫描 (orphan sweep) [待实施]
+│   cross_session_log WHERE status='pending' AND child_session_id IS NULL
+│   AND created_at < now - 60s
+│   AND NOT EXISTS (spawn_async_items WHERE comm_id = id)
+│   → 登记 spawn_async_items (failure_kind=spawn_not_started)
+│
+├─ ② 扫 spawn_async_items WHERE status IN ('pending','re_driving','adjudicating')
+│
+└─ ③ 对每条 async 项: 重新跑三段检查 → 分流
+    │
+    ├─ D 类 (直接处理, 无需判断)
+    │  ├─ D1: A 超时 + B 后来跑完 + 结果通过检查
+    │  │     → 补送: 写 caller/A 的 heartbeat 待办 (带 B 完整结果)
+    │  │     → 去重键: 当前 watcher 用 comm_id；05-19 历史/人工补投可见 comm_id:attempt
+    │  │     → enqueue 前置: 目标 session 存在且 heartbeat_enabled=1
+    │  │
+    │  ├─ D2: B 没起来 → redrive (程序化重调 /api/spawn)
+    │  ├─ D3: B 瞬态出错 → redrive
+    │  └─ D4: 投递没发生但产出有效 → redeliver（重跑声明的 resultSinks, 不重跑 B）
+    │
+    └─ J 类 (需要判断, 升级 SK)
+       ├─ J1: delivery_missing + attempt 用尽
+       ├─ J2: empty_output + attempt 用尽
+       ├─ J3: run_error + attempt 用尽
+       ├─ J4: 其它未分类 + attempt 用尽
+       └─ J5: B 迟迟不完成 (stale/hung)
+    </div>
+
+    <div class="muted-note">
+      ★ redrive 不走 heartbeat 消息。教训 (2026-05-19): heartbeat 把 "redrive_b" 口令注入 B, B 正确拒绝执行 —— 裸控制消息形态就是 prompt injection。
+      <br>★ redrive = 程序化重调 /api/spawn (原 from/target/prompt + client_request_id=spawn-redrive:&lt;logicalKey&gt;), 新 spawn 走自己的三段检查。调用路径: watcher → scheduler http executor → localhost:3501/api/spawn。
+      <br>★ D1 补送 = enqueue-heartbeat-todo CLI → heartbeat.sqlite session_todos 表, 去重键 = target_session + logical_key。enqueue 成功会关闭 watcher 项, 但不代表 heartbeat 已注入或目标 session 已处理。
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h2>Watcher 运行状态</h2>
+      <ul style="font-size:13px;">
+        <li><strong>当前版本</strong>: task ID <code>989328f9-4dc7-45af-8d1f-6e5b02ed2f2a</code> (新), 旧版 <code>c0eb135e</code> 已于 05-15 被 disable</li>
+        <li><strong>运行方式</strong>: scheduler cron 调度, 通过 http executor 调 <code>localhost:3501/api/spawn</code></li>
+        <li><strong>同步扇出超时</strong>: watcher 曾对 40+ 条 async 项同步调 /api/spawn, 远超 config.timeout=60s → kill → status=running 残留 → cascading skipped_overlap</li>
+        <li><strong>已修</strong> (05-21): 改为 fire-and-forget 模式, 逐个处理不再同步扇出</li>
+        <li><strong>手术记录</strong>: state/heal-decisions/spawn-closure-watcher.jsonl (13 条 SKIP)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>孤儿扫描 (新增 05-21) <span class="tag red">待实施</span></h2>
+      <ul style="font-size:13px;">
+        <li><strong>触发点</strong>: ① 框架启动后 (bootstrap) ② watcher 每 tick 处理前</li>
+        <li><strong>扫描条件</strong>: cross_session_log 中 status=pending + child_session_id IS NULL + created_at < now-60s</li>
+        <li><strong>动作</strong>: 登记 spawn_async_items (failure_kind=spawn_not_started)</li>
+        <li><strong>幂等</strong>: EXISTS 检查 — 已有 async 项的不重复登记</li>
+        <li><strong>历史数据</strong>: 18 条孤儿 comm 在 DB 中, 部署后第一次启动自然回收</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>假警报减少: 升级前对账 (新增 05-21)</h2>
+    <table>
+      <tr><th>机制</th><th>触发点</th><th>效果</th><th>状态</th></tr>
+      <tr>
+        <td><strong>client_request_id 去重</strong></td>
+        <td>adjudicate 前: 查同 client_request_id 是否有 status=completed 的另一条 comm</td>
+        <td>有 → 自动关 (verdict=business_satisfied_elsewhere), 不升级 SK</td>
+        <td><span class="tag red">待实施</span></td>
+      </tr>
+      <tr>
+        <td><strong>fire-and-forget 空产出</strong></td>
+        <td>checkExecution: callerInvocation=fire_and_forget 时跳过空产出检查</td>
+        <td>空产出不再判 empty_output 失败</td>
+        <td><span class="tag red">待实施</span></td>
+      </tr>
+      <tr>
+        <td><strong>sink=audit_only</strong></td>
+        <td>所有有效 sink 都是 audit_only → B 空回合法</td>
+        <td>不靠 prompt 里写"无须回复", 框架只看 sink 字段</td>
+        <td><span class="tag green">已部署</span></td>
+      </tr>
+    </table>
+  </div>
+
+</div><!-- /panel-watcher -->
+
+<!-- ============================================================ -->
+<!-- PANEL: Coupling -->
+<!-- ============================================================ -->
+<div class="panel" id="panel-coupling">
+
+  <div class="card">
+    <h2>耦合关系矩阵</h2>
+    <p style="color:var(--muted);margin-bottom:16px">谁依赖谁、怎么依赖、依赖的是什么</p>
+
+    <div class="coupling-grid">
+
+      <div class="coupling-item">
+        <h4>① 框架 → Scheduler</h4>
+        <div class="from-to">框架 spawn 失败 → 登记 spawn_async_items → Watcher (scheduler 任务) 接管</div>
+        <p>耦合点: <code>spawn_async_items</code> 表是框架写、watcher 读的共享状态。Watcher 的任务注册/ cron 调度依赖 scheduler 服务 (localhost:3500)。</p>
+        <p><span class="tag yellow">紧耦合</span> — watcher 挂了, 所有 async 项静默积压</p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>② Watcher → Heartbeat</h4>
+        <div class="from-to">Watcher D1 补送 → enqueue-heartbeat-todo CLI → session_todos 表</div>
+        <p>耦合点: <code>session_todos</code> 表 (heartbeat.sqlite)。Watcher 通过 CLI 写待办, heartbeat patrol 负责注入。去重靠 <code>UNIQUE(target_session, logical_key)</code>, 且 CLI 先检查目标 session 是否存在、是否 <code>heartbeat_enabled</code>。</p>
+        <p><span class="tag yellow">紧耦合</span> — 目标 session 未启用 heartbeat 时 enqueue 直接返回 <code>target_not_heartbeat_enabled</code>; 已入池后若 session 被 stop/permanent pause, 待办会积压在 drain（消费）侧而不是 watcher 写入失败 (当前 deepsearch 75 条 pending)</p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>③ Watcher → SK</h4>
+        <div class="from-to">Watcher J 类 → spawn SK 裁决子 session → SK 写 verdict → close async</div>
+        <p>耦合点: Watcher 通过 /api/spawn 调起 SK 子 session, prompt 内含 async ref + comm 现场。SK 按 SOP 裁决后回写 <code>spawn_async_items.verdict</code>。</p>
+        <p><span class="tag yellow">紧耦合</span> — SK 子 session 被限速/超时则 async 项停在 adjudicating</p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>④ Heartbeat → 目标 Session</h4>
+        <div class="from-to">Heartbeat patrol → pause 检查 → packet → prefilter → controller 决策 → idle drain（空闲时消费）→ lark-cli user send</div>
+        <p>耦合点: 待办注入依赖目标 session 的 <code>group_id</code>、<code>lark-cli im +messages-send --as user</code>、框架 Feishu ingress, 以及目标 session 当时 idle 且 latest run 不是 running。patrol 不是简单扫 pending 就注入, 它先构造 session packet (recent_runs / recent_cross_session / pending_todos / policy), 再经过 deterministic prefilter（确定性预筛）和 controller JSON（控制器 JSON 决策）。</p>
+        <p><span class="tag yellow">中度耦合</span> — busy 时只记 <code>todo_skipped_session_busy</code> 并保留 pending 下轮再试; 但真正发送失败或缺 group_id 会把 claimed 待办标 <code>failed</code>, 不会自动回到 pending。去重只能防重复注入, 不能保证目标 session 后续 run 一定成功。</p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>⑤ Scheduler → Spawn 调用方</h4>
+        <div class="from-to">Scheduler 管理 cron 任务 → 各 session 的定时任务 (cross-session-review 等) → 这些任务调 /api/spawn</div>
+        <p>耦合点: Scheduler 不是 spawn 系统的一部分, 但它管理的任务 (cross-session-review) 自己也产生 spawn。这就产生"自指"问题: review 产生的 spawn 失败也会进 watcher, watcher 也会升级 SK 裁决。</p>
+        <p><span class="tag yellow">中度耦合</span></p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>⑥ 框架重启 → 孤儿 Comm</h4>
+        <div class="from-to">框架进程重启 → 在飞的 spawn 变成 pending+无 child → 孤儿</div>
+        <p>耦合点: 框架重启时不优雅退出, 不主动标记在飞的 spawn。孤儿扫描 (05-21 新增) 是兜底而非根治。DB 里现有 18 条历史孤儿。</p>
+        <p><span class="tag red">紧耦合 + 已知缺口</span></p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>⑦ 三段检查 → spawn_async_items</h4>
+        <div class="from-to">同步路径失败 → 登记 async → 异步路径接管</div>
+        <p>耦合点: <code>failed_phase</code> 和 <code>failure_kind</code> 是同步路径写入、异步路径读取的关键字段。写错 → watcher 分流错 → 动作错。</p>
+        <p>实证: EP-1 (sync_inline spawn 被误判 delivery_missing), EP-2 (late_result + executionPassed=false 无分支)</p>
+        <p><span class="tag yellow">紧耦合 — 字段语义一致性是硬依赖</span></p>
+      </div>
+
+      <div class="coupling-item">
+        <h4>⑧ spawn_queue → 框架 childSession</h4>
+        <div class="from-to">节流入队 → child terminate 触发 dequeue → 起跑新 child</div>
+        <p>耦合点: <code>spawn_queue</code> 表和 childSession 生命周期互相驱动。队列调度正确性依赖 child terminate 路径必然触发 dequeue。</p>
+        <p><span class="tag yellow">紧耦合 — 新机制, 尚未经充分实战验证</span></p>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /panel-coupling -->
+
+<!-- ============================================================ -->
+<!-- PANEL: Tables -->
+<!-- ============================================================ -->
+<div class="panel" id="panel-tables">
+
+  <div class="card">
+    <h2>核心数据表</h2>
+
+    <table>
+      <tr><th>表名</th><th>所属</th><th>用途</th><th>关键字段</th></tr>
+      <tr>
+        <td><code>cross_session_log</code></td>
+        <td>框架 (SuperMatrix DB)</td>
+        <td>所有跨 session spawn 的主记录</td>
+        <td>id, from, to, prompt, status, final_message, child_session_id, client_request_id (新增), created_at, finished_at</td>
+      </tr>
+      <tr>
+        <td><code>spawn_async_items</code></td>
+        <td>框架 (SuperMatrix DB)</td>
+        <td>异步跟进项 — watcher 的工作队列</td>
+        <td>ref, comm_id, caller_session, target_session, failed_phase, failure_kind, attempt_count, status (pending/re_driving/adjudicating/closed/parked), verdict</td>
+      </tr>
+      <tr>
+        <td><code>spawn_queue</code></td>
+        <td>框架 (SuperMatrix DB) <span class="tag green">新增</span></td>
+        <td>节流队列 — per-parent FIFO</td>
+        <td>id, parent_id, spawn_input_json, caller_session, comm_id, status (pending/dispatched/expired/failed), created_at, dispatched_at, ttl_sec</td>
+      </tr>
+      <tr>
+        <td><code>result_sink_attempts</code></td>
+        <td>框架 (SuperMatrix DB)</td>
+        <td>投递动作记录</td>
+        <td>sink_kind (http_response/chat_post/parent_continuation_inject/...), status (delivered/skipped/failed), note</td>
+      </tr>
+      <tr>
+        <td><code>spawn_predicates</code></td>
+        <td>框架 (SuperMatrix DB)</td>
+        <td>业务注册的投递约定</td>
+        <td>comm_id, predicate (contains_all/contains_any 等), version, active</td>
+      </tr>
+      <tr>
+        <td><code>session_todos</code></td>
+        <td>Heartbeat (heartbeat.sqlite)</td>
+        <td>心跳待办池</td>
+        <td>target_session, logical_key (UNIQUE(target_session, logical_key)), todo_type, message, status (pending/claimed/injected/failed), auto_batch 支持；injected 只表示群消息已发出, 不是目标 run 完成确认</td>
+      </tr>
+      <tr>
+        <td><code>message_runs</code></td>
+        <td>框架 (SuperMatrix DB)</td>
+        <td>Session 的消息运行记录</td>
+        <td>session_id, status, final_message, error_message, token_usage, stream_log</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>SK 本地状态文件</h2>
+    <table>
+      <tr><th>文件</th><th>用途</th></tr>
+      <tr><td><code>state/exception-transactions.jsonl</code></td><td>spawn 异常事务底稿 (~260KB)</td></tr>
+      <tr><td><code>state/judgments.jsonl</code></td><td>SK 判断记录 (~146KB)</td></tr>
+      <tr><td><code>state/cross-session-review-state.json</code></td><td>回顾游标 + 最后报告路径</td></tr>
+      <tr><td><code>state/heal-decisions/spawn-closure-watcher.jsonl</code></td><td>Watcher 手术决策 (13 条 SKIP)</td></tr>
+    </table>
+  </div>
+
+</div><!-- /panel-tables -->
+
+<!-- ============================================================ -->
+<!-- PANEL: Exceptions -->
+<!-- ============================================================ -->
+<div class="panel" id="panel-exceptions">
+
+  <div class="card">
+    <h2>异常处理模式 (Exception Patterns)</h2>
+    <p style="color:var(--muted);margin-bottom:16px">从 SK 裁决中沉淀的重复异常模式, 治"如何处理对"</p>
+
+    <table>
+      <tr><th>模式</th><th>长什么样</th><th>根因</th><th>处置</th><th>样本量</th></tr>
+      <tr>
+        <td><strong>EP-1</strong><br>synthetic delivery_missing</td>
+        <td>sync_inline spawn 的投递被误判 delivery_missing。result_sink 记的是 skipped (note: sync_inline handler owns delivery), 但 delivery 检查只认 status=delivered。</td>
+        <td>三段检查不认 sync_inline 的投递路径</td>
+        <td><span class="tag yellow">false_alarm</span> — 不重推/不补投/不通知</td>
+        <td>3 条 (ATP 测试桩 + SK 自测)</td>
+      </tr>
+      <tr>
+        <td><strong>EP-2</strong><br>late_result</td>
+        <td>B 健康但慢, 超出同步窗口后被登记 late_result。watcher 的 classifyAsyncItem 对 late_result+executionPassed=false 无分支, punt SK。</td>
+        <td>① classifyAsyncItem 缺分支 ② sync_inline 窗口关了后无 fallback 投递路径</td>
+        <td><span class="tag yellow">false_alarm</span> 或 <span class="tag" style="background:rgba(57,210,192,0.15);color:var(--cyan)">late_result_delivered</span> — SK D1 补投迟到结果</td>
+        <td>70+ 条 (deepsearch 真源头判别器 fan-out 为主, 也有 gongying/wuliu1 跨会话)</td>
+      </tr>
+      <tr>
+        <td><strong>EP-3</strong><br>notify-type empty_output</td>
+        <td>Caller 把 /api/spawn 当通知用, prompt 写"无须回复", B 正确沉默, 框架判 empty_output。</td>
+        <td>框架缺 notify-only 通道, caller 选错通道</td>
+        <td><span class="tag purple">parked</span> — 待框架加 fire-and-forget 通道后解封</td>
+        <td>70+ 条 storm (amzdata→dataquery 通知)</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Verdict 语义</h2>
+    <table>
+      <tr><th>verdict</th><th>含义</th><th>谁来做</th></tr>
+      <tr><td><code>retrying</code></td><td>暂不判, 让 watcher 继续重试</td><td>SK 裁决</td></tr>
+      <tr><td><code>escalated</code></td><td>升级用户, 需人工介入</td><td>SK 裁决</td></tr>
+      <tr><td><code>false_alarm</code></td><td>误报 — 底层其实已闭环, 或 watcher D 类已自行补投</td><td>SK 裁决</td></tr>
+      <tr><td><code>parked</code></td><td>搁置 — 等框架/约定修好后解封</td><td>SK 裁决</td></tr>
+      <tr><td><code>contract_fixed</code></td><td>约定已修 — 从 parked 解封</td><td>SK 裁决</td></tr>
+      <tr><td><code>late_result_delivered</code></td><td>迟到结果已被 SK 补投 (非规范 verdict, 待补齐)</td><td>SK 裁决</td></tr>
+      <tr><td><code>business_satisfied_elsewhere</code></td><td>业务通过同 client_request_id 的另一条 comm 已闭环 <span class="tag green">新增</span></td><td>框架自动 (adjudicate 前)</td></tr>
+    </table>
+  </div>
+
+</div><!-- /panel-exceptions -->
+
+<!-- ============================================================ -->
+<!-- PANEL: Issues -->
+<!-- ============================================================ -->
+<div class="panel" id="panel-issues">
+
+  <div class="card">
+    <h2>已知问题 & 待修项</h2>
+
+    <table>
+      <tr><th>#</th><th>问题</th><th>影响</th><th>状态</th><th>负责</th></tr>
+      <tr>
+        <td>1</td>
+        <td><strong>classifyAsyncItem 缺 late_result 分支</strong><br>late_result + executionPassed=false 无分支, 落 default adjudicate punt SK</td>
+        <td>大量健康慢 spawn 被无谓升级 SK (EP-2)</td>
+        <td><span class="tag red">待修</span></td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>sync_inline delivery 误判</strong><br>result_sink_attempts status=skipped + note 含 "sync_inline handler owns delivery" 应视同投递成功</td>
+        <td>EP-1 synthetic delivery_missing</td>
+        <td><span class="tag red">待修</span></td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>sync_inline 超时后无 fallback 投递</strong><br>http_response sink 让位 sync_inline 被记 skipped, 但 sync_inline 窗口已关, 迟到结果无投递路径</td>
+        <td>每条超时的健康 spawn 都靠 watcher D1 或 SK D1 补投</td>
+        <td><span class="tag red">待修</span></td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>缺 notify-only / fire-and-forget 通道</strong><br>/api/spawn 对所有 spawn 一视同仁查"产出非空"</td>
+        <td>EP-3 storm (amzdata 通知 70+ 条 empty_output)</td>
+        <td><span class="tag yellow">部分修</span> — fire-and-forget 跳过空产出 (05-21 设计), sink=audit_only (05-21 契约)</td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>Watcher 同步扇出超时</strong><br>对 40+ async 项同步调 /api/spawn 超 60s → kill → 残留</td>
+        <td>13 条 cascading skipped_overlap</td>
+        <td><span class="tag green">已修</span> (watcher 侧改 fire-and-forget)<br><span class="tag red">底层待修</span> — SIGKILL 后 run 残留 (exitCode=null + signal=SIGKILL + finished_at=NULL) 致 scheduler exitZero 校验误读为"仍在运行", 需 codexroot 框架修复</td>
+        <td>SK + codexroot</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>孤儿 comm 静默丢失</strong><br>框架重启 → pending+无 child 的 comm 不进 async → 永远不被处理</td>
+        <td>18 条历史孤儿在 DB</td>
+        <td><span class="tag yellow">设计完成</span> (05-21 orphan sweep), <span class="tag red">待实施</span></td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><strong>节流入队未实施</strong><br>spawn_queue 表 + 入队逻辑设计完成, 代码未写</td>
+        <td>调用方仍在用 sleep+retry 等机</td>
+        <td><span class="tag yellow">设计完成</span> (05-20), <span class="tag red">待实施</span></td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><strong>client_request_id 跨 comm 去重未实施</strong></td>
+        <td>scheduler 重派产生的假警报 (6 条 false_alarm 中的 2 条)</td>
+        <td><span class="tag yellow">设计完成</span> (05-21), <span class="tag red">待实施</span></td>
+        <td>codexroot (框架)</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><strong>late_result_delivered 非规范 verdict</strong><br>快递员模型新增"补送"动作但 SOP verdict 集未补齐</td>
+        <td>verdict 取值不一致</td>
+        <td><span class="tag red">待 SOP/framework 补齐</span></td>
+        <td>SK + codexroot</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><strong>Heartbeat drain（消费）侧停滞/暂停风险 + 目标 session provider limit（供应商限额）风险</strong><br>当前 DB 证据显示 deepsearch 合计 139 条 spawn_closure 待办: 64 injected、75 pending；pending 创建范围 2026-05-19T09:18:24Z 到 12:55:00Z。deepsearch 于 2026-05-19T16:12:51Z 临时 pause, 16:13:00Z permanent/manual off, 之后 pause 检查正确跳过 deepsearch。patrol_runs 在 05-19 00:00Z 到 05-20 03:50Z 基本每 10 分钟运行, 未见 8h 全局停摆；注入后的 deepsearch run 也不是全部 failed, provider/account limit（供应商或账号限额）是目标 session 下游风险而非 heartbeat 全局停摆。</td>
+        <td>75 条补送待办积压在 heartbeat 池, watcher 补送写入正常但 heartbeat drain 因目标 session pause 停止消费</td>
+        <td><span class="tag red">待处理</span> — 需确认 deepsearch 是否应保持 pause, 或解除 pause 让 patrol 清空积压</td>
+        <td>Heartbeat + deepsearch</td>
+      </tr>
+    </table>
+  </div>
+
+</div><!-- /panel-issues -->
+
+</div><!-- /container -->
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+</script>
+
+</body>
+</html>

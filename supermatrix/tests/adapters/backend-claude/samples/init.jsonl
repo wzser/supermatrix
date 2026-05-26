@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","session_id":"claude_fixture_init","model":"claude-fixture"}
+{"type":"result","subtype":"success","session_id":"claude_fixture_init","result":"initialized"}

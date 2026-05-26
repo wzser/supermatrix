@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.log
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!.env.*.example
+logs/
+coverage/
+.vitest-cache/
+~/.supermatrix/
+tmp/
+.DS_Store
+.reload-source
+.fp-capability-draft-*.md

@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>First Principle 运作机制 (v3)</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --ink: #1b1b1a;
+    --sub: #5c5c58;
+    --fp: #d97706;
+    --session: #2563eb;
+    --user: #7c3aed;
+    --sched: #059669;
+    --feishu: #0ea5e9;
+    --line: #d1d5db;
+    --ok: #059669;
+    --warn: #dc2626;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 32px 24px 80px; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  h1 small { font-weight: 400; color: var(--sub); font-size: 14px; margin-left: 8px; }
+  h2 { font-size: 19px; margin: 40px 0 14px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  h3 { font-size: 15px; margin: 20px 0 8px; color: var(--ink); }
+  p, li { font-size: 14px; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; background: #eef0f2; padding: 1px 5px; border-radius: 3px; }
+  .lede { font-size: 14px; color: var(--sub); margin: 0 0 20px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 18px; font-size: 13px; color: var(--sub); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .diagram { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1.4fr 1.05fr;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .lane-title { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--sub); margin-bottom: 8px; }
+  .node {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .node b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .node.fp { border-color: var(--fp); background: #fffbeb; }
+  .node.session { border-color: var(--session); background: #eff6ff; }
+  .node.user { border-color: var(--user); background: #f5f3ff; }
+  .node.sched { border-color: var(--sched); background: #ecfdf5; }
+  .node.feishu { border-color: var(--feishu); background: #f0f9ff; }
+  .node small { display: block; color: var(--sub); font-size: 12px; margin-top: 3px; }
+  .flows { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .flow { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .flow h3 { margin-top: 0; }
+  .flow ol { margin: 6px 0 0; padding-left: 20px; }
+  .flow li { margin-bottom: 4px; }
+  .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+    margin-right: 6px;
+  }
+  .pill.push { background: #dbeafe; color: #1d4ed8; }
+  .pill.pull { background: #fef3c7; color: #b45309; }
+  .pill.cmd { background: #ede9fe; color: #6d28d9; }
+  .pill.cron { background: #d1fae5; color: #047857; }
+  .pill.dead { background: #f3f4f6; color: var(--muted); text-decoration: line-through; }
+  .phases { margin-top: 6px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; }
+  .phase { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .phase:last-child { border-bottom: none; }
+  .phase-head { display: flex; gap: 10px; align-items: center; font-weight: 600; }
+  .phase-id { background: var(--sched); color: white; border-radius: 6px; padding: 2px 10px; font-size: 12px; min-width: 66px; text-align: center; }
+  .phase-body { margin-top: 6px; color: var(--sub); font-size: 13px; padding-left: 80px; }
+  .phase-body b { color: var(--ink); }
+  .phase-body ul { margin: 2px 0; padding-left: 18px; }
+  .soft-principle { margin-top: 26px; background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; padding: 14px 18px; }
+  .soft-principle h3 { color: #9a3412; margin-top: 0; }
+  .soft-principle ul { margin: 4px 0 0; padding-left: 20px; }
+  .solved { margin-top: 26px; background: #ecfdf5; border: 1px solid #86efac; border-radius: 10px; padding: 14px 18px; }
+  .solved h3 { color: var(--ok); margin-top: 0; }
+  .drift { margin-top: 12px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 12px 16px; font-size: 13px; }
+  .drift b { color: var(--warn); }
+  footer { margin-top: 40px; color: var(--sub); font-size: 12px; text-align: center; }
+  .arrow-note { color: var(--sub); font-size: 12px; font-style: italic; margin-top: 4px; }
+  table.inv { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13px; background: #fff; }
+  table.inv th, table.inv td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  table.inv th { background: #f3f4f6; font-weight: 600; font-size: 12.5px; }
+  table.inv tr td:first-child { white-space: nowrap; color: var(--fp); font-weight: 600; }
+  .judgments { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 8px; }
+  .jcard { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; }
+  .jcard b { display: block; margin-bottom: 3px; font-size: 13px; }
+  .jcard.accepted { border-color: var(--ok); background: #ecfdf5; }
+  .jcard.rejected { border-color: var(--warn); background: #fef2f2; }
+  .jcard.split    { border-color: #a855f7; background: #faf5ff; }
+  .jcard.deferred { border-color: var(--fp);   background: #fffbeb; }
+  .jcard.noaction { border-color: var(--muted); background: #f9fafb; }
+  .effect { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 8px; }
+  .ecol { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 12.5px; }
+  .ecol .ehead { font-weight: 600; font-size: 13px; color: var(--fp); margin-bottom: 4px; }
+  .ecol .ehead small { display: block; color: var(--sub); font-weight: 400; font-size: 11.5px; }
+  .qa { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-top: 6px; }
+  .qa dt { font-weight: 600; margin-top: 10px; font-size: 14px; color: var(--ink); }
+  .qa dt:first-child { margin-top: 0; }
+  .qa dd { margin: 2px 0 0 0; color: var(--sub); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>First Principle 运作机制 <small>v3 · 2026-04-24 · 吸收 6 天结构变化</small></h1>
+
+  <p class="lede">
+    <b>一句话定位</b>：First Principle（下称 FP）是 Supermatrix 多 session 运行时里 <b>三份 Principles + 四套分类模板 + 治理规则</b> 的 <b>唯一事实源（SSoT）</b>。
+    它以"仓库即数据库、symlink 即分发、scheduler 即心跳、soft-distribute 即协作"这四条原则运转。
+  </p>
+
+  <h2>七问七答（用户问题速查）</h2>
+  <div class="qa"><dl>
+    <dt>整个架构怎么运转？</dt>
+    <dd>FP 的工作区是 SSoT。三份 Principles 通过 <b>symlink</b> 被每个 session 挂载进自己的工作区；分类模板通过 <b>spawn 柔性分发</b>影响 session 自改；飞书 wiki/多维表是下游只读镜像。scheduler 每奇数日 03:17 通过 <code>/api/spawn</code> 叫醒 FP 跑四阶段巡检。</dd>
+    <dt>怎么维护？</dt>
+    <dd>FP 只改自己 <code>templates/</code> / <code>rules/</code> / <code>sop/</code> 下的文件。任何 session 的 CLAUDE.md / AGENTS.md <b>所有权都归 session 自己</b>，FP 不强覆盖，只 spawn 通知；代改必须先拿确认。</dd>
+    <dt>怎么迭代？</dt>
+    <dd>主要走 <b>pull 模式</b>：git log 扫最近改动 + daily self-report + changelog 近 50 条反思。push 通道（<code>/first-principle</code> skill）保留但实际极少触发，已降级为 escape hatch。</dd>
+    <dt>有什么触发方式？</dt>
+    <dd>四种：<code>user_command</code>（用户直说）/ <code>patrol</code>（scheduler 定时）/ <code>event</code>（session 被纠正后自动提交）/ <code>request</code>（<code>/first-principle</code> skill push，legacy）。</dd>
+    <dt>维护哪些东西？</dt>
+    <dd>七类资产：3 份 Principles · 4 套 CLAUDE-md 分类模板（+ 对应 AGENTS-md 四套） · 3 份 rules（update-judgment / wiki-management / episodes） · 4 份 sop · 2 个脚本（sync-feishu / sync-session-table） · 1 个 changelog（SQLite + 飞书多维表镜像） · FP 自身 CLAUDE.md / AGENTS.md。</dd>
+    <dt>维护的东西怎么生效？</dt>
+    <dd>四种生效链路，看情况并用：<b>symlink 瞬时</b>（Principles） · <b>spawn 柔性分发</b>（分类模板） · <b>飞书 wiki 同步</b>（11 份镜像给人类看） · <b>changelog 留痕</b>（SQLite + 飞书多维表镜像）。</dd>
+    <dt>如何保证 FP 自己不偏？</dt>
+    <dd>强制对称（FP 自己的 CLAUDE.md 和 AGENTS.md 互查，和 session 一套规则） · 每次编辑和巡检都必须问"还能删什么"（防 doc rot） · 多 session 交叉验证门槛（update-judgment v1.4/v1.5） · 所有变更走 changelog 留痕不允许静默改。</dd>
+  </dl></div>
+
+  <h2>主架构图（角色 × 职责 × 信息通道）</h2>
+  <div class="legend">
+    <span><i class="dot" style="background: var(--fp)"></i> FP（first-principle）</span>
+    <span><i class="dot" style="background: var(--session)"></i> 受管 session</span>
+    <span><i class="dot" style="background: var(--user)"></i> 用户</span>
+    <span><i class="dot" style="background: var(--sched)"></i> scheduler（定时触发）</span>
+    <span><i class="dot" style="background: var(--feishu)"></i> 飞书（wiki / 多维表）</span>
+  </div>
+  <div class="diagram">
+    <div class="grid">
+      <!-- LEFT: Sessions -->
+      <div>
+        <div class="lane-title">受管 session</div>
+        <div class="node session">
+          <b>业务</b>
+          amzdata · gongyinglian-oldversion · ads-master · after-sales
+        </div>
+        <div class="node session">
+          <b>工具</b>
+          amz-radar · amz-sql · atp-automated-testing-platform · email-admin · listing-editor
+        </div>
+        <div class="node session">
+          <b>平台</b>
+          codexroot · first-principle · scheduler · skill-master · supermatrix-root · watchdog
+        </div>
+        <div class="node session">
+          <b>知识</b>
+          business-knowledge · mythos
+        </div>
+        <div class="node session" style="background: #eef2ff;">
+          <b>每个 session 的工作区持有</b>
+          <small>
+            • CLAUDE.md / AGENTS.md（<b>session 自己所有</b>，FP 不代改）<br/>
+            • CONSTITUTION.md（supermatrix-root 维护）<br/>
+            • sop/ 目录（session 自己维护）<br/>
+            • <b>symlink → first-principle/templates/ 的 3 份 Principles</b><br/>
+            &nbsp;&nbsp;<code>console-principles.md</code> / <code>coding-principles.md</code> / <code>business-principles.md</code><br/>
+            &nbsp;&nbsp;<span class="arrow-note">FP 改模板 → 所有 session 瞬间看到最新内容（零推送）</span>
+          </small>
+        </div>
+      </div>
+
+      <!-- CENTER: FP -->
+      <div>
+        <div class="lane-title">First Principle（本仓库）</div>
+        <div class="node fp">
+          <b>templates/ — 英文 SSoT（所有 session symlink 到这里）</b>
+          <small>
+            3 份 Principles：console / coding / business<br/>
+            4 套 CLAUDE-md 分类模板 + 4 套对应 AGENTS-md（业务/工具/平台/知识）<br/>
+            claude-md-base.md / agents-md-base.md（旧版 base 覆盖机制已废除，留作参考）<br/>
+            daily-self-report-prompt.md（Phase 1.2 用） · sop-template.md
+          </small>
+        </div>
+        <div class="node fp">
+          <b>rules/ — 3 份治理规则</b>
+          <small>
+            <code>update-judgment.md</code>（v1.5 · 含 incident-backed 单 session 例外）<br/>
+            <code>wiki-management.md</code>（飞书 wiki 节点治理：四桶分类 / 命名 / 三级审批 / <code>agent临时</code> 缓冲区）<br/>
+            <code>episodes.md</code>（过往事件记忆）
+          </small>
+        </div>
+        <div class="node fp">
+          <b>sop/ — 4 份操作手册</b>
+          <small>
+            <code>INDEX.md</code>（目录） · <code>TEMPLATE.md</code>（SOP 撰写模板）<br/>
+            <code>periodic-review-operation-manual.md</code>（<b>周期巡检总手册</b>）<br/>
+            <code>category-template-distribution.md</code>（柔性分发流程）
+          </small>
+        </div>
+        <div class="node fp">
+          <b>scripts/</b>
+          <small>
+            <code>sync-feishu.sh</code>（wiki 同步 · <b>11 份镜像</b>）<br/>
+            <code>sync-session-table.sh</code>（sessions + bindings 多维表同步）<br/>
+            <code>com.supermatrix.fp-sync-review.plist</code>（本地 launchd，当前未必启用；生产触发走 scheduler 任务）
+          </small>
+        </div>
+        <div class="node fp">
+          <b>data/principles-log.db（SQLite · changelog）</b>
+          <small>每次处理都留痕：trigger_type × judgment × target_doc（含 <code>fp-self</code> 类目）</small>
+        </div>
+        <div class="node fp">
+          <b>requests/ + archive/</b>
+          <small>/first-principle skill 的 push 入口 — <span style="text-decoration:line-through;color:var(--muted)">实践中极少触发</span>，仍保留作为 escape hatch</small>
+        </div>
+        <div class="node fp">
+          <b>FP 自身 CLAUDE.md + AGENTS.md（自查对称）</b>
+          <small>FP 是自己规则的首个遵守者 — 两份必须同步对称、同样要英文、同样走修订流程</small>
+        </div>
+      </div>
+
+      <!-- RIGHT: Triggers + outputs -->
+      <div>
+        <div class="lane-title">触发源 / 输出目的地</div>
+        <div class="node user">
+          <b>用户</b>
+          <small>直接指令 / 反馈 / 把关分类模板定稿 / 响应 FP 群通知</small>
+        </div>
+        <div class="node sched">
+          <b>scheduler（cron 03:17 · 奇数日触发）</b>
+          <small>
+            实际由 Supermatrix scheduler 远程 cron 通过 <code>/api/spawn</code> 调起 FP 跑四阶段。<br/>
+            本仓库 <code>com.supermatrix.fp-sync-review.plist</code> 是本地 launchd 备份定义（<code>date +%-d % 2 == 1</code>，奇数日限制），实际以生产 scheduler 任务为准。
+          </small>
+        </div>
+        <div class="node feishu">
+          <b>飞书 Wiki · <b>11 份镜像</b></b>
+          <small>
+            3 Principles · 4 分类模板（claude-md-{业务,工具,平台,知识}）· claude-md-all-categories 合并视图 · rules/update-judgment · rules/wiki-management · sop/periodic-review-operation-manual<br/>
+            agents-md-* 不单独同步（body 与 claude-md 一致，仅 header 区分）
+          </small>
+        </div>
+        <div class="node feishu">
+          <b>飞书多维表（changelog 镜像）</b>
+          <small>每条 SQLite 变更同步入表 — 人类可读视图（table_id <code><FP_CHANGELOG_TABLE_ID></code>）</small>
+        </div>
+        <div class="node feishu">
+          <b>飞书 Session 表</b>
+          <small>sessions + bindings 全量同步（含别称、头像、分类、群名）</small>
+        </div>
+        <div class="node feishu">
+          <b>FP 群通知</b>
+          <small>不能自动处理的问题（需用户定夺 / 连续 N 次 deferred 的冲突）→ 推到 FP 群</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>资产清单 — FP 究竟维护哪些东西</h2>
+  <table class="inv">
+    <tr><th style="width:16%">类别</th><th style="width:36%">文件 / 对象</th><th>性质 & 生效链路</th></tr>
+    <tr>
+      <td>Principles</td>
+      <td><code>templates/console-principles.md</code><br/><code>templates/coding-principles.md</code><br/><code>templates/business-principles.md</code></td>
+      <td>每 session 通过 <b>symlink</b> 挂载 → FP 改完即全网生效（零推送）。同时由 <code>sync-feishu.sh</code> 镜像到飞书 wiki。</td>
+    </tr>
+    <tr>
+      <td>分类模板</td>
+      <td><code>templates/claude-md-{业务,工具,平台,知识}.md</code><br/><code>templates/agents-md-{业务,工具,平台,知识}.md</code><br/><code>templates/claude-md-base.md</code> · <code>agents-md-base.md</code>（legacy）</td>
+      <td>advisory demo，不是强制规则。通过 <b>spawn 柔性分发</b>让 session 自改；BASE 覆盖机制已废除。</td>
+    </tr>
+    <tr>
+      <td>治理规则</td>
+      <td><code>rules/update-judgment.md</code>（v1.5）<br/><code>rules/wiki-management.md</code><br/><code>rules/episodes.md</code></td>
+      <td>FP 自用；update-judgment 和 wiki-management 也镜像到飞书 wiki。update-judgment 含"多 session 交叉验证门槛" + "incident-backed 单 session 例外"。</td>
+    </tr>
+    <tr>
+      <td>操作手册 (SOP)</td>
+      <td><code>sop/INDEX.md</code> · <code>sop/TEMPLATE.md</code><br/><code>sop/periodic-review-operation-manual.md</code><br/><code>sop/category-template-distribution.md</code></td>
+      <td>FP 自用。periodic-review-operation-manual 是 scheduler 巡检的总手册；同步到飞书 wiki。</td>
+    </tr>
+    <tr>
+      <td>脚本</td>
+      <td><code>scripts/sync-feishu.sh</code><br/><code>scripts/sync-session-table.sh</code><br/><code>scripts/com.supermatrix.fp-sync-review.plist</code></td>
+      <td>sync-feishu 推 11 份 wiki；sync-session-table 推 sessions + bindings 多维表；plist 是本地 launchd 备份。</td>
+    </tr>
+    <tr>
+      <td>Changelog</td>
+      <td><code>data/principles-log.db</code>（SQLite · 表 <code>changelog</code>）</td>
+      <td>每一次 request / user_command / patrol / event 都写一行，再同步一行到飞书多维表。<code>target_doc</code> 新增 <code>fp-self</code> 类目（FP 改自己的 CLAUDE/AGENTS/rules/scripts 时）。</td>
+    </tr>
+    <tr>
+      <td>FP 自身文件</td>
+      <td><code>CLAUDE.md</code>（Claude 后端用）<br/><code>AGENTS.md</code>（Codex 后端用）</td>
+      <td>FP 是自己规则的首个遵守者 — 两份必须对称（和 session 同一套规则）。自改记 <code>target_doc=fp-self</code>。</td>
+    </tr>
+  </table>
+
+  <h2>触发方式 — FP 的动作被什么叫起来</h2>
+  <div class="flows">
+    <div class="flow">
+      <h3><span class="pill cmd">Command</span>用户直接指令</h3>
+      <ol>
+        <li>用户直接说「改 Principles 的这条」或「做一次分类模板分发」</li>
+        <li>FP 按相关 SOP 执行（distribution 或 operation-manual）</li>
+        <li>改 <code>templates/</code> → commit → 同步飞书 wiki</li>
+        <li>如需下游执行（柔性分发），继续走 spawn 通道</li>
+        <li>changelog 记 <code>user_command</code></li>
+      </ol>
+    </div>
+    <div class="flow">
+      <h3><span class="pill cron">Cron</span>scheduler 周期巡检</h3>
+      <ol>
+        <li>每奇数日 03:17，scheduler 通过 <code>/api/spawn</code> 调起 FP（prompt 指定"执行完整维护周期"）</li>
+        <li>FP 按 <code>sop/periodic-review-operation-manual.md</code> 跑四阶段 Gather → Synthesize → Conform → Sync</li>
+        <li>Phase 2 产生的内容变更直接改 <code>templates/</code></li>
+        <li>Phase 3 对齐违规 → spawn 通知 session 自改，记 <code>patrol/deferred</code></li>
+        <li>Phase 4 同步完，更新 <code>.last-sync-review</code></li>
+      </ol>
+    </div>
+    <div class="flow">
+      <h3><span class="pill pull">Event</span>session 被纠正后自动提交</h3>
+      <ol>
+        <li>某 session 被用户纠正 → 判断规则是"通用"还是"本 session 自用"</li>
+        <li>若通用 → 由该 session 调 <code>/first-principle</code> skill（落 <code>requests/</code> pending 文件）</li>
+        <li>FP 激活时扫 requests，按 <code>rules/update-judgment.md</code> 判断 5 种结果</li>
+        <li>处理后文件移入 <code>requests/archive/</code></li>
+        <li>changelog 记 <code>event</code> / <code>request</code>（二选一看来源）</li>
+      </ol>
+    </div>
+    <div class="flow">
+      <h3><span class="pill dead">legacy</span>/first-principle skill push 通道</h3>
+      <ol>
+        <li>push 通道名义上是上面 event 的落盘方式</li>
+        <li><b>现实：高强度使用多日以来极少成功触发</b> → 主信息源靠 pull（Phase 1 Gather）</li>
+        <li>保留作为 escape hatch，但 FP 不指望它</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>处理流程 — 一条请求进来，会落到哪 5 种结果</h2>
+  <p style="font-size:13px;color:var(--sub);margin-top:-6px;">
+    判断规则写在 <code>rules/update-judgment.md</code>（现 v1.5）。含两关：形式合法性 → 内容判断；多 session 同期出现同一问题会自动提升接受优先级。
+  </p>
+  <div class="judgments">
+    <div class="jcard accepted"><b>accepted</b>通过判断、写入 <code>templates/</code> 或 <code>rules/</code>；commit + 飞书同步</div>
+    <div class="jcard rejected"><b>rejected</b>不符合原则 / 单 session 偏好 / 已在现有条款覆盖；仍留 changelog 记录拒绝原因</div>
+    <div class="jcard split"><b>split</b>一条请求混了多件事 — 拆分后分别判断</div>
+    <div class="jcard deferred"><b>deferred</b>单 session 首次提出、无 incident 证据、需要等交叉验证 — 暂缓</div>
+    <div class="jcard noaction"><b>no_action</b>巡检本身也要留痕 — 即使一切正常也写一行</div>
+  </div>
+
+  <h2>scheduler 四阶段 — Gather → Synthesize → Conform → Sync</h2>
+  <p style="font-size:13px;color:var(--sub);margin-top:-6px;">
+    <b>次序原则</b>：先把内容定准，再查对齐。若先 Conform 再改内容，session 刚按旧模板改完又被打回。完整步骤见 <code>sop/periodic-review-operation-manual.md</code>。
+  </p>
+  <div class="phases">
+    <div class="phase">
+      <div class="phase-head"><span class="phase-id">Phase 1</span>Gather — 收集本周期新信息</div>
+      <div class="phase-body">
+        <b>1.1 Code Change Review</b>：对每个活跃工作区跑 <code>git log --since</code>，识别新 API / 新模式 / 踩坑 / 重复 revert。<br/>
+        <b>1.2 Daily Self-Report</b>：并发 spawn 活跃 session，让它们按 <code>templates/daily-self-report-prompt.md</code> 三段式回报（新能力 / 踩坑 / 跨 session 协作信号，每段 ≤100 字）。结果落 <code>/tmp/fp-daily-selfreport-&lt;date&gt;/</code>。<br/>
+        <b>产物</b>：Phase 2 的候选清单。
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-head"><span class="phase-id">Phase 2</span>Synthesize — 综合信号，更新内容</div>
+      <div class="phase-body">
+        <b>2.1 内容更新</b>：把 Phase 1 候选转成 <code>templates/*.md</code> 的文字改动。多 session 投诉集中同一段 → 模板修订 + 判断是否重新分发。<br/>
+        <b>2.2 Reflection</b>：查 <code>principles-log.db</code> 近 50 条 → 多次 rejected / 多次 deferred / 多次 patrol fix 的模式 → 提炼进 <code>rules/update-judgment.md</code>。<br/>
+        <b>2.3 Lint</b>：三份 Principles + 四套分类模板互检（矛盾 / 失效引用 / 冗余）；各 session <code>sop/</code> 目录健康检查。<br/>
+        <b>2.4 剪枝</b>（每阶段必做）：除了问"还缺什么"也问"什么过时了可以删"。
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-head"><span class="phase-id">Phase 3</span>Conform — 对齐 session 的 CLAUDE/AGENTS</div>
+      <div class="phase-body">
+        对每个活跃 session 的 CLAUDE.md / AGENTS.md 做四项检查：<br/>
+        <b>(a) 对称性</b> — CLAUDE 与 AGENTS 规则一致（仅 header 可说明后端不同）<br/>
+        <b>(b) 分类模板符合性</b> — 与 <code>templates/claude-md-{category}.md</code> 对比<br/>
+        <b>(c) BASE 残留</b> — grep <code>BASE:BEGIN/END</code>（已废除的机制，应清零）<br/>
+        <b>(d) 语言合规</b>（硬性）— 英文；中文仅限专有名词内嵌<br/>
+        违规 → <b>spawn 通知 session 自改，不代改</b>（代改需先 spawn 拿到确认）；记 <code>patrol/deferred</code>。
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-head"><span class="phase-id">Phase 4</span>Sync — 同步到下游</div>
+      <div class="phase-body">
+        <b>4.1</b> <code>./scripts/sync-session-table.sh</code> → 飞书 session 多维表<br/>
+        <b>4.2</b> <code>./scripts/sync-feishu.sh</code> → 飞书 wiki（<b>11 份</b>：3 Principles + 4 分类模板 + claude-md-all-categories 合并视图 + rules/update-judgment + rules/wiki-management + sop/periodic-review-operation-manual）<br/>
+        <b>4.3</b> <code>date &gt; .last-sync-review</code>；无法自动处理的问题 → FP 群 <code>lark-cli im +messages-send</code>
+      </div>
+    </div>
+  </div>
+
+  <h2>生效链路 — 改完的东西怎么真正"起作用"</h2>
+  <div class="effect">
+    <div class="ecol">
+      <div class="ehead">A. Symlink 瞬时 <small>用于：3 份 Principles</small></div>
+      每个 session 工作区里这 3 份文件是 <b>指向 FP/templates/ 的软链</b>。FP 一改即"全网可见"，无需推送，无需确认。这是 FP 影响力最直接的一条链。
+    </div>
+    <div class="ecol">
+      <div class="ehead">B. Spawn 柔性分发 <small>用于：4 套分类模板</small></div>
+      FP 起草模板 → <b>先找用户确认"可以分发"</b> → <code>/api/spawn</code> 并发通知同分类 session → 每个 session 按自身情况改自己的 CLAUDE.md/AGENTS.md → FP trust-but-verify（时间戳 / 语言 / 对称）。
+    </div>
+    <div class="ecol">
+      <div class="ehead">C. 飞书 wiki 同步 <small>用于：11 份给人看的镜像</small></div>
+      <code>sync-feishu.sh</code> 把文件以 overwrite 模式 push 到 wiki。wiki 页只读，源在 git。给用户 / 其他 session / 外部人员浏览用。
+    </div>
+    <div class="ecol">
+      <div class="ehead">D. Changelog 留痕 <small>用于：所有变更</small></div>
+      每一次 accepted / rejected / split / deferred / no_action 都要写 <code>data/principles-log.db</code>，并一行一行同步到飞书多维表。<b>没写 changelog = 这次改没发生</b>。
+    </div>
+  </div>
+
+  <h2>核心原则：柔性分发（Soft Distribution）</h2>
+  <div class="soft-principle">
+    <h3>FP 从不强覆盖 session 的 CLAUDE.md / AGENTS.md</h3>
+    <ul>
+      <li><b>所有权</b>：每个 session 对自己的 CLAUDE.md / AGENTS.md 拥有所有权</li>
+      <li><b>分类模板是 advisory</b>：4 套 category 模板只是参考 demo，不是强制规则</li>
+      <li><b>3 份 Principles 例外走 symlink</b>：session 工作区里的 console/coding/business-principles.md 是软链到 <code>first-principle/templates/</code>，FP 改一次所有 session 立即生效——这是真正的单一事实源</li>
+      <li><b>BASE 强覆盖机制已废除</b>：<code>&lt;!-- BASE:BEGIN/END --&gt;</code> 不再维护</li>
+      <li><b>两层分发</b>：
+        <ul>
+          <li>主流程：FP spawn 通知 session，session 自主决定采纳或保留</li>
+          <li>FP 代改：必须先 spawn 取得 session 确认，不得静默改</li>
+        </ul>
+      </li>
+      <li><b>Session 保留自身特色</b>：业务特色、能力边界、工作区布局——session 自己填，FP 不干涉</li>
+      <li><b>分类通用核心习惯 bottom-up</b>：模板里的核心习惯都从该分类已有 session 实践抽共性</li>
+    </ul>
+  </div>
+
+  <h2>Changelog 字段速查</h2>
+  <table class="inv">
+    <tr><th>字段</th><th>取值</th><th>含义</th></tr>
+    <tr><td>trigger_type</td><td><code>request</code> / <code>user_command</code> / <code>patrol</code> / <code>event</code></td><td>触发本次处理的来源类别</td></tr>
+    <tr><td>trigger_source</td><td>session name / <code>user</code> / <code>scheduler</code></td><td>具体谁触发的</td></tr>
+    <tr><td>target_doc</td><td><code>console-principles</code> / <code>coding-principles</code> / <code>business-principles</code> / <code>claude-md-base</code> / <b><code>fp-self</code></b> / <code>NULL</code></td><td>目标文档；<code>fp-self</code> = FP 改自己的 CLAUDE / AGENTS / rules / scripts</td></tr>
+    <tr><td>judgment</td><td><code>accepted</code> / <code>rejected</code> / <code>split</code> / <code>deferred</code> / <code>no_action</code></td><td>五种处理结果</td></tr>
+    <tr><td>judgment_reason</td><td>自由文本</td><td>为什么这样判；拒绝/暂缓也要写清楚依据</td></tr>
+    <tr><td>change_summary / change_detail</td><td>自由文本</td><td>一句话 + 详细 diff 描述</td></tr>
+    <tr><td>request_file</td><td><code>requests/...</code> 路径</td><td>如来自 push 通道</td></tr>
+  </table>
+
+  <h2>对比 v2 — 本次（v3）吸收的结构变化</h2>
+  <div class="solved">
+    <h3>2026-04-18 → 2026-04-24 · 6 天内变化</h3>
+    <ol>
+      <li><b>scheduler 频次改成奇数日 01:17</b>（原 v2 写 01:17 daily）：scheduler task <code>fp-daily-sync-review</code> cron 从 <code>17 1 * * *</code> 改为 <code>17 1 */2 * *</code>（每隔一天奇数日触发）。本地 <code>com.supermatrix.fp-sync-review.plist</code>（03:17 奇数日）是历史备份，未加载，不参与生产触发。</li>
+      <li><b>rules/ 扩到 3 份</b>：新增 <code>wiki-management.md</code>（飞书 wiki 节点治理：四桶分类、命名、三级审批、<code>agent临时</code> 缓冲区）和 <code>episodes.md</code>。</li>
+      <li><b>sop/ 扩到 4 份</b>：新增 <code>INDEX.md</code> + <code>TEMPLATE.md</code>（SOP 目录与撰写模板）。</li>
+      <li><b>飞书 wiki 同步 11 份</b>（原 v2 写 9 份）：新增 <code>claude-md-all-categories</code> 合并视图 + <code>rules/wiki-management</code>。</li>
+      <li><b>update-judgment 升到 v1.5</b>：v1.4 明文"多 session 交叉验证门槛"（单 session defer / 2+ session accept）；v1.5 追加 incident-backed 单 session 例外（commit + 观测性故障 = 第二证据源）。</li>
+      <li><b>changelog 新增 <code>fp-self</code> target_doc</b>：FP 自改 CLAUDE / AGENTS / rules / scripts 也要留痕，不再豁免。</li>
+      <li><b>业务分类新增 after-sales</b>：作为 CONSTITUTION 的新 sibling（2026-04-24 commit <code>abd8a79</code>）。</li>
+    </ol>
+  </div>
+
+  <div class="solved">
+    <b>2026-04-26 文档漂移已修</b>：
+    scheduler task <code>fp-daily-sync-review</code> cron 从 daily 调整为 odd-day（<code>17 1 */2 * *</code>），同时同步更新 CLAUDE.md / AGENTS.md / sop/periodic-review-operation-manual.md / scripts/sync-feishu.sh 的措辞，统一为"every other day at 01:17"。本地 plist 为停用历史备份。
+  </div>
+
+  <footer>
+    源文件：<code>first-principle/docs/fp-mechanism.html</code> · 运作手册：<code>sop/periodic-review-operation-manual.md</code> · 飞书 wiki 对应页已同步 · v3 · 2026-04-24
+  </footer>
+</main>
+</body>
+</html>

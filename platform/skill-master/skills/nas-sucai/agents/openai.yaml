@@ -1,0 +1,4 @@
+interface:
+  display_name: "NAS Sucai"
+  short_description: "Access the company NAS material library"
+  default_prompt: "Use $nas-sucai when you need to browse, search, download, upload, create directories for, or rename files in the company NAS material library."

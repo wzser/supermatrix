@@ -1,0 +1,2 @@
+{"_type":"notif","method":"session/update","params":{"update":{"sessionUpdate":"tool_call","toolCallId":"tool_fixture","title":"shell","status":"in_progress","content":[]}}}
+{"_type":"notif","method":"session/update","params":{"update":{"sessionUpdate":"tool_call_update","toolCallId":"tool_fixture","status":"failed","content":[{"type":"content","content":{"type":"text","text":"fixture failure"}}]}}}

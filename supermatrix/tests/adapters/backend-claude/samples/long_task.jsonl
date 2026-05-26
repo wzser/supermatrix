@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","session_id":"claude_fixture_long","model":"claude-fixture"}
+{"type":"assistant","session_id":"claude_fixture_long","message":{"model":"claude-fixture","content":[{"type":"text","text":"Step one."}]}}
+{"type":"assistant","session_id":"claude_fixture_long","message":{"model":"claude-fixture","content":[{"type":"text","text":"Step two."}]}}
+{"type":"result","subtype":"success","session_id":"claude_fixture_long","result":"Long task complete."}

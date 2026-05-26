@@ -1,0 +1,40 @@
+{
+  "name": "supermatrix",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "lint:deps": "tsx scripts/check-deps.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:unit": "vitest run tests/domain tests/app tests/cli tests/scripts",
+    "test:adapters": "vitest run tests/adapters",
+    "test:e2e": "vitest run tests/e2e",
+    "test:all": "npm run lint:deps && npm run typecheck && npm run test:unit && npm run test:adapters && npm run test:e2e",
+    "verify": "npm run lint:deps && npm run typecheck && npm run test:unit && npm run test:adapters && npm run test:e2e",
+    "build": "tsc -p tsconfig.json",
+    "init": "tsx src/cli/init.ts",
+    "start": "tsx src/cli/main.ts",
+    "self-check": "tsx src/cli/selfCheck.ts"
+  },
+  "dependencies": {
+    "@larksuite/cli": "^1.0.35",
+    "@larksuiteoapi/node-sdk": "^1.65.0",
+    "@zed-industries/agent-client-protocol": "^0.4.5",
+    "better-sqlite3": "^11.8.1",
+    "pino": "^9.6.0",
+    "qrcode-terminal": "^0.12.0",
+    "yaml": "^2.8.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.13.10",
+    "@types/qrcode-terminal": "^0.12.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.1.1"
+  }
+}

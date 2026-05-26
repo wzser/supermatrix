@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跨 Session 通讯机制盘点</title>
+<style>
+  :root{
+    --bg:#0f1216; --panel:#171b22; --panel2:#1d222b; --line:#2c333f;
+    --ink:#e8ecf2; --dim:#9aa6b6; --faint:#6b7686;
+    --comm:#4f9cf0;    /* 通讯执行 — 蓝 */
+    --deliver:#f0a93f; /* 投递 — 橙 */
+    --ok:#43c97a; --bad:#e8634f; --warn:#e3b341;
+    --purple:#a779e8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;line-height:1.65;padding:36px 24px 80px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:26px;letter-spacing:.5px;margin-bottom:6px}
+  .sub{color:var(--dim);font-size:14px;margin-bottom:4px}
+  .principle{background:linear-gradient(90deg,#1d222b,#171b22);border-left:3px solid var(--deliver);
+    padding:12px 18px;border-radius:6px;margin:18px 0 34px;font-size:14.5px;color:var(--ink)}
+  .principle b{color:var(--deliver)}
+  h2{font-size:18px;margin:42px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  h2 .num{background:var(--panel2);color:var(--dim);font-size:13px;width:26px;height:26px;border-radius:6px;
+    display:inline-flex;align-items:center;justify-content:center;flex:none}
+  h3{font-size:14.5px;color:var(--dim);margin:22px 0 10px;font-weight:600}
+  p.note{color:var(--dim);font-size:13.5px;margin:8px 0}
+  code{background:#11151b;color:#cfe0f5;padding:1.5px 6px;border-radius:4px;font-size:12.5px;
+    font-family:"SF Mono",Menlo,Consolas,monospace}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .card .tag{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+  .card h4{font-size:14px;margin-bottom:6px}
+  .card p{font-size:12.8px;color:var(--dim)}
+  .card .meta{margin-top:9px;font-size:11.5px;color:var(--faint);border-top:1px dashed var(--line);padding-top:8px}
+
+  /* flow */
+  .flow{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:26px 22px}
+  .step{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:13px 16px;position:relative}
+  .step .lbl{font-size:11px;color:var(--faint);letter-spacing:.5px;margin-bottom:3px}
+  .step .ttl{font-size:14px;font-weight:600}
+  .step .desc{font-size:12.3px;color:var(--dim);margin-top:4px}
+  .arrow{text-align:center;color:var(--faint);font-size:18px;line-height:1;margin:7px 0}
+  .arrow.lbl::after{content:attr(data-l);display:block;font-size:11px;color:var(--faint);margin-top:2px}
+
+  /* three-phase block */
+  .phases{border:1.5px solid var(--line);border-radius:11px;padding:16px;margin:6px 0;background:#13171e}
+  .phases-h{font-size:12px;color:var(--faint);letter-spacing:.7px;text-transform:uppercase;margin-bottom:12px;text-align:center}
+  .ph-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .ph{border-radius:9px;padding:13px 14px;border:1px solid var(--line)}
+  .ph.comm{background:rgba(79,156,240,.08);border-color:rgba(79,156,240,.45)}
+  .ph.exec{background:rgba(79,156,240,.08);border-color:rgba(79,156,240,.45)}
+  .ph.deliver{background:rgba(240,169,63,.09);border-color:rgba(240,169,63,.5)}
+  .ph .pn{font-size:11px;font-weight:700;letter-spacing:.5px}
+  .ph.comm .pn,.ph.exec .pn{color:var(--comm)}
+  .ph.deliver .pn{color:var(--deliver)}
+  .ph .pt{font-size:14.5px;font-weight:700;margin:3px 0 5px}
+  .ph .pd{font-size:12.3px;color:var(--dim)}
+  .ph .pf{margin-top:9px;font-size:11.3px;color:var(--faint)}
+  .ph .pf b{color:var(--bad);font-weight:600}
+  .ph .chk{font-size:11.5px;color:var(--ok);margin-top:6px}
+
+  .bracket{text-align:center;font-size:11.5px;color:var(--faint);margin-top:8px}
+
+  /* outcomes */
+  .outs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  .out{border-radius:8px;padding:10px 12px;font-size:12px}
+  .out .oh{font-weight:700;font-size:12.5px;margin-bottom:3px}
+  .out.ok{background:rgba(67,201,122,.1);border:1px solid rgba(67,201,122,.4)}
+  .out.ok .oh{color:var(--ok)}
+  .out.bad{background:rgba(232,99,79,.1);border:1px solid rgba(232,99,79,.4)}
+  .out.bad .oh{color:var(--bad)}
+  .out.warn{background:rgba(227,179,65,.1);border:1px solid rgba(227,179,65,.4)}
+  .out.warn .oh{color:var(--warn)}
+  .out p{color:var(--dim)}
+
+  /* big compare */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+  .col{padding:22px 22px 24px}
+  .col.c-comm{background:linear-gradient(160deg,rgba(79,156,240,.13),rgba(79,156,240,.04))}
+  .col.c-deliver{background:linear-gradient(160deg,rgba(240,169,63,.14),rgba(240,169,63,.04))}
+  .col .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;
+    padding:3px 9px;border-radius:5px;margin-bottom:10px}
+  .c-comm .badge{background:var(--comm);color:#06121f}
+  .c-deliver .badge{background:var(--deliver);color:#241701}
+  .col h3{color:var(--ink);font-size:16px;margin:0 0 4px}
+  .col .one{font-size:12.8px;color:var(--dim);margin-bottom:14px;min-height:34px}
+  .col dl{display:grid;grid-template-columns:78px 1fr;gap:7px 12px;font-size:12.6px}
+  .col dt{color:var(--faint);font-weight:600}
+  .col dd{color:var(--ink)}
+  .col .pin{margin-top:14px;font-size:12px;padding:9px 11px;border-radius:7px;background:rgba(0,0,0,.25)}
+  .c-comm .pin{border-left:2px solid var(--comm)}
+  .c-deliver .pin{border-left:2px solid var(--deliver)}
+  .divider-mid{display:flex;align-items:center;justify-content:center}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--dim);font-weight:600}
+  td code{font-size:11.5px}
+  .pill{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:10px;font-weight:600}
+  .pill.c{background:rgba(79,156,240,.18);color:var(--comm)}
+  .pill.d{background:rgba(240,169,63,.18);color:var(--deliver)}
+  .pill.s{background:rgba(167,121,232,.18);color:var(--purple)}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin:10px 0 0}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  footer{margin-top:48px;color:var(--faint);font-size:11.5px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>跨 Session 通讯机制盘点</h1>
+  <div class="sub">SuperMatrix · <code>/api/spawn</code> + spawn-closure 三段闭环 · 代码出处 <code><SM_REPO_ROOT>/src</code></div>
+  <div class="sub">盘点人：socail-king（SK）· 2026-05-19</div>
+
+  <div class="principle">
+    <b>一句话：</b>一次通讯 = 一个结果。机器把一次 spawn 拆成<b style="color:var(--comm)">「通讯执行」</b>和<b style="color:var(--deliver)">「投递」</b>两件事——
+    B 起来了、跑完了、回了话，只算<b style="color:var(--comm)">通讯执行成功</b>；A 真正要的那个东西落到了一个能被客观核对的地方，才算<b style="color:var(--deliver)">投递成功</b>。
+    <code>status=completed</code> 只证明前者，不证明后者。这套机器存在的全部理由，就是不让前者冒充后者。
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--comm)"></i>通讯执行（B 跑了、回了话）</span>
+    <span><i class="dot" style="background:var(--deliver)"></i>投递（A 要的东西真落地了）</span>
+    <span><i class="dot" style="background:var(--purple)"></i>异步兜底 / 裁决</span>
+  </div>
+
+  <!-- ===== 1. 入口 ===== -->
+  <h2><span class="num">1</span>四个通讯入口（谁在跟谁说话）</h2>
+  <p class="note">跨 session 通讯不止 <code>/api/spawn</code> 一条路。四条入口形态不同，但都终结于同一套「三段检查」或绕过它。</p>
+  <div class="grid g4">
+    <div class="card">
+      <div class="tag">主入口 · HTTP</div>
+      <h4><code>POST /api/spawn</code></h4>
+      <p>A 程序化地请 B 干一件事。必填 <code>from</code> / <code>target</code> / <code>prompt</code>；可带 <code>delivery_checks</code>。这是被闭环机制完整管住的唯一入口。</p>
+      <div class="meta">apiServer.ts:229 · 默认同步阻塞</div>
+    </div>
+    <div class="card">
+      <div class="tag">人触发 · 飞书命令</div>
+      <h4><code>/spawn &lt;session&gt; …</code></h4>
+      <p>人在 root 群里手动派活。一次性 <code>one_shot_delegation</code>，结果以 bot 身份回贴到父 session 的群。</p>
+      <div class="meta">commands/spawnChild.ts · 仅 root 群</div>
+    </div>
+    <div class="card">
+      <div class="tag">子→父回流</div>
+      <h4>continuation 注入</h4>
+      <p>子 session 跑完，把结果包成 <code>&lt;sm-child-completed&gt;</code> 信封，合成一条 inbound 消息塞回父 session 的正常管道，唤醒父去消费。</p>
+      <div class="meta">continuationDispatcher.ts · 父 busy 则丢弃</div>
+    </div>
+    <div class="card">
+      <div class="tag">广播 · 观察层</div>
+      <h4>EventBus / TopicBus</h4>
+      <p><code>eventbus_publish</code> sink 把子的产出发到一个具名 topic。属观察/通知，<b>不</b>用来做跨 session 协调，也不进闭环检查。</p>
+      <div class="meta">resultSinkEngine.ts · 三层分离的最外层</div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 一次 spawn 的全生命周期 ===== -->
+  <h2><span class="num">2</span>一次 <code>/api/spawn</code> 的全生命周期</h2>
+  <p class="note">下面是 <code>apiServer.ts</code> 里 <code>sync_inline</code> 这条主路从受理到闭环/转异步的逐步展开。调用方<b>不能</b>选 sync/async——异步纯粹是框架失败时的自动兜底。</p>
+
+  <div class="flow">
+
+    <div class="step">
+      <div class="lbl">STEP 0 · 受理</div>
+      <div class="ttl">校验请求 & delivery_checks 可检验性</div>
+      <div class="desc">缺 <code>from</code> → 400；带了 <code>mode</code> → 400；<code>delivery_checks</code> 表达不成可客观核对的事实 → 400 打回让 A 重述。<code>verification_predicate</code> 缺失只 warn，不拒。</div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="step">
+      <div class="lbl">STEP 1 · 同步执行</div>
+      <div class="ttl">runSyncSpawnAttempt — 起一个 child session 跑 prompt</div>
+      <div class="desc">A 的 HTTP 连接一直挂着等。若 A 中途断连 → disconnect switch 把这次 spawn detach 成异步项，A 不再阻塞。</div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <!-- three phase -->
+    <div class="phases">
+      <div class="phases-h">runThreePhaseCheck — 按顺序查三段，前一段不过则后面跳过</div>
+      <div class="ph-row">
+        <div class="ph comm">
+          <div class="pn">① 通讯 COMMUNICATION</div>
+          <div class="pt">B 起来了吗</div>
+          <div class="pd">child session 进程是否成功启动。</div>
+          <div class="chk">✓ 判据：spawn 没报 spawn_failed</div>
+          <div class="pf">失败 <b>spawn_not_started</b> → 不进异步，当场 <b>500</b> 同步报错给 A</div>
+        </div>
+        <div class="ph exec">
+          <div class="pn">② 执行 EXECUTION</div>
+          <div class="pt">B 跑完且有产出吗</div>
+          <div class="pd">run 状态正常、final message 非空。</div>
+          <div class="chk">✓ 判据：非 timeout / 非 run_error / 产出 trim 后非空</div>
+          <div class="pf">失败 <b>run_timeout / run_error / empty_output</b></div>
+        </div>
+        <div class="ph deliver">
+          <div class="pn">③ 投递 DELIVERY</div>
+          <div class="pt">A 要的东西真落地了吗</div>
+          <div class="pd">逐条核对 A 声明的 <code>delivery_checks</code>，查的是对话之外的客观事实。</div>
+          <div class="chk">✓ 判据：inbox 收到 / 表里有行 / 文件写了</div>
+          <div class="pf">失败 <b>delivery_missing</b>；没声明 checks 则此段直接 pass</div>
+        </div>
+      </div>
+      <div class="bracket">└─ ①+② = 「通讯执行」一眼可见 ──────┘&nbsp;&nbsp;└─ ③ =「投递」要查实 ─┘</div>
+    </div>
+
+    <div class="arrow lbl" data-l="三段结果决定走向">↓</div>
+
+    <div class="outs">
+      <div class="out ok">
+        <div class="oh">全过</div>
+        <p><code>200 closure:"verified"</code>，把验证过的 <code>finalMessage</code> 返回 A。这才是真闭环。</p>
+      </div>
+      <div class="out bad">
+        <div class="oh">通讯段失败</div>
+        <p>B 根本没起来 → 当场 <code>500</code>。通讯段的失败<b>全在同步路了结</b>，不进 watcher。</p>
+      </div>
+      <div class="out warn">
+        <div class="oh">执行/投递失败</div>
+        <p>先复查一遍（防瞬态抖动）→ 仍不过 → <b>整条同步重试 B 一次</b>（同 prompt）→ 再查。</p>
+      </div>
+      <div class="out warn">
+        <div class="oh">run_timeout</div>
+        <p>特例：不做同步重试（大概率还超时），直接转异步。</p>
+      </div>
+    </div>
+
+    <div class="arrow lbl" data-l="重试仍不过 / 超时">↓</div>
+
+    <div class="step" style="border-color:rgba(167,121,232,.5);background:rgba(167,121,232,.07)">
+      <div class="lbl" style="color:var(--purple)">STEP 2 · 转异步</div>
+      <div class="ttl">respondSwitchedAsync → registerAsyncItem</div>
+      <div class="desc">写一行到 <code>spawn_async_items</code> 表，返回 A：<code>{ok:false, status:"switched_async", ref}</code>。A 不再阻塞，之后 A 靠 <code>GET /api/sessions/:id/result</code> 轮询拿结果。</div>
+    </div>
+    <div class="arrow">↓</div>
+
+    <div class="step" style="border-color:rgba(167,121,232,.5);background:rgba(167,121,232,.07)">
+      <div class="lbl" style="color:var(--purple)">STEP 3 · watcher 接管（SK 的 scheduler 任务）</div>
+      <div class="ttl">定期扫 async 项 → D 类直接处理 / J 类升级裁决</div>
+      <div class="desc">
+        <b>D 类（纯路由，不需判断）：</b>D1 = A 超时但 B 后来跑完且检查过 → 用 heartbeat 待办把结果送回 A；D2/D3/D4 = B 没起来/瞬态错/投递没发生 → <b>redrive</b>（程序化重发原 spawn，不走 heartbeat 消息）。<br>
+        <b>J 类（需判断）：</b>重发用尽、反复空产出、结构性坏、约定反复改、卡过时长阈值 → spawn 一个 SK 裁决子 session，判是谁的锅、动手、把 verdict 写回 <code>spawn_async_items</code>。
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== 3. 核心区分 ===== -->
+  <h2><span class="num">3</span>核心区分：「通讯执行」≠「投递」</h2>
+  <p class="note">这是整套机制的命门，也是 SK 这个 session 存在的理由。两者最容易被混为一谈——B 回了一长段话，看着像成了，但 A 要的东西可能根本没落地。</p>
+
+  <div class="compare">
+    <div class="col c-comm">
+      <span class="badge">通讯执行</span>
+      <h3>B 跑了、回了话</h3>
+      <div class="one">「A→B 的请求到达了，B 起得来，B 跑完了并吐出了非空内容。」——过程层面的成功。</div>
+      <dl>
+        <dt>对应段</dt><dd>① 通讯 + ② 执行</dd>
+        <dt>查什么</dt><dd>进程起没起、run 状态、产出空不空</dd>
+        <dt>证据在</dt><dd>HTTP 响应体 / <code>message_runs</code> 行 / poll endpoint</dd>
+        <dt>失败形态</dt><dd>spawn_not_started · run_timeout · run_error · empty_output</dd>
+        <dt>谁兜底</dt><dd>框架同步路（500 / 同步重试 / 转异步）</dd>
+      </dl>
+      <div class="pin">
+        判据只看「行为与存在性」，<b>不判内容质量</b>。产出非空就算过——所以 B 干一半、产出却非空的「半成品」会被这一关放过去（设计上接受的盲区）。
+      </div>
+    </div>
+    <div class="col c-deliver">
+      <span class="badge">投递</span>
+      <h3>A 要的东西真落地了</h3>
+      <div class="one">「A 当初要的那个具体结果，确实出现在了一个对话之外、能被第三方客观核对的地方。」——结果层面的成功。</div>
+      <dl>
+        <dt>对应段</dt><dd>③ 投递</dd>
+        <dt>查什么</dt><dd>A 声明的 <code>delivery_checks</code> 逐条命中</dd>
+        <dt>证据在</dt><dd>某 inbox 收到消息 / 某表有行 / 某文件写了</dd>
+        <dt>失败形态</dt><dd>delivery_missing（声明了却没命中）</dd>
+        <dt>谁兜底</dt><dd>失败→重试→watcher redrive D4</dd>
+      </dl>
+      <div class="pin">
+        投递是<b>唯一</b>拿对话之外的客观事实去对账的一段。A 不声明 <code>delivery_checks</code>，这一段就自动 pass——机器就退化成只验「B 回了话」。<b>所以 A 必须把「算成功」声明成可检查的事实。</b>
+      </div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:14px">
+    一句话记住差别：<b style="color:var(--comm)">通讯执行</b>问的是「B 回话了吗」，<b style="color:var(--deliver)">投递</b>问的是「A 拿到它要的东西了吗」。
+    <code>status=completed</code> 只回答了第一个问题。SK 判定一次通讯成不成，永远看第二个。
+  </p>
+
+  <!-- ===== 4. 投递目的地 ===== -->
+  <h2><span class="num">4</span>投递目的地：结果到底送去哪（resultSinks）</h2>
+  <p class="note">「投递」这个动作的物理落点由 resultSink 决定。<code>sync_inline</code> 的 child 由 HTTP handler 自己交付，sink 引擎让路；异步与派生场景才走引擎。出处 <code>resultSinkEngine.ts</code>。</p>
+  <table>
+    <tr><th style="width:170px">sink 类型</th><th style="width:90px">归类</th><th>投递动作</th><th style="width:150px">能否被 delivery_check 核对</th></tr>
+    <tr><td><code>http_response</code></td><td><span class="pill c">通讯执行</span></td><td>结果随 <code>/api/spawn</code> 的同步 HTTP 响应原路返回 A。引擎里是 no-op，由 handler 交付。</td><td>响应体本身即证据</td></tr>
+    <tr><td><code>pollable_endpoint</code></td><td><span class="pill c">通讯执行</span></td><td>转异步后，结果落 <code>message_runs</code>，A 轮询 <code>GET /api/sessions/:id/result</code> 取。</td><td>DB 行即证据</td></tr>
+    <tr><td><code>chat_post</code></td><td><span class="pill d">投递</span></td><td>以 bot/user 身份把结果贴到某飞书群（父群 / 显式 chatId）。</td><td>✓ <code>inbox_message</code> check</td></tr>
+    <tr><td><code>parent_continuation_inject</code></td><td><span class="pill d">投递</span></td><td>合成 inbound 消息塞回父 session，唤醒父消费子的产出。父 busy/error/deleted 则丢弃。</td><td>✓ 父 run 记录</td></tr>
+    <tr><td><code>eventbus_publish</code></td><td><span class="pill s">广播</span></td><td>把固定 shape 的 payload 发到具名 topic，供订阅者消费。</td><td>topic 投递，不入闭环</td></tr>
+    <tr><td><code>audit_only</code></td><td><span class="pill s">观察</span></td><td>不做任何外发，只靠 <code>cross_session_log</code> 留痕。</td><td>仅留档</td></tr>
+  </table>
+
+  <!-- ===== 5. 失败形态 ===== -->
+  <h2><span class="num">5</span>失败形态 × 在哪一段被发现 × 谁来兜</h2>
+  <table>
+    <tr><th style="width:160px">failureKind</th><th style="width:130px">所在段</th><th>含义</th><th style="width:230px">处理路径</th></tr>
+    <tr><td><code>spawn_not_started</code></td><td><span class="pill c">① 通讯</span></td><td>child 进程没起来。</td><td>同步路当场 <code>500</code>，不进异步</td></tr>
+    <tr><td><code>run_timeout</code></td><td><span class="pill c">② 执行</span></td><td>B 跑超过主 session 运行超时。</td><td>不重试，直接转 async</td></tr>
+    <tr><td><code>run_error</code></td><td><span class="pill c">② 执行</span></td><td>B 的 run 报错。</td><td>复查 → 同步重试 1 次 → 仍错转 async（watcher D3 redrive）</td></tr>
+    <tr><td><code>empty_output</code></td><td><span class="pill c">② 执行</span></td><td>B 的 final message 为空。</td><td>同上；反复空 → J2 升级裁决</td></tr>
+    <tr><td><code>delivery_missing</code></td><td><span class="pill d">③ 投递</span></td><td>声明的 delivery_check 没命中。</td><td>同步重试 → watcher D4 redrive</td></tr>
+    <tr><td><code>late_result</code></td><td><span class="pill d">③ 投递</span></td><td>A 已超时，B 后来才跑完。</td><td>watcher D1：heartbeat 待办把结果送回 A</td></tr>
+  </table>
+  <p class="note" style="margin-top:12px">
+    每个关键环节都写一条带 <code>comm_id</code> 的结构化闭环日志（<code>closureLog.ts</code>）：受理校验、三段每段判定、同步重试、转异步决定——任何一条 spawn 的全程都能事后 join 还原。
+  </p>
+
+  <!-- ===== 6. 三层分离 ===== -->
+  <h2><span class="num">6</span>别混淆：三层通讯的分工</h2>
+  <div class="grid g3">
+    <div class="card" style="border-color:rgba(79,156,240,.4)">
+      <div class="tag" style="color:var(--comm)">协调层</div>
+      <h4>HTTP API · <code>/api/spawn</code></h4>
+      <p>跨 session 派活、要结果。<b>唯一</b>被三段闭环管住的层。本盘点讲的全部是这一层。</p>
+    </div>
+    <div class="card" style="border-color:rgba(240,169,63,.4)">
+      <div class="tag" style="color:var(--deliver)">人机交互层</div>
+      <h4>飞书 Feishu</h4>
+      <p>人和 session 对话、收文档。<code>chat_post</code> 投递落在这里。不拿飞书做 session 间转译。</p>
+    </div>
+    <div class="card" style="border-color:rgba(167,121,232,.4)">
+      <div class="tag" style="color:var(--purple)">观察层</div>
+      <h4>EventBus / TopicBus</h4>
+      <p>只做旁路观察、日志、通知。handler 里禁止改状态、起子 session。</p>
+    </div>
+  </div>
+
+  <footer>
+    代码出处：<code>SuperMatrix/src/cli/apiServer.ts</code>（路由与同步路）·
+    <code>src/app/spawnClosure/threePhaseCheck.ts</code>（三段检查）·
+    <code>src/app/resultSinkEngine.ts</code>（投递引擎）·
+    <code>src/app/continuationDispatcher.ts</code>（子→父回流）。
+    异步路径：<code>scripts/spawn-closure-watcher.sh</code> + <code>scripts/watcher-tick.sh</code> + <code>scripts/lib/spawnClosureClassify.ts</code>（D/J 分流）。
+    设计依据：<code>socail-king/docs/superpowers/specs/2026-05-18-spawn-closure-reliability-redesign-design.md</code>。
+    watcher 已落地并由 scheduler 每 5 分钟调度（任务 <code>spawn-closure-watcher</code>，owner=socail-king）；<code>spawn_async_items</code> 表已建并被裁决跑通。
+  </footer>
+
+</div>
+</body>
+</html>

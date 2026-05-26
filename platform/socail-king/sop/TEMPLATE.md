@@ -1,0 +1,1 @@
+../../first-principle/templates/sop-template.md

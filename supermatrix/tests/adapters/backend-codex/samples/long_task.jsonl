@@ -1,0 +1,5 @@
+{"type":"thread.started","thread_id":"codex_fixture_long"}
+{"type":"event_msg","payload":{"type":"agent_message","phase":"commentary","message":"Reading files."}}
+{"type":"event_msg","payload":{"type":"agent_message","phase":"commentary","message":"Running tests."}}
+{"type":"event_msg","payload":{"type":"agent_message","phase":"commentary","message":"Preparing answer."}}
+{"type":"item.completed","item":{"type":"agent_message","text":"Long task complete."}}

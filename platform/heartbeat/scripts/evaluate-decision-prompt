@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+from collections import Counter
+import json
+from pathlib import Path
+import sqlite3
+import sys
+import time
+from typing import Any
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from heartbeat_patrol.api import HeartbeatApi
+from heartbeat_patrol.config import load_config
+from heartbeat_patrol.decision import build_controller_prompt, parse_decision
+from heartbeat_patrol.sm_reader import SuperMatrixReader, dict_rows
+
+
+def main() -> int:
+    args = parse_args()
+    cfg = load_config()
+    reader = SuperMatrixReader(cfg.sm_db_path)
+    api = HeartbeatApi(api_base=cfg.api_base, lark_cli=cfg.lark_cli, heartbeat_session=cfg.heartbeat_session)
+
+    sessions = find_sessions(str(cfg.sm_db_path), args.sessions)
+    summaries: list[dict[str, Any]] = []
+    failures: list[str] = []
+
+    for session in sessions:
+        packet = reader.build_packet(session, max_recent_runs=args.max_recent_runs)
+        packet["heartbeat_policy"] = {
+            "now_ms": int(time.time() * 1000),
+            "stale_running_minutes": cfg.stale_running_minutes,
+            "child_sla_minutes": cfg.child_sla_minutes,
+        }
+        prompt = build_controller_prompt(
+            packet,
+            controller_model=args.model,
+            escalation_model=cfg.escalation_model,
+        )
+        if args.print_prompt:
+            print(prompt)
+            continue
+
+        raw = ""
+        try:
+            raw = api.run_controller_decision(prompt, args.model)
+            decision = parse_decision(raw, expected_session=session["name"])
+        except Exception as exc:
+            suffix = ""
+            if raw:
+                suffix = f"; raw={raw[:500]}"
+            failures.append(f"{session['name']}: {exc}{suffix}")
+            continue
+
+        counts = Counter(item.decision for item in decision.items)
+        summaries.append(
+            {
+                "session": session["name"],
+                "items": len(decision.items),
+                "decisions": dict(sorted(counts.items())),
+                "non_skip": [
+                    {
+                        "logical_key": item.logical_key,
+                        "decision": item.decision,
+                        "severity": item.severity,
+                        "child_model": item.child_model,
+                        "reason": item.reason,
+                    }
+                    for item in decision.items
+                    if item.decision != "skip"
+                ],
+            }
+        )
+
+    print(json.dumps({"summaries": summaries, "failures": failures}, ensure_ascii=False, indent=2))
+    return 1 if failures else 0
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Evaluate heartbeat controller decisions without executing them.")
+    parser.add_argument(
+        "sessions",
+        nargs="+",
+        help="Session names to evaluate, for example: monet writer scheduler zedong",
+    )
+    parser.add_argument("--model", default="gpt-5.4-mini", help="Controller model to call.")
+    parser.add_argument("--max-recent-runs", type=int, default=12, help="Recent run count to include per packet.")
+    parser.add_argument("--print-prompt", action="store_true", help="Print prompts instead of calling the controller.")
+    return parser.parse_args()
+
+
+def find_sessions(db_path: str, names: list[str]) -> list[dict[str, Any]]:
+    placeholders = ",".join("?" for _ in names)
+    with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
+        dict_rows(conn)
+        rows = conn.execute(
+            f"""
+            SELECT s.id, s.name, s.scope, s.backend, s.model, s.effort, s.workdir,
+                   s.status, s.purpose, b.group_id
+            FROM sessions s
+            LEFT JOIN bindings b ON b.session_id = s.id
+            WHERE s.name IN ({placeholders})
+              AND s.status != 'deleted'
+              AND s.scope != 'child'
+            ORDER BY s.name ASC
+            """,
+            names,
+        ).fetchall()
+
+    by_name = {row["name"]: dict(row) for row in rows}
+    missing = [name for name in names if name not in by_name]
+    if missing:
+        raise SystemExit(f"session not found or not evaluable: {', '.join(missing)}")
+    return [by_name[name] for name in names]
+
+
+if __name__ == "__main__":
+    sys.exit(main())

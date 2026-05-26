@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""sp-plan-bootstrap — convert a landed plan.md into YOLO-style runs/<RID>/ layout.
+
+Reuses YOLO's supervisor.plan + supervisor.paths so plan.json schema stays in
+lockstep with whatever YOLO writes — no parallel schema to maintain.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+YOLO_REPO = Path(os.environ.get("YOLO_REPO", "../yolo")).resolve()
+sys.path.insert(0, str(YOLO_REPO))
+
+from supervisor import paths, plan  # noqa: E402
+
+
+# `### Task N: <title>` — same convention as superpowers:writing-plans output.
+TASK_HEADER_RE = re.compile(r"^###\s+Task\s+(\d+)\s*[:：]\s*(.+?)\s*$")
+
+
+def split_tasks(md: str) -> list[tuple[str, str, str]]:
+    """Return list of (task_id, title, body).
+
+    body is the markdown content between this `### Task` header and the next
+    `### Task` header (or EOF). We pass body verbatim to the implementer as
+    its prompt — preserving acceptance criteria, code blocks, step lists.
+    """
+    out: list[list[str]] = []
+    current: list[str] | None = None
+    for raw in md.splitlines(keepends=True):
+        m = TASK_HEADER_RE.match(raw.rstrip())
+        if m:
+            if current is not None:
+                out.append(current)
+            tid = f"T{int(m.group(1)):03d}"
+            current = [tid, m.group(2).strip(), ""]
+        elif current is not None:
+            current[2] += raw
+    if current is not None:
+        out.append(current)
+    return [(t[0], t[1], t[2]) for t in out]
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--plan", required=True, help="path to the source plan.md")
+    ap.add_argument("--workspace", default=".",
+                    help="dir under which runs/<RID>/ will be created (default: cwd)")
+    ap.add_argument("--target-session", required=True,
+                    help="default target_session for every task. Typically your own session name "
+                         "so spawn children inherit your workdir.")
+    ap.add_argument("--title", default=None,
+                    help="run title for RID slug (default: plan filename stem)")
+    ap.add_argument("--sequential", action="store_true", default=True,
+                    help="(default) emit T002 deps on T001, T003 deps on T002, etc. "
+                         "Override with --no-sequential for fully parallel.")
+    ap.add_argument("--no-sequential", dest="sequential", action="store_false")
+    args = ap.parse_args()
+
+    plan_path = Path(args.plan)
+    if not plan_path.exists():
+        print(f"ERROR: plan not found: {plan_path}", file=sys.stderr)
+        return 2
+
+    md = plan_path.read_text(encoding="utf-8")
+    tasks = split_tasks(md)
+    if not tasks:
+        print("ERROR: no '### Task N: <title>' headers found in plan", file=sys.stderr)
+        return 2
+
+    workspace = Path(args.workspace).resolve()
+    title = args.title or plan_path.stem
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    run_id = paths.make_run_id(title, now_iso)
+    rp = paths.RunPaths(workspace, run_id)
+    rp.dir.mkdir(parents=True, exist_ok=True)
+
+    doc = plan.PlanDoc.new(run_id, now_iso)
+    prev: str | None = None
+    for tid, title_t, body in tasks:
+        doc.add_task(
+            task_id=tid,
+            title=title_t,
+            target_session=args.target_session,
+            deps=[prev] if (args.sequential and prev) else [],
+            now_iso=now_iso,
+        )
+        task_dir = rp.task_dir(tid)
+        task_dir.mkdir(parents=True, exist_ok=True)
+        rp.task_prompt(tid).write_text(body.strip() + "\n", encoding="utf-8")
+        prev = tid
+
+    doc.save(rp.plan_json)
+
+    # Copy the source plan.md into the run dir so it's self-contained.
+    rp.plan_md.write_text(md, encoding="utf-8")
+
+    print(run_id)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Watchdog Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px; }
+  h1 { color: #58a6ff; margin-bottom: 8px; font-size: 24px; }
+  h2 { color: #58a6ff; margin: 32px 0 16px; font-size: 18px; }
+  .subtitle { color: #8b949e; margin-bottom: 32px; font-size: 14px; }
+
+  .diagram { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 24px 0; }
+  .arrow { color: #8b949e; font-size: 24px; line-height: 1; }
+  .arrow-label { color: #8b949e; font-size: 11px; }
+
+  .box { border-radius: 8px; padding: 16px 20px; width: 100%; max-width: 900px; }
+  .box-launchd { background: #1c1c1c; border: 1px solid #444; }
+  .box-watchdog { background: #161b22; border: 2px solid #58a6ff; }
+  .box-inner { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 14px 16px; margin: 8px 0; }
+  .box-process { background: #1a1a2e; border: 1px solid #4a4a8a; border-radius: 6px; padding: 12px 16px; margin: 6px 0; }
+  .box-repair { background: #1a2e1a; border: 1px solid #3fb950; border-radius: 6px; padding: 12px 16px; margin: 6px 0; }
+  .box-alert { background: #2e1a1a; border: 1px solid #f85149; border-radius: 6px; padding: 12px 16px; margin: 6px 0; }
+  .box-health { background: #2e2a1a; border: 1px solid #d29922; border-radius: 6px; padding: 12px 16px; margin: 6px 0; }
+
+  .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .label-blue { color: #58a6ff; }
+  .label-green { color: #3fb950; }
+  .label-yellow { color: #d29922; }
+  .label-red { color: #f85149; }
+  .label-gray { color: #8b949e; }
+
+  .title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .title-row .icon { font-size: 18px; }
+  .title-row .name { font-weight: 600; font-size: 15px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .tag-blue { background: #1f3a5f; color: #58a6ff; }
+  .tag-green { background: #1a3a1a; color: #3fb950; }
+  .tag-yellow { background: #3a3a1a; color: #d29922; }
+  .tag-red { background: #3a1a1a; color: #f85149; }
+
+  .detail { font-size: 12px; color: #8b949e; margin-top: 4px; line-height: 1.6; }
+  .detail code { background: #1c2028; padding: 1px 5px; border-radius: 3px; font-size: 11px; color: #c9d1d9; }
+
+  .freq { font-size: 20px; font-weight: 700; color: #d29922; }
+  .freq-label { font-size: 12px; color: #8b949e; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { text-align: left; padding: 8px 12px; background: #161b22; color: #58a6ff; border-bottom: 1px solid #30363d; }
+  td { padding: 8px 12px; border-bottom: 1px solid #21262d; }
+
+  .comparison { display: grid; grid-template-columns: 1fr 40px 1fr; align-items: center; gap: 0; margin: 24px 0; max-width: 900px; }
+  .comparison .arrow-mid { text-align: center; color: #58a6ff; font-size: 20px; }
+  .comp-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; }
+  .comp-box .comp-title { font-size: 12px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .comp-box code { display: block; font-size: 13px; line-height: 1.8; color: #c9d1d9; }
+  .strikethrough { text-decoration: line-through; color: #6e7681; }
+</style>
+</head>
+<body>
+
+<h1>Local Watchdog Architecture</h1>
+<p class="subtitle">SuperMatrix 进程管理 & 健康监控 &mdash; 2026-04-16</p>
+
+<!-- Main Diagram -->
+<div class="diagram">
+
+  <!-- launchd -->
+  <div class="box box-launchd">
+    <div class="title-row">
+      <span class="icon">&nbsp;</span>
+      <span class="name">macOS launchd</span>
+      <span class="tag tag-blue">com.supermatrix.localwatch.plist</span>
+    </div>
+    <div class="detail">KeepAlive=true &mdash; watchdog 自身挂了 launchd 自动拉起，是整个体系的最后兜底</div>
+  </div>
+
+  <div class="arrow">&darr;</div>
+
+  <!-- Watchdog -->
+  <div class="box box-watchdog">
+    <div class="title-row">
+      <span class="icon">&nbsp;</span>
+      <span class="name" style="color:#58a6ff; font-size:17px;">localwatch.sh</span>
+      <span class="tag tag-blue">Shell 主循环 &middot; 轻量常驻</span>
+    </div>
+    <div class="detail" style="margin-bottom:16px;">取代 dev-loop.sh，成为所有进程的统一管理者。自身逻辑极简，复杂操作委托给独立脚本。</div>
+
+    <!-- Process Management -->
+    <div class="box-inner">
+      <div class="label label-blue">进程管理</div>
+      <div class="grid2">
+        <div class="box-process">
+          <div class="title-row">
+            <span class="name">SuperMatrix 主进程</span>
+          </div>
+          <div class="detail">
+            <code>tsx src/cli/main.ts</code><br>
+            端口 3501 &middot; API + Lark Gateway + Dispatcher<br><br>
+            <strong>内部防御:</strong><br>
+            &bull; Migration idempotency (duplicate column 自愈)<br>
+            &bull; Migration 分层 (critical fatal / optional 降级)<br>
+            &bull; Source watcher + ProcessLifecycle 优雅重启<br><br>
+            <strong>Watchdog 管控:</strong><br>
+            &bull; crash &rarr; 指数退避 + typecheck 门控后重启<br>
+            &bull; 连续 5 次相同 fatal &rarr; 熔断 + 告警
+          </div>
+        </div>
+        <div class="box-process">
+          <div class="title-row">
+            <span class="name">Scheduler</span>
+          </div>
+          <div class="detail">
+            <code>独立进程</code><br>
+            端口 3500 &middot; Cron 任务调度<br><br>
+            <strong>Watchdog 管控:</strong><br>
+            &bull; 挂了自动重启<br>
+            &bull; health endpoint 不通 &rarr; 告警
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Detection -->
+    <div class="box-inner">
+      <div class="label label-yellow">健康检测 (分层频率)</div>
+      <div class="grid3">
+        <div class="box-health">
+          <div class="freq">30s</div>
+          <div class="freq-label">进程存活</div>
+          <div class="detail" style="margin-top:8px;">
+            检查 pid 是否存在<br>
+            进程名是否匹配<br>
+            <span class="tag tag-green" style="margin-top:4px;">零开销</span>
+          </div>
+        </div>
+        <div class="box-health">
+          <div class="freq">3min</div>
+          <div class="freq-label">API 健康探测</div>
+          <div class="detail" style="margin-top:8px;">
+            <code>GET :3501/api/health</code><br>
+            <code>GET :3500/health</code><br>
+            <span class="tag tag-yellow" style="margin-top:4px;">轻量 HTTP</span>
+          </div>
+        </div>
+        <div class="box-health">
+          <div class="freq">10min</div>
+          <div class="freq-label">飞书连通性</div>
+          <div class="detail" style="margin-top:8px;">
+            lark-cli 发测试消息<br>
+            或调飞书 API 验证 token<br>
+            <span class="tag tag-red" style="margin-top:4px;">外部依赖</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Self Repair -->
+    <div class="box-inner">
+      <div class="label label-green">自修复 (独立脚本)</div>
+      <div class="detail" style="margin-bottom:8px;">watchdog 检测到特定故障模式 &rarr; 调用对应修复脚本</div>
+      <div class="grid2">
+        <div class="box-repair">
+          <strong>fix-migration-drift.sh</strong>
+          <div class="detail">
+            检测 crash log 含 <code>duplicate column</code><br>
+            &rarr; 自动补 schema_version 记录<br>
+            &rarr; 重启主进程
+          </div>
+        </div>
+        <div class="box-repair">
+          <strong>fix-stale-pid.sh</strong>
+          <div class="detail">
+            <code>.bootstrap.pid</code> 指向已死进程<br>
+            &rarr; 清理 pid 文件<br>
+            &rarr; 允许正常启动
+          </div>
+        </div>
+        <div class="box-repair">
+          <strong>fix-port-in-use.sh</strong>
+          <div class="detail">
+            端口 3501/3500 被旧进程占用<br>
+            &rarr; kill 占用进程<br>
+            &rarr; 重启
+          </div>
+        </div>
+        <div class="box-repair">
+          <strong>restart-scheduler.sh</strong>
+          <div class="detail">
+            Scheduler 进程消失或 health 不通<br>
+            &rarr; 重启 Scheduler 进程
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerting -->
+    <div class="box-inner">
+      <div class="label label-red">告警</div>
+      <div class="grid2">
+        <div class="box-alert">
+          <strong>飞书优先</strong>
+          <div class="detail">
+            通过 <code>lark-cli</code> 发送到管理群<br>
+            crash loop 熔断、进程死亡、health 异常
+          </div>
+        </div>
+        <div class="box-alert">
+          <strong>飞书不通时降级</strong>
+          <div class="detail">
+            本地日志 <code>logs/watchdog.log</code><br>
+            macOS 系统通知 (<code>osascript</code>)
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end watchdog box -->
+
+</div><!-- end diagram -->
+
+<!-- Before/After comparison -->
+<h2>架构变化</h2>
+<div class="comparison" style="margin:24px auto; max-width:900px;">
+  <div class="comp-box">
+    <div class="comp-title">改前</div>
+    <code>
+      launchd<br>
+      &nbsp;&nbsp;&darr;<br>
+      dev-loop.sh <span style="color:#8b949e;">(只管主进程)</span><br>
+      &nbsp;&nbsp;&darr;<br>
+      tsx main.ts<br>
+      <br>
+      <span style="color:#f85149;">&#x2717;</span> Scheduler 无人管<br>
+      <span style="color:#f85149;">&#x2717;</span> 无 crash loop 熔断<br>
+      <span style="color:#f85149;">&#x2717;</span> 无飞书连通性检测<br>
+      <span style="color:#f85149;">&#x2717;</span> 无自修复能力
+    </code>
+  </div>
+  <div class="arrow-mid">&rarr;</div>
+  <div class="comp-box">
+    <div class="comp-title">改后</div>
+    <code>
+      launchd<br>
+      &nbsp;&nbsp;&darr;<br>
+      <strong style="color:#58a6ff;">localwatch.sh</strong> <span style="color:#8b949e;">(统一管控)</span><br>
+      &nbsp;&nbsp;&darr;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&darr;<br>
+      tsx main.ts&nbsp;&nbsp;Scheduler<br>
+      <br>
+      <span style="color:#3fb950;">&#x2713;</span> 所有进程统一管理<br>
+      <span style="color:#3fb950;">&#x2713;</span> crash loop 熔断 + 告警<br>
+      <span style="color:#3fb950;">&#x2713;</span> 飞书连通性定期检测<br>
+      <span style="color:#3fb950;">&#x2713;</span> 故障模式识别 + 自修复
+    </code>
+  </div>
+</div>
+
+<!-- Defense layers table -->
+<h2>双层防御</h2>
+<table style="max-width:900px;">
+  <tr>
+    <th>防御层</th>
+    <th>职责</th>
+    <th>来源</th>
+  </tr>
+  <tr>
+    <td><strong>主进程内部</strong></td>
+    <td>Migration idempotency、optional 降级、announce 警告、ProcessLifecycle 优雅重启</td>
+    <td>migration-resilience-design.md</td>
+  </tr>
+  <tr>
+    <td><strong>Watchdog 外部</strong></td>
+    <td>进程保活、crash loop 熔断、schema 漂移修复、飞书连通性、Scheduler 保活</td>
+    <td>localwatch</td>
+  </tr>
+</table>
+<div class="detail" style="max-width:900px; margin-top:8px;">
+  两层独立运作。主进程内部防御失效（如今天 migration 008 事故），watchdog 外部兜底。反之亦然。
+</div>
+
+</body>
+</html>
