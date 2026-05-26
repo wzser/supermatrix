@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Autobitable placeholder</title>
+  <desc id="desc">Placeholder for a Feishu Bitable row triggering a Super Matrix session.</desc>
+  <rect width="1600" height="900" fill="#f8fafc"/>
+  <text x="100" y="100" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="800" fill="#111827">Autobitable trigger</text>
+  <rect x="100" y="170" width="1400" height="560" rx="26" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+  <g font-family="Inter, Arial, sans-serif" font-size="26" fill="#334155">
+    <rect x="150" y="240" width="1300" height="70" fill="#e2e8f0"/>
+    <text x="180" y="285" font-weight="700">Task</text>
+    <text x="610" y="285" font-weight="700">Status</text>
+    <text x="920" y="285" font-weight="700">Target session</text>
+    <rect x="150" y="330" width="1300" height="88" fill="#f8fafc"/>
+    <text x="180" y="385">Process new record</text>
+    <text x="610" y="385" fill="#166534">Dispatched</text>
+    <text x="920" y="385">alpha</text>
+    <rect x="150" y="450" width="1300" height="88" fill="#f8fafc"/>
+    <text x="180" y="505">Write result back</text>
+    <text x="610" y="505" fill="#1d4ed8">Done</text>
+    <text x="920" y="505">watchdog</text>
+    <text x="150" y="805" fill="#64748b">Replace with a real Bitable screenshot after masking private fields.</text>
+  </g>
+</svg>

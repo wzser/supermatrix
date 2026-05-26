@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Super Matrix architecture placeholder</title>
+  <desc id="desc">Architecture diagram from Feishu/Lark to API, SQLite, workspaces, and CLI agents.</desc>
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text x="100" y="100" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="800" fill="#111827">Super Matrix architecture</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="28" text-anchor="middle">
+    <rect x="100" y="260" width="220" height="120" rx="20" fill="#e0f2fe" stroke="#0284c7" stroke-width="4"/>
+    <text x="210" y="330" fill="#0c4a6e">Feishu/Lark</text>
+    <rect x="430" y="260" width="220" height="120" rx="20" fill="#ede9fe" stroke="#7c3aed" stroke-width="4"/>
+    <text x="540" y="330" fill="#4c1d95">SM API</text>
+    <rect x="760" y="260" width="220" height="120" rx="20" fill="#dcfce7" stroke="#16a34a" stroke-width="4"/>
+    <text x="870" y="330" fill="#14532d">SQLite</text>
+    <rect x="1090" y="260" width="220" height="120" rx="20" fill="#ffedd5" stroke="#ea580c" stroke-width="4"/>
+    <text x="1200" y="330" fill="#7c2d12">Workspace</text>
+    <rect x="760" y="560" width="550" height="120" rx="20" fill="#f1f5f9" stroke="#475569" stroke-width="4"/>
+    <text x="1035" y="630" fill="#334155">Claude / Codex / Kimi CLI</text>
+    <path d="M320 320 H430 M650 320 H760 M980 320 H1090 M1200 380 V560" stroke="#64748b" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
