@@ -423,3 +423,8 @@ npm run verify
 `src/` 是正式框架源码，`scripts/` 是本地操作、维护、迁移、验收和探测工具。`scripts` 可以调用 `src` 的模块；`src` 不应把 `scripts` 当作运行时依赖。
 
 发布公开快照前，按 [SANITIZATION_REPORT.md](SANITIZATION_REPORT.md) 的边界检查 secrets、私有链接、数据库、日志、大文件、媒体文件和生成产物。
+
+🌟 关于
+我是Nacle，WX：AtThePinnacle，公众号「硅基山」、跨境AI人。大厂商分出身，实体虚拟产品都做过，不是程序员。
+
+Supermatrix已经成为我们公司层面的操作系统，我们在上面构建了大量的业务流程，进行协同，并持续进行迭代。开源出来如果对你有帮助，给个 ⭐ 就行。有问题或建议，欢迎在 Issues / Discussions 里说一声。
