@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","session_id":"bks-long-1","model":"claude-opus-4-6"}
+{"type":"assistant","session_id":"bks-long-1","message":{"content":[{"type":"text","text":"1\n2\n3\n4\n5"}]}}
+{"type":"assistant","session_id":"bks-long-1","message":{"content":[{"type":"text","text":"\n6\n7\n8\n9\n10"}]}}
+{"type":"result","subtype":"success","session_id":"bks-long-1","result":"1\n2\n3\n4\n5\n6\n7\n8\n9\n10"}

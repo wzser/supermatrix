@@ -1,0 +1,16 @@
+node_modules/
+dist/
+data/
+.env
+.env.*
+.DS_Store
+*.log
+NOTES.md
+.attachments/
+.fp-capability-draft-*.md
+
+# auto-added by watchdog daily-commit
+__pycache__/
+*.pyc
+*.pyo
+# 这是标准 Python 缓存和编译产物，直接加到 `.gitignore` 可解决。

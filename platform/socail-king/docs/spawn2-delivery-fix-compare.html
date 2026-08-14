@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>spawn2.0 投递：现状 vs 修正建议</title>
+<style>
+  body { margin: 0; padding: 24px; background: #fafbfc; font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .src { font-size: 12px; color: #57606a; margin-bottom: 12px; }
+  svg { background: #fff; border: 1px solid #d0d7de; border-radius: 8px; display: block; }
+  text { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; }
+</style>
+</head>
+<body>
+<h1>spawn2.0 结果投递：现状 vs 修正建议（对比）</h1>
+<div class="src">现状依据：apiServer.ts:2184-2560 · fastPathRoute.ts:29-141（2026-07-30 快照）｜修正为建议方案，归 codexroot / supermatrix-root 裁决</div>
+<svg viewBox="0 0 1300 1090" width="1300" height="1090">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"></path>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8250df"></path>
+    </marker>
+  </defs>
+
+  <!-- ============ 左面板：现状 ============ -->
+  <rect x="15" y="10" width="620" height="950" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"></rect>
+  <text x="325" y="42" text-anchor="middle" font-size="16" font-weight="700" fill="#cf222e">现状（2026-07-30）</text>
+
+  <!-- L1 -->
+  <rect x="90" y="60" width="340" height="44" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="260" y="87" text-anchor="middle" font-size="13" font-weight="600">A → POST /api/spawn2.0（inline）</text>
+  <line x1="260" y1="104" x2="260" y2="128" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- L2 -->
+  <rect x="90" y="128" width="340" height="48" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="260" y="148" text-anchor="middle" font-size="13">框架挂住原连接，等同步窗口</text>
+  <text x="260" y="165" text-anchor="middle" font-size="11" fill="#57606a">apiServer.ts sync window</text>
+  <line x1="260" y1="176" x2="260" y2="208" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D1 -->
+  <polygon points="260,208 390,253 260,298 130,253" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="260" y="249" text-anchor="middle" font-size="12">窗口内完成且</text>
+  <text x="260" y="265" text-anchor="middle" font-size="12">socket 写成功？</text>
+
+  <!-- 是 ↓ L4 -->
+  <line x1="260" y1="298" x2="260" y2="322" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="272" y="316" font-size="11" fill="#2da44e">是</text>
+  <rect x="90" y="322" width="340" height="64" rx="8" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></rect>
+  <text x="260" y="342" text-anchor="middle" font-size="13" font-weight="600">旁路落证据 result_sink_attempts</text>
+  <text x="260" y="359" text-anchor="middle" font-size="11" fill="#9a6700">与响应发送相互独立的一次写库</text>
+  <text x="260" y="375" text-anchor="middle" font-size="11" fill="#cf222e">可能失败 / 缺失 ⚠</text>
+  <line x1="260" y1="386" x2="260" y2="408" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- L5 通道1 -->
+  <rect x="90" y="408" width="340" height="44" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="2"></rect>
+  <text x="260" y="435" text-anchor="middle" font-size="13" font-weight="700" fill="#1a7f37">通道1：A 实时拿到结果</text>
+
+  <!-- 否 → L6 -->
+  <line x1="390" y1="253" x2="455" y2="253" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="393" y="242" font-size="10" fill="#cf222e">否（超时/断连）</text>
+  <rect x="455" y="218" width="175" height="70" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="542" y="240" text-anchor="middle" font-size="11">switched_async /</text>
+  <text x="542" y="256" text-anchor="middle" font-size="11">断连 detach</text>
+  <text x="542" y="272" text-anchor="middle" font-size="11">→ 注册 async item</text>
+  <polyline points="542,288 542,546 430,546" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></polyline>
+
+  <!-- L7 回投路由 -->
+  <rect x="90" y="518" width="340" height="56" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="260" y="540" text-anchor="middle" font-size="13">迟到结果 → 回投路由</text>
+  <text x="260" y="558" text-anchor="middle" font-size="11" fill="#57606a">routeCompletedSpawnClosure</text>
+  <line x1="260" y1="574" x2="260" y2="608" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D2 证据闸口 -->
+  <polygon points="260,608 390,653 260,698 130,653" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="260" y="649" text-anchor="middle" font-size="12">查到 sync 送达证据？</text>
+  <text x="260" y="665" text-anchor="middle" font-size="10" fill="#9a6700">（查旁路日志，fastPathRoute.ts:52）</text>
+  <polyline points="430,354 450,354 450,640 390,648" fill="none" stroke="#8250df" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrowDash)"></polyline>
+
+  <!-- 有 → L8 -->
+  <line x1="390" y1="653" x2="455" y2="653" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="400" y="644" font-size="11" fill="#2da44e">有</text>
+  <rect x="455" y="618" width="175" height="70" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="1.5"></rect>
+  <text x="542" y="648" text-anchor="middle" font-size="12" font-weight="600">抑制推送</text>
+  <text x="542" y="666" text-anchor="middle" font-size="11" fill="#1a7f37">mark delivered</text>
+
+  <!-- 无 ↓ L9 -->
+  <line x1="260" y1="698" x2="260" y2="722" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="272" y="716" font-size="11" fill="#cf222e">无 / 缺失</text>
+  <rect x="90" y="722" width="340" height="48" rx="8" fill="#fbefff" stroke="#8250df" stroke-width="1.5"></rect>
+  <text x="260" y="741" text-anchor="middle" font-size="12" font-weight="600" fill="#8250df">保守回投：enqueue heartbeat todo（通道3）</text>
+  <text x="260" y="758" text-anchor="middle" font-size="11" fill="#8250df">分不清「没送到」和「证据丢了」</text>
+  <line x1="260" y1="770" x2="260" y2="795" stroke="#cf222e" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"></line>
+
+  <!-- 风险框 -->
+  <rect x="40" y="795" width="560" height="84" rx="8" fill="#ffebe9" stroke="#cf222e" stroke-width="2"></rect>
+  <text x="320" y="818" text-anchor="middle" font-size="13" font-weight="700" fill="#cf222e">⚠ 双投递风险：通道1 已送到，通道3 又投一次</text>
+  <text x="320" y="838" text-anchor="middle" font-size="11" fill="#cf222e">根因：「A 是否已拿到」靠旁路日志判定；日志写入、响应发送、异步注册是三次独立动作</text>
+  <text x="320" y="856" text-anchor="middle" font-size="11" fill="#cf222e">任一不一致窗口（日志写失败 / 写成功但 caller 已放弃读取）→ 闸口判不准</text>
+
+  <!-- 通道2 -->
+  <rect x="90" y="900" width="340" height="44" rx="8" fill="#ddf4ff" stroke="#0969da" stroke-width="1.5"></rect>
+  <text x="260" y="927" text-anchor="middle" font-size="12" fill="#0969da">通道2 take：消费账本幂等（本来就可靠）</text>
+
+  <!-- ============ 右面板：修正后 ============ -->
+  <rect x="665" y="10" width="620" height="950" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1.5"></rect>
+  <text x="975" y="42" text-anchor="middle" font-size="16" font-weight="700" fill="#1a7f37">修正后（建议）</text>
+
+  <!-- R1 -->
+  <rect x="745" y="60" width="340" height="44" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="915" y="87" text-anchor="middle" font-size="13" font-weight="600">A → POST /api/spawn2.0（inline）<tspan fill="#57606a" font-size="11" font-weight="400">（不变）</tspan></text>
+  <line x1="915" y1="104" x2="915" y2="128" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- R2 -->
+  <rect x="745" y="128" width="340" height="48" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="915" y="148" text-anchor="middle" font-size="13">挂连接等同步窗口 <tspan fill="#57606a" font-size="11">（不变）</tspan></text>
+  <text x="915" y="165" text-anchor="middle" font-size="11" fill="#57606a">prompt 交付规则也不变</text>
+  <line x1="915" y1="176" x2="915" y2="208" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D1' -->
+  <polygon points="915,208 1045,253 915,298 785,253" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="915" y="249" text-anchor="middle" font-size="12">窗口内完成且</text>
+  <text x="915" y="265" text-anchor="middle" font-size="12">socket 写成功？</text>
+
+  <!-- 是 ↓ R4 -->
+  <line x1="915" y1="298" x2="915" y2="322" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="927" y="316" font-size="11" fill="#2da44e">是</text>
+  <rect x="745" y="322" width="340" height="64" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="2"></rect>
+  <text x="915" y="342" text-anchor="middle" font-size="12" font-weight="700" fill="#1a7f37">原子事务：UPDATE delivery_state</text>
+  <text x="915" y="359" text-anchor="middle" font-size="11" fill="#1a7f37">undelivered → delivered_sync（WHERE 当前态）</text>
+  <text x="915" y="375" text-anchor="middle" font-size="11" fill="#1a7f37">证据 = 状态机本身，无旁路日志</text>
+  <line x1="915" y1="386" x2="915" y2="408" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- R5 通道1 -->
+  <rect x="745" y="408" width="340" height="44" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="1.5"></rect>
+  <text x="915" y="435" text-anchor="middle" font-size="13" fill="#1a7f37">通道1：A 实时拿到结果（不变）</text>
+
+  <!-- 否 → R6 -->
+  <line x1="1045" y1="253" x2="1110" y2="253" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="1050" y="242" font-size="10" fill="#cf222e">否</text>
+  <rect x="1110" y="218" width="165" height="70" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="1192" y="240" text-anchor="middle" font-size="11">注册 async item</text>
+  <text x="1192" y="256" text-anchor="middle" font-size="11">delivery_state =</text>
+  <text x="1192" y="272" text-anchor="middle" font-size="11" font-weight="600">undelivered</text>
+  <polyline points="1192,288 1192,546 1085,546" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></polyline>
+
+  <!-- R7 回投路由 -->
+  <rect x="745" y="518" width="340" height="56" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="915" y="540" text-anchor="middle" font-size="13">迟到结果 → 回投路由 <tspan fill="#57606a" font-size="11">（通道拓扑不变）</tspan></text>
+  <text x="915" y="558" text-anchor="middle" font-size="11" fill="#57606a">routeCompletedSpawnClosure</text>
+  <line x1="915" y1="574" x2="915" y2="608" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D2' 原子 claim -->
+  <polygon points="915,608 1050,653 915,698 780,653" fill="#e6ffed" stroke="#2da44e" stroke-width="2"></polygon>
+  <text x="915" y="649" text-anchor="middle" font-size="12" font-weight="600" fill="#1a7f37">原子 claim：</text>
+  <text x="915" y="665" text-anchor="middle" font-size="10" fill="#1a7f37">UPDATE undelivered→delivering_push</text>
+
+  <!-- claim 失败 → R8 -->
+  <line x1="1050" y1="653" x2="1110" y2="653" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="1053" y="644" font-size="10" fill="#1a7f37">失败</text>
+  <rect x="1110" y="618" width="165" height="70" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="1.5"></rect>
+  <text x="1192" y="640" text-anchor="middle" font-size="12" font-weight="600" fill="#1a7f37">确定性 noop</text>
+  <text x="1192" y="657" text-anchor="middle" font-size="11" fill="#1a7f37">已被 sync / take 认领</text>
+  <text x="1192" y="673" text-anchor="middle" font-size="11" fill="#1a7f37">状态互斥，不靠猜</text>
+
+  <!-- 成功 ↓ R9 -->
+  <line x1="915" y1="698" x2="915" y2="722" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="927" y="716" font-size="11" fill="#2da44e">成功</text>
+  <rect x="745" y="722" width="340" height="48" rx="8" fill="#fbefff" stroke="#8250df" stroke-width="1.5"></rect>
+  <text x="915" y="741" text-anchor="middle" font-size="12" font-weight="600" fill="#8250df">enqueue heartbeat todo（通道3 不变）</text>
+  <text x="915" y="758" text-anchor="middle" font-size="11" fill="#8250df">完成后 → delivered_push</text>
+
+  <!-- 保证框 -->
+  <rect x="695" y="795" width="560" height="84" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="2"></rect>
+  <text x="975" y="818" text-anchor="middle" font-size="13" font-weight="700" fill="#1a7f37">✓ 三通道在同一状态字段上原子竞争，任一时刻只有一个 delivery_state</text>
+  <text x="975" y="838" text-anchor="middle" font-size="11" fill="#1a7f37">「已送达」不再靠日志推断 → 闸口永不「判不出」，通道1+3 双投被状态机消除</text>
+  <text x="975" y="856" text-anchor="middle" font-size="11" fill="#57606a">残留风险仅进程崩溃窗口，由消费侧幂等（client_request_id 409 / take 账本）兜底</text>
+
+  <!-- 通道2 -->
+  <rect x="745" y="900" width="340" height="44" rx="8" fill="#ddf4ff" stroke="#0969da" stroke-width="1.5"></rect>
+  <text x="915" y="927" text-anchor="middle" font-size="12" fill="#0969da">通道2 take：undelivered→delivered_take（同一状态机）</text>
+
+  <!-- ============ 底部改动范围 ============ -->
+  <rect x="15" y="980" width="1270" height="76" rx="10" fill="#fff7e6" stroke="#d48806" stroke-width="2"></rect>
+  <text x="650" y="1006" text-anchor="middle" font-size="14" font-weight="700" fill="#9a6700">改动范围（最小机制，不造新通道、不动 prompt 层）</text>
+  <text x="650" y="1028" text-anchor="middle" font-size="12" fill="#9a6700">仅框架内部：spawn_async_items 增加 delivery_state 状态机 + 两处原子 UPDATE（sync 写成功后 / 回投 claim 时）</text>
+  <text x="650" y="1046" text-anchor="middle" font-size="12" fill="#9a6700">通道拓扑、prompt 交付规则、take / todo_pool 对外契约全部不变 —— 归 codexroot / supermatrix-root 裁决与实施</text>
+</svg>
+</body>
+</html>

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+.DS_Store
+*.log
+NOTES.md
+.attachments/
+reports/*.md
+reports/*.txt
+reports/context/*.json
+reports/review/*.txt
+# Local runtime SQLite snapshot; audit state is tracked as JSON/JSONL.
+state/supermatrix.db
+# Python build artifacts
+__pycache__/
+*.pyc

@@ -1,0 +1,33 @@
+node_modules/
+dist/
+*.log
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!.env.*.example
+logs/
+coverage/
+.vitest-cache/
+~/.supermatrix/
+tmp/
+.DS_Store
+.reload-source
+.fp-capability-draft-*.md
+/session-catalog.json
+/workspace/*.mov
+/5000'
+
+# auto-added by localgit daily-commit
+*.lock
+
+# auto-added by localgit daily-commit
+__pycache__/
+.gstack/
+
+# kimi SEA patch large binaries — evidence stays on disk, SHA-256 in runs README
+runs/2026-08-06-kimi-033-patch/kimi-0.33.0
+runs/2026-08-06-kimi-033-patch/kimi-0.33.0-fixed
+runs/2026-08-06-kimi-033-patch/kimi-0.33.0.pre-sm-patch
+runs/2026-08-06-kimi-033-patch/kimi-0.33.0-fixed.pre-sm-patch

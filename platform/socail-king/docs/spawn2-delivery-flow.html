@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>spawn2.0 结果投递全流程</title>
+<style>
+  body { margin: 0; padding: 24px; background: #fafbfc; font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .src { font-size: 12px; color: #57606a; margin-bottom: 12px; }
+  svg { background: #fff; border: 1px solid #d0d7de; border-radius: 8px; display: block; }
+  text { font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif; }
+</style>
+</head>
+<body>
+<h1>spawn2.0 结果投递全流程（通道拆分与去重）</h1>
+<div class="src">源码依据：SuperMatrix src/cli/apiServer.ts:2184-2560 · src/app/spawnClosure/fastPathRoute.ts:29-141（2026-07-30 快照）</div>
+<svg viewBox="0 0 1240 1660" width="1240" height="1660">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"></path>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8250df"></path>
+    </marker>
+  </defs>
+
+  <!-- 图例 -->
+  <g font-size="12">
+    <rect x="880" y="16" width="14" height="14" fill="#e6ffed" stroke="#2da44e"></rect><text x="900" y="28">通道1 同步响应（同连接）</text>
+    <rect x="880" y="38" width="14" height="14" fill="#ddf4ff" stroke="#0969da"></rect><text x="900" y="50">通道2 take 拉取（异步）</text>
+    <rect x="880" y="60" width="14" height="14" fill="#fbefff" stroke="#8250df"></rect><text x="900" y="72">通道3 待办池推送（异步）</text>
+    <rect x="1060" y="38" width="14" height="14" fill="#ffebe9" stroke="#cf222e"></rect><text x="1080" y="50">风险点</text>
+  </g>
+
+  <!-- N1 入口 -->
+  <rect x="400" y="30" width="440" height="52" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="620" y="52" text-anchor="middle" font-size="14" font-weight="600">A → POST /api/spawn2.0</text>
+  <text x="620" y="70" text-anchor="middle" font-size="12" fill="#57606a">from / target / prompt / client_request_id / closure</text>
+  <line x1="620" y1="82" x2="620" y2="105" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D1 closure type -->
+  <polygon points="620,105 715,142 620,179 525,142" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="620" y="146" text-anchor="middle" font-size="13">closure.target.type?</text>
+
+  <!-- 左分支 inline/session/topic -->
+  <polyline points="525,142 260,142 260,196" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></polyline>
+  <text x="330" y="134" font-size="12" fill="#57606a">inline / session / topic（sync_inline）</text>
+
+  <!-- N2 -->
+  <rect x="80" y="196" width="360" height="56" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="260" y="218" text-anchor="middle" font-size="13">框架挂住原 HTTP 连接</text>
+  <text x="260" y="238" text-anchor="middle" font-size="12" fill="#57606a">child 开跑，同步窗口计时</text>
+  <line x1="260" y1="252" x2="260" y2="292" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D2 窗口内完成? -->
+  <polygon points="260,292 365,330 260,368 155,330" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="260" y="334" text-anchor="middle" font-size="13">窗口内完成?</text>
+
+  <!-- D2 是 -->
+  <line x1="260" y1="368" x2="260" y2="404" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="272" y="392" font-size="12" fill="#2da44e">是</text>
+
+  <!-- N3 -->
+  <rect x="80" y="404" width="360" height="48" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="260" y="432" text-anchor="middle" font-size="13">child 结果写入原连接 response</text>
+  <line x1="260" y1="452" x2="260" y2="500" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D3 socket 写成功? -->
+  <polygon points="260,500 375,540 260,580 145,540" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="260" y="536" text-anchor="middle" font-size="13">socket 写入成功?</text>
+  <text x="260" y="552" text-anchor="middle" font-size="11" fill="#57606a">（框架侧 writeJson 判定）</text>
+
+  <!-- D3 是 -->
+  <line x1="260" y1="580" x2="260" y2="616" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="272" y="602" font-size="12" fill="#2da44e">是</text>
+
+  <!-- N4 落证据 -->
+  <rect x="50" y="616" width="420" height="56" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="1.5"></rect>
+  <text x="260" y="638" text-anchor="middle" font-size="13" font-weight="600">落证据 result_sink_attempts</text>
+  <text x="260" y="656" text-anchor="middle" font-size="12" fill="#1a7f37">sink=http_response · status=delivered · note="sync_inline response written"</text>
+  <line x1="260" y1="672" x2="260" y2="696" stroke="#2da44e" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- N5 通道1 -->
+  <rect x="50" y="696" width="420" height="48" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="2"></rect>
+  <text x="260" y="718" text-anchor="middle" font-size="14" font-weight="700" fill="#1a7f37">A 经原连接实时拿到结果【通道1】</text>
+  <text x="260" y="735" text-anchor="middle" font-size="11" fill="#1a7f37">不再回投（迟到回投被证据闸口抑制）</text>
+
+  <!-- D3 否：A 断连 -->
+  <line x1="375" y1="540" x2="500" y2="540" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="392" y="532" font-size="12" fill="#cf222e">否（A 断连）</text>
+
+  <!-- N7 -->
+  <rect x="500" y="506" width="300" height="68" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="650" y="530" text-anchor="middle" font-size="13">markResponseWriteFailed → detach</text>
+  <text x="650" y="548" text-anchor="middle" font-size="12" fill="#57606a">注册 spawn_async_item</text>
+  <text x="650" y="564" text-anchor="middle" font-size="12" fill="#57606a">排队迟到结果回投</text>
+
+  <!-- D2 否：超时 -->
+  <line x1="365" y1="330" x2="500" y2="330" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="382" y="322" font-size="12" fill="#cf222e">否（窗口超时）</text>
+
+  <!-- N8 switched_async -->
+  <rect x="500" y="296" width="300" height="68" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="650" y="320" text-anchor="middle" font-size="13" font-weight="600">switched_async</text>
+  <text x="650" y="338" text-anchor="middle" font-size="12" fill="#57606a">注册 spawn_async_item</text>
+  <text x="650" y="354" text-anchor="middle" font-size="12" fill="#57606a">响应 A：ref + resultUrl（/take）</text>
+
+  <!-- D1 右分支 todo_pool -->
+  <line x1="715" y1="142" x2="880" y2="142" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="730" y="130" font-size="12" fill="#57606a">todo_pool</text>
+
+  <!-- N9 -->
+  <rect x="880" y="108" width="300" height="68" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="1030" y="132" text-anchor="middle" font-size="13" font-weight="600">async_kickoff：立即异步</text>
+  <text x="1030" y="150" text-anchor="middle" font-size="12" fill="#57606a">sink = pollable_endpoint</text>
+  <text x="1030" y="166" text-anchor="middle" font-size="12" fill="#57606a">prompt 头部带「写入待办池」交付规则</text>
+
+  <!-- 汇合到异步回收 -->
+  <polyline points="650,574 650,854 540,854" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></polyline>
+  <polyline points="650,364 650,574" fill="none" stroke="#57606a" stroke-width="1.5"></polyline>
+  <polyline points="1030,176 1030,854 860,854" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></polyline>
+
+  <!-- 异步区标题 -->
+  <text x="700" y="790" text-anchor="middle" font-size="13" font-weight="700" fill="#57606a">—— 异步回收：通道2 拉 / 通道3 推 ——</text>
+
+  <!-- N10 -->
+  <rect x="540" y="820" width="320" height="68" rx="8" fill="#ffffff" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="700" y="844" text-anchor="middle" font-size="13">child 迟到完成 → lateResult</text>
+  <text x="700" y="862" text-anchor="middle" font-size="12" fill="#57606a">routeCompletedSpawnClosure(ref, commId)</text>
+  <text x="700" y="878" text-anchor="middle" font-size="12" fill="#57606a">fastPathRoute.ts:29</text>
+  <line x1="700" y1="888" x2="700" y2="965" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+  <!-- D4 claim -->
+  <polygon points="700,965 835,1010 700,1055 565,1010" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="700" y="1006" text-anchor="middle" font-size="13">原子 claim 成功?</text>
+  <text x="700" y="1022" text-anchor="middle" font-size="11" fill="#57606a">一次只有一个投递方获胜</text>
+  <line x1="835" y1="1010" x2="920" y2="1010" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="850" y="1002" font-size="12" fill="#cf222e">否</text>
+
+  <!-- N11 -->
+  <rect x="920" y="980" width="280" height="60" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="1060" y="1004" text-anchor="middle" font-size="13">noop</text>
+  <text x="1060" y="1022" text-anchor="middle" font-size="12" fill="#57606a">已被 take / 另次回投认领</text>
+
+  <!-- D5 结果就绪? -->
+  <line x1="700" y1="1055" x2="700" y2="1100" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="712" y="1082" font-size="12" fill="#2da44e">是</text>
+  <polygon points="700,1100 835,1145 700,1190 565,1145" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="700" y="1141" text-anchor="middle" font-size="13">commStatus=completed</text>
+  <text x="700" y="1157" text-anchor="middle" font-size="13">且 finalMessage 非空?</text>
+  <line x1="835" y1="1145" x2="920" y2="1145" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="850" y="1137" font-size="12" fill="#cf222e">否</text>
+
+  <!-- N12 -->
+  <rect x="920" y="1115" width="280" height="60" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="1060" y="1139" text-anchor="middle" font-size="13">release claim → noop</text>
+  <text x="1060" y="1157" text-anchor="middle" font-size="12" fill="#57606a">结果未就绪，稍后再来</text>
+
+  <!-- D6 sync 证据闸口 -->
+  <line x1="700" y1="1190" x2="700" y2="1235" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="712" y="1217" font-size="12" fill="#2da44e">是</text>
+  <polygon points="700,1235 835,1280 700,1325 565,1280" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="700" y="1276" text-anchor="middle" font-size="13">存在 sync_inline</text>
+  <text x="700" y="1292" text-anchor="middle" font-size="13">送达证据?</text>
+  <line x1="835" y1="1280" x2="920" y2="1280" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="850" y="1272" font-size="12" fill="#2da44e">有</text>
+
+  <!-- N13 抑制推送 -->
+  <rect x="920" y="1250" width="280" height="60" rx="8" fill="#e6ffed" stroke="#2da44e" stroke-width="1.5"></rect>
+  <text x="1060" y="1274" text-anchor="middle" font-size="13" font-weight="600">mark delivered · 抑制推送</text>
+  <text x="1060" y="1292" text-anchor="middle" font-size="12" fill="#1a7f37">防通道1+3 双投的闸口</text>
+
+  <!-- D7 adjudication -->
+  <line x1="700" y1="1325" x2="700" y2="1370" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="712" y="1352" font-size="12" fill="#cf222e">无</text>
+  <polygon points="700,1370 825,1415 700,1460 575,1415" fill="#fff7e6" stroke="#d48806" stroke-width="1.5"></polygon>
+  <text x="700" y="1411" text-anchor="middle" font-size="13">spawn-adjudication</text>
+  <text x="700" y="1427" text-anchor="middle" font-size="13">裁决请求?</text>
+  <line x1="825" y1="1415" x2="920" y2="1415" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="840" y="1407" font-size="12" fill="#2da44e">是</text>
+
+  <!-- N14 -->
+  <rect x="920" y="1385" width="280" height="60" rx="8" fill="#f6f8fa" stroke="#57606a" stroke-width="1.5"></rect>
+  <text x="1060" y="1409" text-anchor="middle" font-size="13">记录裁决结果 · 抑制 todo</text>
+  <text x="1060" y="1427" text-anchor="middle" font-size="12" fill="#57606a">SK 裁决路径专用</text>
+
+  <!-- N15 通道3 -->
+  <line x1="700" y1="1460" x2="700" y2="1490" stroke="#8250df" stroke-width="1.5" marker-end="url(#arrow)"></line>
+  <text x="712" y="1482" font-size="12" fill="#8250df">否</text>
+  <rect x="560" y="1490" width="280" height="60" rx="8" fill="#fbefff" stroke="#8250df" stroke-width="2"></rect>
+  <text x="700" y="1514" text-anchor="middle" font-size="13" font-weight="700" fill="#8250df">enqueue heartbeat todo</text>
+  <text x="700" y="1532" text-anchor="middle" font-size="12" fill="#8250df">→ A 下一轮被注入结果【通道3】</text>
+
+  <!-- 通道2 take -->
+  <polyline points="500,352 230,352 230,880 60,880 60,892" fill="none" stroke="#0969da" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"></polyline>
+  <text x="238" y="600" font-size="12" fill="#0969da" transform="rotate(-90 238 600)">ref + resultUrl</text>
+  <rect x="60" y="892" width="400" height="88" rx="8" fill="#ddf4ff" stroke="#0969da" stroke-width="2"></rect>
+  <text x="260" y="916" text-anchor="middle" font-size="13" font-weight="700" fill="#0969da">A 主动 POST /api/spawn_async_items/&lt;ref&gt;/take</text>
+  <text x="260" y="936" text-anchor="middle" font-size="12" fill="#0969da">原子记账 → 返回 finalMessage【通道2】</text>
+  <text x="260" y="954" text-anchor="middle" font-size="12" fill="#0969da">重复 take → alreadyConsumed:true（幂等）</text>
+  <text x="260" y="970" text-anchor="middle" font-size="11" fill="#57606a">GET 诊断端点永不记账</text>
+
+  <!-- 证据闸口虚线 -->
+  <polyline points="470,644 470,1280 565,1280" fill="none" stroke="#8250df" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrowDash)"></polyline>
+  <text x="482" y="600" font-size="12" fill="#8250df">回投前查此证据（fastPathRoute.ts:52）</text>
+
+  <!-- 风险点 -->
+  <rect x="60" y="1570" width="1120" height="56" rx="8" fill="#ffebe9" stroke="#cf222e" stroke-width="2"></rect>
+  <text x="620" y="1594" text-anchor="middle" font-size="13" font-weight="700" fill="#cf222e">⚠ 双投递风险点：sync 响应已写但 sink 证据缺失 → D6 闸口判不出 → 保守回投 → 通道1+3 各送一次</text>
+  <text x="620" y="1613" text-anchor="middle" font-size="12" fill="#cf222e">修复方向：sync 送达证据落库与回投抑制做成同一个原子事务（框架改动，归 codexroot / supermatrix-root）</text>
+</svg>
+</body>
+</html>

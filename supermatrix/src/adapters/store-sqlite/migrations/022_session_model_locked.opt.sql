@@ -1,0 +1,1 @@
+ALTER TABLE sessions ADD COLUMN model_locked INTEGER NOT NULL DEFAULT 0;

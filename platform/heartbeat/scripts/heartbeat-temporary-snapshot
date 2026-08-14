@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from heartbeat_patrol.config import load_config
+from heartbeat_patrol.state import HeartbeatState
+from heartbeat_patrol.temporary_snapshot import (
+    cleanup_expired_temporary_snapshots,
+    create_temporary_snapshot,
+    temporary_snapshot_dir,
+)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Create or clean receipt-backed temporary heartbeat state snapshots."
+    )
+    actions = parser.add_subparsers(dest="action", required=True)
+
+    create = actions.add_parser("create")
+    create.add_argument("--owner", required=True)
+    create.add_argument("--reason", required=True)
+    create.add_argument("--expires-at", required=True, help="ISO-8601 timestamp with timezone")
+
+    actions.add_parser("cleanup")
+    args = parser.parse_args()
+
+    cfg = load_config()
+    state = HeartbeatState(cfg.state_db_path)
+    snapshot_dir = temporary_snapshot_dir(cfg.state_db_path)
+    if args.action == "create":
+        result = create_temporary_snapshot(
+            state=state,
+            snapshot_dir=snapshot_dir,
+            owner=args.owner,
+            reason=args.reason,
+            expires_at=args.expires_at,
+        )
+    else:
+        result = cleanup_expired_temporary_snapshots(state=state, snapshot_dir=snapshot_dir)
+    print(json.dumps({"ok": True, **result}, ensure_ascii=False, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

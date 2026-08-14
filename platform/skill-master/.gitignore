@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.*
+.DS_Store
+*.log
+NOTES.md
+.attachments/
+.tmp/
+metrics/call-log.jsonl
+metrics/issues.jsonl
+metrics/reviews/
+metrics/last-run.txt
+data/skill-upgrades/
+data/skill-retirements/*.jsonl
+__pycache__/
+*.pyc
+.fp-capability-draft-*.md
+
+# auto-added by localgit daily-commit
+*.lock

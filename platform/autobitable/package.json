@@ -1,0 +1,13 @@
+{
+  "name": "autobitable",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.mjs",
+    "ledger:sync": "node scripts/sync-feishu-ledger.mjs",
+    "prompt:send": "node scripts/send-feishu-ai-prompt.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm test"
+  }
+}

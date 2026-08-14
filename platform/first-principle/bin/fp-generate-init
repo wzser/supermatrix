@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+# fp-generate-init — emit CLAUDE.md/AGENTS.md content + Feishu sync hints for a new session.
+# Owned by first-principle. See task T001.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FP_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+TEMPLATE_DIR="${FP_ROOT}/templates"
+NDJSON_PATH="${FP_ROOT}/data/session-init.ndjson"
+
+CATEGORY=""
+ALIAS=""
+AVATAR=""
+PURPOSE=""
+BACKEND=""
+SESSION_NAME=""
+WORKDIR=""
+
+emit_err() {
+  local msg="$1"
+  printf '%s\n' "$msg" >&2
+  python3 - "$msg" <<'PY'
+import json, sys
+print(json.dumps({"ok": False, "error": sys.argv[1]}, ensure_ascii=False))
+PY
+  exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --category)     CATEGORY="${2:-}"; shift 2 ;;
+    --alias)        ALIAS="${2:-}"; shift 2 ;;
+    --avatar)       AVATAR="${2:-}"; shift 2 ;;
+    --purpose)      PURPOSE="${2:-}"; shift 2 ;;
+    --backend)      BACKEND="${2:-}"; shift 2 ;;
+    --session-name) SESSION_NAME="${2:-}"; shift 2 ;;
+    --workdir)      WORKDIR="${2:-}"; shift 2 ;;
+    *) emit_err "unknown argument: $1" ;;
+  esac
+done
+
+[[ -z "$CATEGORY"     ]] && emit_err "missing --category"
+[[ -z "$ALIAS"        ]] && emit_err "missing --alias"
+[[ -z "$AVATAR"       ]] && emit_err "missing --avatar"
+[[ -z "$PURPOSE"      ]] && emit_err "missing --purpose"
+[[ -z "$BACKEND"      ]] && emit_err "missing --backend"
+[[ -z "$SESSION_NAME" ]] && emit_err "missing --session-name"
+
+case "$CATEGORY" in
+  业务|知识|平台|工具|外部) ;;
+  *) emit_err "invalid --category: $CATEGORY (must be 业务|知识|平台|工具|外部)" ;;
+esac
+
+case "$BACKEND" in
+  claude) PREFIX="claude-md"; CONFIG_FILENAME="CLAUDE.md" ;;
+  codex)  PREFIX="agents-md"; CONFIG_FILENAME="AGENTS.md" ;;
+  *) emit_err "invalid --backend: $BACKEND (must be claude|codex)" ;;
+esac
+
+BASE_TPL="${TEMPLATE_DIR}/${PREFIX}-base.md"
+CAT_TPL="${TEMPLATE_DIR}/${PREFIX}-${CATEGORY}.md"
+[[ -f "$BASE_TPL" ]] || emit_err "template not found: $BASE_TPL"
+[[ -f "$CAT_TPL"  ]] || emit_err "template not found: $CAT_TPL"
+
+INITIALIZED_AT="$(date -u +%Y-%m-%dT%H:%M:%S+00:00)"
+
+export FP_BASE_TPL="$BASE_TPL"
+export FP_CAT_TPL="$CAT_TPL"
+export FP_CONFIG_FILENAME="$CONFIG_FILENAME"
+export FP_SESSION_NAME="$SESSION_NAME"
+export FP_ALIAS="$ALIAS"
+export FP_AVATAR="$AVATAR"
+export FP_PURPOSE="$PURPOSE"
+export FP_CATEGORY="$CATEGORY"
+export FP_BACKEND="$BACKEND"
+export FP_WORKDIR="$WORKDIR"
+export FP_INITIALIZED_AT="$INITIALIZED_AT"
+export FP_NDJSON_PATH="$NDJSON_PATH"
+
+python3 - <<'PY'
+import json, os, sys
+
+cat  = open(os.environ["FP_CAT_TPL"],  encoding="utf-8").read()
+
+session  = os.environ["FP_SESSION_NAME"]
+alias    = os.environ["FP_ALIAS"]
+avatar   = os.environ["FP_AVATAR"]
+purpose  = os.environ["FP_PURPOSE"]
+category = os.environ["FP_CATEGORY"]
+backend  = os.environ["FP_BACKEND"]
+workdir  = os.environ["FP_WORKDIR"]
+ts       = os.environ["FP_INITIALIZED_AT"]
+
+# config_md_content is the FORMAL CLAUDE.md / AGENTS.md the session writes to
+# disk in step 6 of templates/claude-md-base.md. The base stub itself is the
+# init runbook — once init completes, it MUST NOT linger in the formal config.
+# Empirically all 9+ recent sessions already wrote cat-only (67–150 lines);
+# returning base+cat (~330 lines) was a latent script bug that nobody followed.
+content = cat
+subs = {
+    "{{name}}": session,
+    "{session-name}": session,
+    "{{alias}}": alias,
+    "{{purpose}}": purpose,
+    "{{category}}": category,
+    "{{backend}}": backend,
+}
+for k, v in subs.items():
+    content = content.replace(k, v)
+
+CHAT_ID = "<CHAT_ID>"
+
+# Group rename + description: lark-cli im +chat-update accepts both in one call.
+# Probed via `lark-cli im +chat-update --help`: --chat-id, --name (<=60), --description (<=100).
+group_name = f"{alias}-{session}-{backend}"
+rename_cmd = (
+    f"lark-cli im +chat-update --as bot --chat-id {CHAT_ID} "
+    f"--name {json.dumps(group_name, ensure_ascii=False)}"
+)
+desc_cmd = (
+    f"lark-cli im +chat-update --as bot --chat-id {CHAT_ID} "
+    f"--description {json.dumps(purpose, ensure_ascii=False)}"
+)
+
+# Avatar: two-step. Upload PNG → image_key, then PUT chats with avatar.
+# Avatar input can be `emoji:🚀`, a URL, or a local file path — caller decides how to
+# materialize the PNG. Below is a shape-only template; mark unknown so caller verifies.
+avatar_cmd = (
+    f"# 1) materialize a PNG from --avatar (emoji→render, URL→download, path→cp); "
+    f"place at $SM_RUNTIME_ROOT/data/avatars/{session}.png\n"
+    f"# 2) upload: cd $SM_RUNTIME_ROOT/data/avatars && "
+    f"lark-cli im images create --as bot --data '{{\"image_type\":\"avatar\"}}' "
+    f"--file image={session}.png  # → image_key\n"
+    f"# 3) apply: lark-cli api PUT /open-apis/im/v1/chats/{CHAT_ID} --as bot "
+    f"--data '{{\"avatar\": \"<image_key>\"}}'"
+)
+
+# Bitable session-table sync: push alias/Purpose/分类/头像 to the Bitable row.
+# Implemented as a single FP-owned wrapper script; idempotent.
+bitable_sync_cmd = (
+    f"$SM_RUNTIME_ROOT/workspaces/first-principle/scripts/bitable-init-sync.sh "
+    f"--session-name {json.dumps(session, ensure_ascii=False)} "
+    f"--alias {json.dumps(alias, ensure_ascii=False)} "
+    f"--purpose {json.dumps(purpose, ensure_ascii=False)} "
+    f"--category {json.dumps(category, ensure_ascii=False)} "
+    f"--avatar {json.dumps(avatar, ensure_ascii=False)}"
+)
+
+result = {
+    "ok": True,
+    "config_md_filename": os.environ["FP_CONFIG_FILENAME"],
+    "config_md_content": content,
+    "ndjson_path": os.environ["FP_NDJSON_PATH"],
+    "feishu_sync_instructions": [
+        {
+            "type": "rename_group",
+            "command": rename_cmd,
+            "explanation": "把当前 session 群名改成三段式 {alias}-{session_name}-{backend}（lark-cli im +chat-update --name）",
+            "supported": True,
+        },
+        {
+            "type": "update_description",
+            "command": desc_cmd,
+            "explanation": "把群描述改成 purpose（lark-cli im +chat-update --description，最多 100 字）",
+            "supported": True,
+        },
+        {
+            "type": "update_avatar",
+            "command": avatar_cmd,
+            "explanation": (
+                "群头像：先把 --avatar (emoji/URL/路径) 物化成 PNG，"
+                "再 lark-cli im images create 拿 image_key，最后 PUT /chats/<id> 写入。"
+                "emoji→PNG 渲染、URL 下载、上传是否成功都需 caller 自行处理。"
+            ),
+            "supported": "unknown",
+        },
+        {
+            "type": "bitable_metadata_sync",
+            "command": bitable_sync_cmd,
+            "explanation": (
+                "把 别称/Purpose/分类/头像 同步到飞书 Bitable session 表："
+                "ensure record exists → push 三字段 → 头像幂等上传（attachment field 是 append-only，"
+                "脚本会先查同名附件再决定是否上传）。"
+            ),
+            "supported": True,
+        },
+    ],
+}
+
+print(json.dumps(result, ensure_ascii=False))
+
+# Append ndjson record (only on success).
+ndjson_path = os.environ["FP_NDJSON_PATH"]
+os.makedirs(os.path.dirname(ndjson_path), exist_ok=True)
+record = {
+    "session_name": session,
+    "alias": alias,
+    "avatar": avatar,
+    "category": category,
+    "purpose": purpose,
+    "backend": backend,
+    "initialized_at": ts,
+    "feishu_sync_ok": None,
+    "workdir": workdir,
+}
+with open(ndjson_path, "a", encoding="utf-8") as f:
+    f.write(json.dumps(record, ensure_ascii=False) + "\n")
+PY

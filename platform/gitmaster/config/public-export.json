@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "max_file_bytes": 5242880,
+  "allowed_artifact_patterns": [
+    "supermatrix/tests/adapters/**/samples/*.jsonl",
+    "supermatrix/tests/adapters/**/samples-acp/*.jsonl"
+  ],
+  "mappings": [
+    {
+      "name": "supermatrix-core",
+      "root": "supermatrix",
+      "subpath": ".",
+      "destination": "supermatrix",
+      "include": [
+        ".editorconfig",
+        ".gitignore",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "vitest.config.ts",
+        "src/**",
+        "tests/**",
+        "templates/**",
+        "prd/00-skeleton.md",
+        "prd/01-domain-and-ports.md",
+        "prd/02-app-orchestration.md",
+        "prd/03-adapters.md",
+        "prd/04-cli-and-api.md",
+        "prd/05-scripts-and-ops.md",
+        "docs/SETUP.md",
+        "docs/SMOKE.md",
+        "docs/caller-provenance-boundary.md",
+        "docs/codemap.md",
+        "docs/codex-state-snapshot-lifecycle.md",
+        "docs/localwatch-and-boot-selfcheck.md",
+        "docs/localwatch-architecture.html",
+        "docs/managed-sqlite-snapshot-lifecycle.md",
+        "principles/Spawn2.0 Principle.md",
+        "scripts/**"
+      ],
+      "exclude": [
+        "scripts/launchd/**",
+        "scripts/localwatch.sh",
+        "scripts/copysm-vpn-guard.zsh",
+        "scripts/package-dist.sh",
+        "scripts/setup-dogfood-session.sh",
+        "scripts/shipment-type-v2-initial-apply-runner.mjs",
+        "scripts/spike-*",
+        "scripts/test_argv3.ts",
+        "tests/app/autoFileDelivery.test.ts",
+        "tests/app/commands/idea.test.ts",
+        "tests/app/commands/rank.test.ts",
+        "tests/app/commands/todo.test.ts",
+        "tests/app/spawnPredicate/evaluate.test.ts",
+        "tests/scripts/localwatch.test.ts",
+        "tests/scripts/processObserve.test.ts",
+        "tests/scripts/sharedInfrastructureScripts.test.ts",
+        "tests/scripts/weeklyCacheCleanup.test.ts"
+      ]
+    },
+    {
+      "name": "supermatrix-launchd-public-templates",
+      "root": "public-base",
+      "subpath": "supermatrix/scripts/launchd",
+      "destination": "supermatrix/scripts/launchd",
+      "include": ["**"],
+      "exclude": []
+    },
+    {
+      "name": "supermatrix-localwatch-public-template",
+      "root": "public-base",
+      "subpath": "supermatrix/scripts",
+      "destination": "supermatrix/scripts",
+      "include": ["localwatch.sh"],
+      "exclude": []
+    },
+    {
+      "name": "supermatrix-localwatch-public-test",
+      "root": "public-base",
+      "subpath": "supermatrix/tests/scripts",
+      "destination": "supermatrix/tests/scripts",
+      "include": ["localwatch.test.ts"],
+      "exclude": []
+    },
+    {
+      "name": "first-principle",
+      "root": "public-base",
+      "subpath": "platform/first-principle",
+      "destination": "platform/first-principle",
+      "include": [".gitignore", "bin/**", "docs/**", "rules/**", "scripts/**", "sop/**", "templates/**", "tests/**"],
+      "exclude": ["sop/TEMPLATE.md", "docs/superpowers/**", "**/data/**", "**/logs/**", "**/reports/**", "**/audit/**", "**/incoming/**", "**/requests/**", "**/.superpowers/**"]
+    },
+    {
+      "name": "scheduler-v2",
+      "root": "workspace:scheduler",
+      "subpath": "v2",
+      "destination": "platform/scheduler",
+      "include": ["**"],
+      "exclude": ["node_modules/**", "dist/**", "data/**", "runs/**", "docs/superpowers/**"]
+    },
+    {
+      "name": "heartbeat",
+      "root": "workspace:heartbeat",
+      "subpath": ".",
+      "destination": "platform/heartbeat",
+      "include": [".gitignore", "docs/heartbeat-function-overview.md", "heartbeat_patrol/**", "scripts/**", "sop/**", "tests/**"],
+      "exclude": ["business-principles.md", "coding-principles.md", "console-principles.md", "sop/TEMPLATE.md", "docs/superpowers/**", "**/data/**", "**/logs/**", "**/runs/**"]
+    },
+    {
+      "name": "autobitable",
+      "root": "public-base",
+      "subpath": "platform/autobitable",
+      "destination": "platform/autobitable",
+      "include": ["**"],
+      "exclude": ["node_modules/**", "dist/**", "data/**", "logs/**", "runs/**", "reports/**", "evidence/**"]
+    },
+    {
+      "name": "watchdog",
+      "root": "workspace:watchdog",
+      "subpath": ".",
+      "destination": "platform/watchdog",
+      "include": [".gitignore", "package.json", "package-lock.json", "tsconfig.json", "vitest.config.ts", "docs/**", "principles/**", "src/**", "sop/**", "tests/**"],
+      "exclude": ["docs/superpowers/**", "docs/incident-*", "**/data/**", "**/logs/**", "**/runs/**", "**/reports/**", "dist/**", "node_modules/**", "*.png"]
+    },
+    {
+      "name": "socail-king",
+      "root": "workspace:socail-king",
+      "subpath": ".",
+      "destination": "platform/socail-king",
+      "include": [".gitignore", "business-principles.md", "coding-principles.md", "console-principles.md", "docs/**", "rules/coordination-patterns.md", "rules/gray-zones.md", "rules/judgment-thresholds.md", "scripts/**", "sop/**", "src/**", "test/**"],
+      "exclude": ["business-principles.md", "coding-principles.md", "console-principles.md", "sop/TEMPLATE.md", "docs/superpowers/**", "**/data/**", "**/logs/**", "**/runs/**"]
+    },
+    {
+      "name": "mythos",
+      "root": "workspace:mythos",
+      "subpath": ".",
+      "destination": "platform/mythos",
+      "include": [".gitignore", "agent-reading-list.md", "kb/CHARTER.md", "kb/concepts/**", "scripts/**"],
+      "exclude": ["business-principles.md", "coding-principles.md", "console-principles.md", "kb/MAP.md", "kb/sources/**", "_index/**", "**/data/**", "**/logs/**", "**/runs/**"]
+    },
+    {
+      "name": "skill-master",
+      "root": "workspace:skill-master",
+      "subpath": ".",
+      "destination": "platform/skill-master",
+      "include": [
+        ".gitignore",
+        "docs/**",
+        "principles/**",
+        "scripts/**",
+        "sop/**",
+        "tests/test_audit_skill_discovery.py",
+        "tests/test_inactive_skill_lifecycle.py",
+        "tests/test_skill_retirement_lifecycle.py",
+        "tests/test_sync_skills.py",
+        "skills/caveman/**",
+        "skills/diagnose/**",
+        "skills/excalidraw-diagram/**",
+        "skills/get-image-url/**",
+        "skills/grill-me/**",
+        "skills/grill-with-docs/**",
+        "skills/handoff/**",
+        "skills/improve-codebase-architecture/**",
+        "skills/migrate-to-shoehorn/**",
+        "skills/prototype/**",
+        "skills/scaffold-exercises/**",
+        "skills/setup-matt-pocock-skills/**",
+        "skills/setup-pre-commit/**",
+        "skills/skill-probe/**",
+        "skills/smallmodel-manager/**",
+        "skills/tdd/**",
+        "skills/to-issues/**",
+        "skills/to-prd/**",
+        "skills/triage/**",
+        "skills/web-access/SKILL.md",
+        "skills/web-access/references/core/**",
+        "skills/web-access/references/packs/generic.md",
+        "skills/web-access/scripts/core/**",
+        "skills/write-a-skill/**",
+        "skills/zoom-out/**"
+      ],
+      "exclude": ["sop/TEMPLATE.md", "docs/superpowers/**", "**/data/**", "**/logs/**", "**/runs/**", "**/output/**", "**/metrics/**", "**/.tmp/**", "**/.superpowers/**", "**/external-upstreams/**"]
+    },
+    {
+      "name": "localgit",
+      "root": "workspace:localgit",
+      "subpath": ".",
+      "destination": "platform/localgit",
+      "include": [".gitignore", "LOCALGIT-GOVERNANCE.md", "package.json", "package-lock.json", "tsconfig.json", "vitest.config.ts", "docs/**", "principles/**", "scripts/**", "sop/**", "src/**", "tests/**"],
+      "exclude": ["sop/TEMPLATE.md", "docs/superpowers/**", "docs/local-db-copy-inventory-*", "scripts/run-supermatrix-recovery-backup.sh", "sop/SOP-supermatrix-recovery-backup-*", "tests/scripts/supermatrix-recovery-backup.test.ts", "tests/scripts/__fixtures__/**", "tests/scripts/stub-transition.test.ts", "**/data/**", "**/logs/**", "**/runs/**", "dist/**", "node_modules/**", "registry/**"]
+    },
+    {
+      "name": "gitmaster",
+      "root": "workspace:gitmaster",
+      "subpath": ".",
+      "destination": "platform/gitmaster",
+      "include": [".gitignore", "config/public-export.json", "scripts/sanitized_release.py", "sop/**", "tests/test_sanitized_release.py"],
+      "exclude": ["sop/TEMPLATE.md", ".private/**", "**/__pycache__/**"]
+    }
+  ]
+}

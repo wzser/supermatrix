@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -u
+
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  SOURCE_DIR="$(cd -P -- "$(dirname -- "$SOURCE")" && pwd)"
+  LINK_TARGET="$(readlink "$SOURCE")"
+  if [[ "$LINK_TARGET" = /* ]]; then
+    SOURCE="$LINK_TARGET"
+  else
+    SOURCE="$SOURCE_DIR/$LINK_TARGET"
+  fi
+done
+SOURCE_DIR="$(cd -P -- "$(dirname -- "$SOURCE")" && pwd)"
+SOURCE="$SOURCE_DIR/$(basename -- "$SOURCE")"
+REPO_DIR="$(cd -- "$SOURCE_DIR/../.." && pwd)"
+REAL_CLI="${SM_REAL_LARK_CLI_PATH:-$REPO_DIR/node_modules/.bin/lark-cli}"
+
+if [[ ! -x "$REAL_CLI" ]]; then
+  echo "lark-cli shim: real lark-cli is not executable: $REAL_CLI" >&2
+  exit 126
+fi
+
+if [[ "$REAL_CLI" -ef "$SOURCE" ]]; then
+  echo "lark-cli shim: real lark-cli resolves to the shim: $REAL_CLI" >&2
+  exit 126
+fi
+
+args=("$@")
+is_as_user=false
+
+if (( ${#args[@]} >= 2 )) \
+  && [[ "${args[0]}" == "im" ]] \
+  && [[ "${args[1]}" == "+messages-send" ]]; then
+  for ((i = 0; i < ${#args[@]} - 1; i++)); do
+    if [[ "${args[$i]}" == "--as" && "${args[$((i + 1))]}" == "user" ]]; then
+      is_as_user=true
+      break
+    fi
+  done
+fi
+
+if [[ "$is_as_user" == true ]]; then
+  for ((i = 0; i < ${#args[@]} - 1; i++)); do
+    if [[ "${args[$i]}" == "--text" || "${args[$i]}" == "--markdown" ]]; then
+      value="${args[$((i + 1))]}"
+      if [[ "$value" != Δ* ]]; then
+        args[$((i + 1))]="Δ$value"
+      fi
+    fi
+  done
+fi
+
+exec "$REAL_CLI" "${args[@]}"

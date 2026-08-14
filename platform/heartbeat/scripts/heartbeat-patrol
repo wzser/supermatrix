@@ -1,0 +1,343 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import fcntl
+import json
+import os
+import sqlite3
+import sys
+import time
+import uuid
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from heartbeat_patrol.config import load_config
+from heartbeat_patrol.completion import (
+    build_completion_summary,
+    landing_deadline_seconds_from_env,
+    write_completion_summary,
+)
+from heartbeat_patrol.event_sync import (
+    sync_events_to_feishu,
+    sync_todo_aggregates_to_feishu,
+    sync_todos_to_feishu,
+)
+from heartbeat_patrol.runner import build_default_runner
+from heartbeat_patrol.state import HeartbeatState, now_iso
+from heartbeat_patrol.temporary_snapshot import cleanup_expired_temporary_snapshots, temporary_snapshot_dir
+
+
+TEMPORARY_FAILURE_EXIT = getattr(os, "EX_TEMPFAIL", 75)
+# A state bootstrap used to die on the first transient SQLite writer.  Keep this
+# short and bounded so an hourly full patrol can survive a brief todo-watcher burst
+# without turning the scheduler entrypoint into an unbounded waiter.
+STATE_STARTUP_LOCK_BACKOFF_SECONDS = (0.25, 0.5, 1.0, 2.0, 4.0)
+
+
+def _completion_id() -> str:
+    return f"attempt-{uuid.uuid4().hex}"
+
+
+def _not_run_feishu_sync(reason: str) -> dict[str, dict[str, str]]:
+    return {
+        "events": {"status": "not_run", "reason": reason},
+        "todos": {"status": "not_run", "reason": reason},
+        "todo_aggregates": {"status": "not_run", "reason": reason},
+    }
+
+
+def _empty_completion_snapshot() -> dict:
+    """Use only when SQLite could not be opened, never as health evidence."""
+    return {
+        "todos": {"live": 0, "terminal": 0, "over_sla_landing": 0},
+        "unrecovered": {"targets": 0, "failures": 0, "active": []},
+        "escalation_handoffs": {
+            "awaiting_acceptance": 0,
+            "notify_failed": 0,
+            "legacy_unverifiable": 0,
+            "recent": [],
+        },
+    }
+
+
+def _is_database_locked(exc: BaseException) -> bool:
+    return isinstance(exc, sqlite3.OperationalError) and "locked" in str(exc).lower()
+
+
+def _open_state_with_retry(
+    state_db_path: Path,
+    *,
+    sleep=time.sleep,
+) -> tuple[HeartbeatState, int]:
+    """Open the authoritative state after a finite retry budget for SQLite writers."""
+    retries = 0
+    for delay in (*STATE_STARTUP_LOCK_BACKOFF_SECONDS, None):
+        try:
+            return HeartbeatState(state_db_path), retries
+        except sqlite3.OperationalError as exc:
+            if not _is_database_locked(exc):
+                raise
+            if delay is None:
+                raise RuntimeError(
+                    f"heartbeat state startup remained locked after {retries} retries: {exc}"
+                ) from exc
+            retries += 1
+            sleep(delay)
+    raise AssertionError("unreachable state startup retry loop")
+
+
+def _emit_completion_summary(
+    *,
+    cfg,
+    state: HeartbeatState | None,
+    completion_id: str,
+    patrol_id: str | None,
+    status: str,
+    started_at: str,
+    finished_at: str,
+    stats: dict,
+    errors: list[str],
+    feishu_sync: dict,
+    snapshot: dict,
+) -> str:
+    summary = build_completion_summary(
+        state=state,
+        completion_id=completion_id,
+        patrol_id=patrol_id,
+        status=status,
+        started_at=started_at,
+        finished_at=finished_at,
+        stats=stats,
+        errors=errors,
+        feishu_sync=feishu_sync,
+        landing_deadline_seconds=landing_deadline_seconds_from_env(),
+        snapshot=snapshot,
+    )
+    directory = Path(os.environ.get("HEARTBEAT_COMPLETION_DIR", str(cfg.state_db_path.parent / "completion")))
+    write_completion_summary(summary=summary, directory=directory)
+    return str(directory / f"{completion_id}.json")
+
+
+def _run_feishu_sync(*, cfg, state: HeartbeatState) -> tuple[dict, list[str]]:
+    base_token = os.environ.get("HEARTBEAT_LOG_FEISHU_BASE_TOKEN", "").strip()
+    event_table_id = (
+        os.environ.get("HEARTBEAT_TRIGGER_FEISHU_TABLE_ID", "").strip()
+        or os.environ.get("HEARTBEAT_LOG_FEISHU_TABLE_ID", "").strip()
+    )
+    todo_table_id = os.environ.get("HEARTBEAT_TODO_FEISHU_TABLE_ID", "").strip()
+    todo_aggregate_table_id = os.environ.get("HEARTBEAT_TODO_AGG_FEISHU_TABLE_ID", "").strip()
+    identity = os.environ.get("HEARTBEAT_LOG_FEISHU_AS", "bot")
+    limit = int(os.environ.get("HEARTBEAT_LOG_SYNC_LIMIT", "500"))
+    calls = {
+        "events": lambda: sync_events_to_feishu(
+            state=state,
+            base_token=base_token,
+            table_id=event_table_id,
+            lark_cli=cfg.lark_cli,
+            identity=identity,
+            limit=limit,
+        ),
+        "todos": lambda: sync_todos_to_feishu(
+            state=state,
+            base_token=base_token,
+            table_id=todo_table_id,
+            lark_cli=cfg.lark_cli,
+            identity=identity,
+            limit=limit,
+        ),
+        "todo_aggregates": lambda: sync_todo_aggregates_to_feishu(
+            state=state,
+            base_token=base_token,
+            table_id=todo_aggregate_table_id,
+            lark_cli=cfg.lark_cli,
+            identity=identity,
+            limit=limit,
+        ),
+    }
+    receipts: dict = {}
+    errors: list[str] = []
+    for name, call in calls.items():
+        try:
+            receipts[name] = call()
+        except Exception as exc:
+            detail = f"Feishu sync failed: {exc}"
+            receipts[name] = {"status": "failed", "error": str(exc)}
+            errors.append(detail)
+    return receipts, errors
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run heartbeat patrol.")
+    parser.add_argument("--session", action="append", default=[], help="Limit this patrol to one target session.")
+    args = parser.parse_args()
+
+    cfg = load_config()
+    completion_id = _completion_id()
+    invocation_started_at = now_iso()
+    lock_path = Path(os.environ.get("HEARTBEAT_PATROL_LOCK_PATH", str(cfg.state_db_path.with_suffix(".lock"))))
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a") as lock_file:
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            result = {
+                "ok": False,
+                "status": "skipped",
+                "reason": "heartbeat patrol already running",
+                "lock_path": str(lock_path),
+                "sessions": args.session,
+                "stats": {},
+                "errors": [],
+                "feishu_sync": _not_run_feishu_sync("patrol lock occupied"),
+            }
+            snapshot = _empty_completion_snapshot()
+            finished_at = now_iso()
+            try:
+                result["completion"] = {
+                    "path": _emit_completion_summary(
+                        cfg=cfg,
+                        state=None,
+                        completion_id=completion_id,
+                        patrol_id=None,
+                        status="skipped",
+                        started_at=invocation_started_at,
+                        finished_at=finished_at,
+                        stats=result["stats"],
+                        errors=result["errors"],
+                        feishu_sync=result["feishu_sync"],
+                        snapshot=snapshot,
+                    ),
+                    "status": "skipped",
+                }
+            except Exception as exc:
+                result["errors"].append(f"completion summary write failed: {exc}")
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            return 1 if result["errors"] else TEMPORARY_FAILURE_EXIT
+
+        try:
+            state, state_startup_retries = _open_state_with_retry(cfg.state_db_path)
+        except Exception as exc:
+            result = {
+                "ok": False,
+                "status": "failed",
+                "reason": "heartbeat state startup failed",
+                "sessions": args.session,
+                "stats": {"coverage_scope": "targeted" if args.session else "full"},
+                "errors": [str(exc)],
+                "feishu_sync": _not_run_feishu_sync("state startup failed"),
+            }
+            finished_at = now_iso()
+            try:
+                result["completion"] = {
+                    "path": _emit_completion_summary(
+                        cfg=cfg,
+                        state=None,
+                        completion_id=completion_id,
+                        patrol_id=None,
+                        status="failed",
+                        started_at=invocation_started_at,
+                        finished_at=finished_at,
+                        stats=result["stats"],
+                        errors=result["errors"],
+                        feishu_sync=result["feishu_sync"],
+                        snapshot=_empty_completion_snapshot(),
+                    ),
+                    "status": "failed",
+                }
+            except Exception as completion_exc:
+                result["errors"].append(f"completion summary write failed: {completion_exc}")
+            print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+            return 1
+
+        try:
+            runner = build_default_runner(cfg, state=state)
+            result = runner.run_once(session_names=args.session or None)
+        except Exception as exc:
+            result = {"patrol_id": None, "stats": {}, "errors": [f"patrol runner failed: {exc}"]}
+        result["errors"] = list(result.get("errors") or [])
+        result["state_startup_retries"] = state_startup_retries
+        patrol_id = str(result.get("patrol_id") or "") or None
+        # Managed temporary whole-DB copies are the one exception to audit-first
+        # history. Clean only the receipt-authorized, expired copies during full
+        # patrol maintenance; targeted todo/watch invocations never delete them.
+        if not args.session:
+            try:
+                temporary_snapshot_cleanup = cleanup_expired_temporary_snapshots(
+                    state=state,
+                    snapshot_dir=temporary_snapshot_dir(cfg.state_db_path),
+                    patrol_id=patrol_id,
+                )
+                result["temporary_snapshot_cleanup"] = {
+                    key: len(value) for key, value in temporary_snapshot_cleanup.items()
+                }
+            except Exception as exc:
+                result["errors"].append(f"temporary snapshot cleanup failed: {exc}")
+        # 事件 TTL：仅全量巡检时增量清理，避免定向巡检/watcher 点火频繁全表扫描。
+        if not args.session:
+            retention_days = int(os.environ.get("HEARTBEAT_EVENT_RETENTION_DAYS", "30"))
+            try:
+                purged = state.purge_old_events(retention_days=retention_days)
+                if purged:
+                    result["events_purged"] = purged
+            except Exception as exc:
+                result["events_purge_error"] = str(exc)
+        snapshot = state.completion_snapshot(landing_deadline_seconds=landing_deadline_seconds_from_env())
+        started_at = invocation_started_at
+        finished_at = now_iso()
+        if patrol_id:
+            try:
+                patrol_run = state.get_patrol_run(patrol_id)
+                started_at = str(patrol_run["started_at"])
+                finished_at = str(patrol_run.get("finished_at") or finished_at)
+            except Exception as exc:
+                result["errors"].append(f"patrol receipt lookup failed: {exc}")
+
+    if patrol_id:
+        feishu_sync, sync_errors = _run_feishu_sync(cfg=cfg, state=state)
+    else:
+        feishu_sync, sync_errors = _not_run_feishu_sync("patrol runner did not produce a run"), []
+    result["feishu_sync"] = feishu_sync
+    for error in sync_errors:
+        result["errors"].append(error)
+        if patrol_id:
+            try:
+                state.append_patrol_error(patrol_id, error)
+            except Exception as exc:
+                result["errors"].append(f"patrol completion record failed: {exc}")
+    completion_status = "failed" if result["errors"] else "completed"
+    result["ok"] = completion_status == "completed"
+    result["status"] = completion_status
+    try:
+        result["completion"] = {
+            "path": _emit_completion_summary(
+                cfg=cfg,
+                state=state,
+                completion_id=completion_id,
+                patrol_id=patrol_id,
+                status=completion_status,
+                started_at=started_at,
+                finished_at=finished_at,
+                stats=result.get("stats") or {},
+                errors=result["errors"],
+                feishu_sync=feishu_sync,
+                snapshot=snapshot,
+            ),
+            "status": completion_status,
+        }
+    except Exception as exc:
+        result["errors"].append(f"completion summary write failed: {exc}")
+        result["ok"] = False
+        result["status"] = "failed"
+        if patrol_id:
+            try:
+                state.append_patrol_error(patrol_id, result["errors"][-1])
+            except Exception as state_exc:
+                result["errors"].append(f"patrol completion record failed: {state_exc}")
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    return 1 if result.get("errors") else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

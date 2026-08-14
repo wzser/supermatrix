@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","session_id":"bks-err-1","model":"claude-opus-4-6"}
+{"type":"result","subtype":"error","is_error":true,"session_id":"bks-err-1","result":"prompt cannot be empty"}

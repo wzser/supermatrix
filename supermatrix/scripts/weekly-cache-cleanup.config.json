@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "maxDeleteBytes": 85899345920,
+  "safeRoots": [
+    "/Users/LOCAL_USER/.cache",
+    "/Users/LOCAL_USER/.codex",
+    "/Users/LOCAL_USER/.codex/sessions",
+    "/Users/LOCAL_USER/.npm",
+    "/Users/LOCAL_USER/Library/Caches",
+    "/Users/LOCAL_USER/Library/Application Support/Google/GoogleUpdater/crx_cache",
+    "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces",
+    "/Users/LOCAL_USER/SuperMatrixRuntime/data",
+    "/Users/LOCAL_USER/CodexSkills",
+    "/private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X"
+  ],
+  "rules": [
+    {
+      "id": "codex-unmanaged-state-backups",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/.codex"],
+      "retentionDays": 3,
+      "includeBasenamePrefixes": ["state_5.sqlite.bak-"],
+      "description": "Fail-safe cleanup for unmanaged legacy Codex state copies. New recovery snapshots must use scripts/codex-state-snapshot.ts, which requires owner/reason/expiry receipts and a maximum 72-hour lifetime. The active state_5.sqlite and its WAL/SHM files do not match this prefix."
+    },
+    {
+      "id": "uv-temp-cache",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/.cache/uv"],
+      "retentionDays": 1,
+      "includeBasenamePrefixes": [".tmp"],
+      "description": "Remove abandoned uv temporary cache entries only."
+    },
+    {
+      "id": "uv-archive-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/.cache/uv/archive-v0"],
+      "retentionDays": 7,
+      "description": "Remove old uv package archive cache entries; uv can repopulate them on demand."
+    },
+    {
+      "id": "sm-runtime-db-backups",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data",
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/supermatrix-recovery-backups"
+      ],
+      "retentionDays": 3,
+      "includeBasenamePrefixes": [
+        "supermatrix.db.bak",
+        "supermatrix.db.backup",
+        "supermatrix.db.pre-",
+        "supermatrix-before-",
+        "scheduler.db.bak",
+        "scheduler-before-",
+        "scheduler-v2.db.bak"
+      ],
+      "description": "Fail-safe cleanup for unmanaged legacy runtime-DB snapshots after 3 days. New SuperMatrix/scheduler pre-mutation snapshots must use scripts/managed-sqlite-snapshot.ts with owner, operationId, reason and a hard 1-72 hour expiry; verified completion releases the artifact immediately. This rule is deliberately independent of disaster-backup ledgers, never creates a replacement backup, and its prefixes cannot match live supermatrix.db / scheduler.db / scheduler-v2.db or their WAL/SHM files."
+    },
+    {
+      "id": "code-sign-clone-stale",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X/org.ZiXun.ziniaobrowser.code_sign_clone",
+        "/private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X/com.google.Chrome.code_sign_clone"
+      ],
+      "retentionDays": 7,
+      "includeBasenamePrefixes": ["code_sign_clone."],
+      "description": "Remove stale macOS code_sign_clone app-update leftovers (ziniao leaks ~4x343MB per day). Running apps only reference their newest clones; 7-day retention keeps those safe."
+    },
+    {
+      "id": "codex-session-transcripts-old-days",
+      "owner": "cachem",
+      "enabled": false,
+      "safetyState": "blocked",
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.codex/sessions/2026/01",
+        "/Users/LOCAL_USER/.codex/sessions/2026/02",
+        "/Users/LOCAL_USER/.codex/sessions/2026/03",
+        "/Users/LOCAL_USER/.codex/sessions/2026/04",
+        "/Users/LOCAL_USER/.codex/sessions/2026/05",
+        "/Users/LOCAL_USER/.codex/sessions/2026/06",
+        "/Users/LOCAL_USER/.codex/sessions/2026/07",
+        "/Users/LOCAL_USER/.codex/sessions/2026/08",
+        "/Users/LOCAL_USER/.codex/sessions/2026/09",
+        "/Users/LOCAL_USER/.codex/sessions/2026/10",
+        "/Users/LOCAL_USER/.codex/sessions/2026/11",
+        "/Users/LOCAL_USER/.codex/sessions/2026/12"
+      ],
+      "retentionDays": 45,
+      "description": "SAFETY BLOCKED after the directory-mtime selector deleted recently active transcripts. Do not re-enable or remove safetyState until a reviewed per-thread activity selector, transcript backup, recovery read-back, and regression coverage replace this rule."
+    },
+    {
+      "id": "chrome-cache-old-profiles",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/Library/Caches/Google/Chrome"],
+      "retentionDays": 7,
+      "description": "Remove stale Chrome profile cache directories under ~/Library/Caches only; Chrome profile data under Application Support is not touched."
+    },
+    {
+      "id": "ziniaobrowser-cache-old-profiles",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/Library/Caches/ziniaobrowser/userdata"],
+      "retentionDays": 7,
+      "description": "Remove stale ZiNiao browser userdata cache directories under ~/Library/Caches only; Application Support runtime/profile data is not touched."
+    },
+    {
+      "id": "google-updater-crx-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/Library/Application Support/Google/GoogleUpdater/crx_cache"],
+      "retentionDays": 14,
+      "description": "Remove stale GoogleUpdater CRX package cache entries; updater can re-download these packages."
+    },
+    {
+      "id": "weekly-cache-cleanup-receipts",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup",
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/prune-message-runs"
+      ],
+      "retentionDays": 90,
+      "description": "Remove cleanup/prune receipts and impact-review markers older than 90 days; impact review only needs receipts newer than its dispatch window."
+    },
+    {
+      "id": "npm-npx-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/.npm/_npx"],
+      "retentionDays": 14,
+      "description": "Remove old one-off npx package execution caches."
+    },
+    {
+      "id": "go-build-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/Library/Caches/go-build"],
+      "retentionDays": 14,
+      "description": "Remove old Go build cache entries."
+    },
+    {
+      "id": "pip-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/Library/Caches/pip"],
+      "retentionDays": 30,
+      "description": "Remove old pip HTTP/package cache entries."
+    },
+    {
+      "id": "playwright-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/Library/Caches/ms-playwright"],
+      "retentionDays": 30,
+      "description": "Remove old Playwright browser cache entries; browsers can be downloaded again."
+    },
+    {
+      "id": "workspace-python-test-caches",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_named_descendants_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces",
+        "/Users/LOCAL_USER/CodexSkills"
+      ],
+      "names": ["__pycache__", ".pytest_cache"],
+      "retentionDays": 7,
+      "maxDepth": 8,
+      "description": "Remove stale Python bytecode and pytest cache directories inside managed workspaces."
+    },
+    {
+      "id": "huodaiduijie-attachments-owner-pending",
+      "owner": "huodaiduijie",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/huodaiduijie/.attachments/wechat-price-downloads",
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/huodaiduijie/.attachments/wechat-dw-delivery-window"
+      ],
+      "retentionDays": 30,
+      "description": "Pending owner approval. Do not enable until huodaiduijie confirms retention and receipt policy."
+    },
+    {
+      "id": "ad-adjust-reports-owner-pending",
+      "owner": "ad-adjust",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/ad-adjust/reports"],
+      "retentionDays": 30,
+      "description": "Pending owner approval. Do not enable until ad-adjust confirms audit-retention policy."
+    },
+    {
+      "id": "copysm-runs-owner-pending",
+      "owner": "copysm",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/copysm/runs"],
+      "retentionDays": 30,
+      "description": "Pending owner approval. Do not enable until copysm confirms recovery requirements."
+    },
+    {
+      "id": "monet-outputs-owner-pending",
+      "owner": "monet",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": ["/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/monet/outputs"],
+      "retentionDays": 45,
+      "description": "Pending owner approval. Do not enable until monet confirms asset archive requirements."
+    },
+    {
+      "id": "amz-sql-productdata-owner-pending",
+      "owner": "amz-sql",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/CodexSkills/amz-sql/productdata-raw",
+        "/Users/LOCAL_USER/CodexSkills/amz-sql/output"
+      ],
+      "retentionDays": 30,
+      "description": "Pending owner approval. Do not enable until amz-sql confirms ETL replay requirements."
+    }
+  ]
+}

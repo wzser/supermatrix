@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.*
+.DS_Store
+*.log
+NOTES.md
+.attachments/
+tests/__pycache__/
+scripts/__pycache__/
+data/daily-picks/*.jsonl
+data/scheduler_receipts/kb-daily-picks.receipt
