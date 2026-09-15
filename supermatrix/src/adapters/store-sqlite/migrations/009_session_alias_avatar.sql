@@ -1,0 +1,3 @@
+ALTER TABLE sessions ADD COLUMN alias TEXT NOT NULL DEFAULT '';
+ALTER TABLE sessions ADD COLUMN avatar TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_sessions_alias ON sessions(alias);

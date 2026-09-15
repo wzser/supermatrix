@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "purpose": "Portable discovery audit defaults for the three-skill distributable.",
+  "retired_names": {},
+  "retirements": [],
+  "inventory_globs": [],
+  "exclude_path_fragments": [],
+  "allowed_duplicate_names": [],
+  "index_is_allowlist": true,
+  "stale_patterns": [],
+  "active_same_name_cleanups": []
+}

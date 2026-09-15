@@ -1,0 +1,188 @@
+{
+  "schema_version": 2,
+  "binding_status": "static_contract_only",
+  "bundle_boundary": {
+    "static_generation": true,
+    "runtime_database": false,
+    "remote_table_provisioning": false,
+    "queue_consumer_process": false,
+    "statement": "This file names the existing owner and queue carriers; it does not make them available in this bundle."
+  },
+  "queue_contract": {
+    "operation": "feishu-sync-enqueue",
+    "completion": "published_wait_terminal_done_plus_independent_record_readback",
+    "accepted_or_queued_is_not_completion": true,
+    "missing_consumer_policy": "blocked_missing_consumer_is_not_completion",
+    "missing_consumer_outcome": "blocked_missing_consumer",
+    "direct_remote_write": false,
+    "drain_consumer": "existing wendangwang queue consumer selected by the registered asset",
+    "status_consumer": "existing wendangwang feishu-sync-status selected by the user config",
+    "new_table_binding_requires": [
+      "owner approval",
+      "base token and table id supplied out of band",
+      "schema read-back",
+      "unique-key verification",
+      "published --wait terminal response and independent record read-back"
+    ]
+  },
+    "tables": {
+    "session_meta": {
+      "local_table": "session_meta",
+      "remote_required": "required",
+      "static_generation_remote_needed": false,
+      "catalog_role": "first-principle.session_metadata",
+      "remote_asset_id": null,
+      "remote_asset_id_env": "SM_SESSION_META_ASSET_ID",
+      "asset_adaptation": "The current catalog role remains required. A user-owned registered asset id is supplied at runtime; the public bundle never embeds or infers a private registry binding.",
+      "remote_table_name": "数据表",
+      "remote_authority_model": "field_split",
+      "remote_sync_direction": "two_way",
+      "unique_key": ["Session"],
+      "write_mode": "owner-queue-only",
+      "read_back_required": true,
+      "public_sql_consumed": false,
+      "local_fields_consumed_by_public_generation": [
+        {"name": "session_name", "source": "--session-name", "consumer": "bin/fp-generate-init", "effect": "identity and idempotency key"},
+        {"name": "alias", "source": "--alias", "consumer": "bin/fp-generate-init", "effect": "identity text and group-name hint"},
+        {"name": "avatar", "source": "--avatar", "consumer": "bin/fp-generate-init", "effect": "recorded in session-init.ndjson; no remote upload in this bundle"},
+        {"name": "category", "source": "--category", "consumer": "bin/fp-generate-init/scripts/fp_assemble.py", "effect": "category validation and module selection"},
+        {"name": "purpose", "source": "--purpose", "consumer": "bin/fp-generate-init", "effect": "identity text, group description hint, and init record"},
+        {"name": "backend", "source": "--backend", "consumer": "bin/fp-generate-init", "effect": "backend validation, primary filename, generated record"},
+        {"name": "workdir", "source": "--workdir", "consumer": "bin/fp-generate-init", "effect": "generated record only"},
+        {"name": "initialized_at", "source": "generated", "consumer": "bin/fp-generate-init", "effect": "generated record only"},
+        {"name": "feishu_sync_ok", "source": "generated", "consumer": "bin/fp-generate-init", "effect": "pending marker; remains null until the owner consumer verifies the queue"}
+      ],
+      "existing_owner_carrier": {
+        "status": "public_parameterized_existing_consumer",
+        "missing_consumer_outcome": "configuration_error",
+        "writeback": {
+          "script": "scripts/bitable-init-sync.sh",
+          "asset": "config/runtime-owned asset_id",
+          "operations": ["bitable_rows_create_if_absent"],
+          "queue_entrypoint": "config/runtime-owned queue_entrypoint",
+          "required_terminal_proof": "queue --wait status=accepted, job_state_at_response=done, terminal=true, waited=true; caller independently reads the Session row"
+        },
+        "read_and_runtime_mirror": {
+          "script": "scripts/sync-session-table.sh",
+          "read_control": "configured lark-cli base +record-list",
+          "local_target": "external receipt/output NDJSON only",
+          "remote_write": "none"
+        },
+        "bundle_has_running_consumer": false,
+        "private_runtime_db_access": false
+      },
+      "remote_fields": [
+        {"remote_name": "Session", "native_type": "text", "authority": "local", "required": true, "local_source": "session_meta.session_name"},
+        {"remote_name": "主Backend当前", "native_type": "single_select", "authority": "local", "required": false, "options": null, "multiple": false, "local_source": "runtime.sessions.backend", "public_source": null},
+        {"remote_name": "部门", "native_type": "single_select", "authority": "feishu", "required": false, "options": null, "multiple": false, "local_source": null},
+        {"remote_name": "头像", "native_type": "attachment", "authority": "feishu", "required": false, "local_source": "session_meta.avatar", "transform": "owner carrier accepts a real image path/URL/data URI; emoji is rejected"},
+        {"remote_name": "Model", "native_type": "text", "authority": "local", "required": false, "local_source": "runtime.sessions.model", "public_source": null},
+        {"remote_name": "Group ID", "native_type": "text", "authority": "local", "required": false, "local_source": "runtime.bindings.group_id", "public_source": null},
+        {"remote_name": "Scope", "native_type": "single_select", "authority": "local", "required": false, "options": null, "multiple": false, "local_source": "runtime.sessions.scope", "public_source": null},
+        {"remote_name": "Workdir", "native_type": "text", "authority": "local", "required": false, "local_source": "runtime.sessions.workdir", "public_source": "session_meta.workdir"},
+        {"remote_name": "分类", "native_type": "single_select", "authority": "feishu", "required": false, "options": ["业务", "平台", "工具", "知识", "外部", "员工"], "multiple": false, "local_source": "session_meta.category"},
+        {"remote_name": "附属于", "native_type": "text", "authority": "mixed", "required": false, "local_source": "owner carrier derives from category or runtime affiliation", "transform": "empty-cell CAS only; non-empty remote value is preserved"},
+        {"remote_name": "Created", "native_type": "date_time", "authority": "local", "required": false, "local_source": "runtime.sessions.created_at", "public_source": null},
+        {"remote_name": "Updated", "native_type": "date_time", "authority": "local", "required": false, "local_source": "runtime.sessions.updated_at", "public_source": null},
+        {"remote_name": "别称", "native_type": "text", "authority": "feishu", "required": false, "local_source": "session_meta.alias", "transform": "owner carrier create/gap-fill only; populated remote value is read back"},
+        {"remote_name": "Purpose", "native_type": "text", "authority": "feishu", "required": false, "local_source": "session_meta.purpose", "transform": "owner carrier create/gap-fill; full runtime sync follows the registered contract"},
+        {"remote_name": "主model当前", "native_type": "single_select", "authority": "local", "required": false, "options": null, "multiple": false, "local_source": "runtime settings consumer", "public_source": null},
+        {"remote_name": "主effort当前", "native_type": "single_select", "authority": "local", "required": false, "options": null, "multiple": false, "local_source": "runtime settings consumer", "public_source": null},
+        {"remote_name": "主model默认值", "native_type": "single_select", "authority": "feishu_on_edit_local_on_backend_switch", "required": false, "options": null, "multiple": false, "local_source": "owner runtime settings consumer", "public_source": null},
+        {"remote_name": "主effort默认值", "native_type": "single_select", "authority": "feishu_on_edit_local_on_backend_switch", "required": false, "options": null, "multiple": false, "local_source": "owner runtime settings consumer", "public_source": null},
+        {"remote_name": "子backend", "native_type": "single_select", "authority": "feishu", "required": false, "options": null, "multiple": false, "local_source": null},
+        {"remote_name": "子model", "native_type": "single_select", "authority": "feishu", "required": false, "options": null, "multiple": false, "local_source": null},
+        {"remote_name": "子effort", "native_type": "single_select", "authority": "feishu", "required": false, "options": null, "multiple": false, "local_source": null},
+        {"remote_name": "负责人", "native_type": "user", "authority": "feishu", "required": false, "local_source": null, "read_consumer": "todomaster exact Session lookup; null or missing falls back to SuperMatrix"}
+      ]
+    },
+    "patrol_state": {
+      "local_table": "patrol_state",
+      "remote_required": "none_for_public_bundle",
+      "remote_asset_id": null,
+      "remote_asset_id_env": "SM_FP_PATROL_ASSET_ID",
+      "remote_table_name": "FP 巡检配置",
+      "remote_authority_model": "feishu_authoritative",
+      "remote_sync_direction": "none",
+      "unique_key": ["配置项"],
+      "write_mode": "read-only",
+      "read_back_required": false,
+      "public_sql_consumed": false,
+      "local_fields_consumed_by_public_generation": [],
+      "existing_owner_carrier": {
+        "status": "outside_bundle",
+        "missing_consumer_outcome": "blocked_missing_consumer",
+        "read_control": "first-principle/scripts/fp-patrol-enabled.sh (outside public bundle)",
+        "command": "lark-cli base +record-list --as user",
+        "fields": ["配置项", "开关"],
+        "failure_mode": "not_public; do not claim patrol availability",
+        "remote_writeback": false,
+        "bundle_has_running_consumer": false,
+        "public_capability": false
+      },
+      "remote_fields": [
+        {"remote_name": "配置项", "native_type": "text", "authority": "feishu", "required": true, "local_source": null},
+        {"remote_name": "开关", "native_type": "checkbox", "authority": "feishu", "required": false, "local_source": null},
+        {"remote_name": "说明", "native_type": "text", "authority": "feishu", "required": false, "local_source": null},
+        {"remote_name": "更新时间", "native_type": "text", "authority": "feishu", "required": false, "local_source": null},
+        {"remote_name": "ID", "native_type": "auto_number", "authority": "readonly", "required": false, "local_source": null}
+      ]
+    },
+    "principle_modules": {
+      "local_table": "principle_modules",
+      "remote_required": "conditional",
+      "remote_asset_id": null,
+      "remote_asset_id_env": "SM_FP_PRINCIPLE_ASSET_ID",
+      "remote_table_name": "原则管理表",
+      "remote_authority_model": "derived_mirror",
+      "remote_sync_direction": "local_to_remote_except_enabled",
+      "unique_key": ["模块名"],
+      "write_mode": "owner-queue-only",
+      "read_back_required": true,
+      "public_sql_consumed": false,
+      "actual_public_source": "data/module-manifest.json",
+      "local_fields_consumed_by_public_generation": [
+        {"name": "module", "source": "data/module-manifest.json", "consumer": "scripts/fp_assemble.py", "effect": "module identity and ordering"},
+        {"name": "section_no", "source": "data/module-manifest.json", "consumer": "scripts/fp_assemble.py", "effect": "assembled section ordering"},
+        {"name": "enabled", "source": "data/module-manifest.json", "consumer": "scripts/fp_assemble.py", "effect": "global module inclusion gate"},
+        {"name": "variants", "source": "data/module-manifest.json/data/session-variants.json", "consumer": "scripts/fp_assemble.py", "effect": "variant selection"},
+        {"name": "snippet_path/full_doc_path", "source": "data/module-manifest.json", "consumer": "scripts/fp_assemble.py", "effect": "content and provenance loading"}
+      ],
+      "existing_owner_carrier": {
+        "status": "outside_bundle_owner_source_only",
+        "missing_consumer_outcome": "blocked_missing_consumer",
+        "writeback": {
+          "script": "first-principle/scripts/fp-sync-principle-table.sh",
+          "asset": "first-principle.principle_management_table",
+          "operation": "bitable_rows_upsert",
+          "queue_entrypoint": "feishu-sync-enqueue"
+        },
+        "read_control": {
+          "script": "first-principle/scripts/fp-sync-principle-table.sh",
+          "command": "lark-cli base +record-list",
+          "fields": ["模块名", "启用"],
+          "effect": "remote enabled checkbox is the sole remote-to-local authority for manifest.enabled"
+        },
+        "bundle_has_running_consumer": false
+      },
+      "remote_fields": [
+        {"remote_name": "模块名", "native_type": "text", "authority": "local", "required": true, "local_source": "data/module-manifest.json.modules[].module"},
+        {"remote_name": "标题", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].title"},
+        {"remote_name": "Owner", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].owner"},
+        {"remote_name": "段号", "native_type": "number", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].section_no"},
+        {"remote_name": "类别", "native_type": "single_select", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].family"},
+        {"remote_name": "覆盖度", "native_type": "single_select", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].coverage"},
+        {"remote_name": "飞书原版链接", "native_type": "text", "authority": "local", "required": false, "local_source": "derived from full_doc_wiki_token"},
+        {"remote_name": "snippet路径", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].snippet_path"},
+        {"remote_name": "原版文档路径", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].full_doc_path"},
+        {"remote_name": "上次蒸馏commit", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].last_distilled_commit"},
+        {"remote_name": "蒸馏内容", "native_type": "text", "authority": "local", "required": false, "local_source": "snippets/<module>.md"},
+        {"remote_name": "蒸馏方法", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].distill_method"},
+        {"remote_name": "变体清单", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].variants"},
+        {"remote_name": "内容sha256", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].last_distilled_content_sha256"},
+        {"remote_name": "装配方式", "native_type": "text", "authority": "local", "required": false, "local_source": "data/module-manifest.json.modules[].assembly"},
+        {"remote_name": "启用", "native_type": "checkbox", "authority": "mixed", "required": false, "local_source": "data/module-manifest.json.modules[].enabled", "transform": "remote checkbox is pulled to manifest.enabled; other fields remain local-to-remote"}
+      ]
+    }
+  }
+}

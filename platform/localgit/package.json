@@ -1,0 +1,47 @@
+{
+  "name": "localgit",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "config/",
+    "docs/INSTALL.md",
+    "scripts/run-branch-patrol.sh",
+    "scripts/run-daily-commit.sh",
+    "sop/INDEX.md",
+    "sop/references/daily-commit-ignore-policy.md",
+    "sop/references/owner-decision-rubric.md",
+    "sop/references/SOP-daily-commit-judgment-matrix-l2-review-prompt.md",
+    "sop/references/SOP-daily-commit-judgment-matrix-secret-patterns.md",
+    "sop/SOP-daily-commit-judgment-matrix-active-20260821-1a186q.md",
+    "sop/SOP-repo-branch-merge-patrol-active-20260714-68dd04.md",
+    "src/",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "daily-commit": "tsx src/scripts/daily-commit.ts",
+    "daily-commit-verify": "tsx src/scripts/daily-commit-verify.ts",
+    "branch-patrol": "tsx src/scripts/branch-patrol.ts",
+    "branch-patrol-verify": "tsx src/scripts/branch-patrol-verify.ts",
+    "daily-commit-decision": "tsx src/scripts/daily-commit-record-decision.ts",
+    "hold-decision": "tsx src/scripts/hold-decision.ts",
+    "git-ledger": "tsx src/scripts/git-ledger-query.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "pino": "^10.3.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.4"
+  }
+}

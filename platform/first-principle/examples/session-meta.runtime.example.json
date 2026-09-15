@@ -1,0 +1,13 @@
+{
+  "asset_id": "",
+  "base_token": "",
+  "table_id": "",
+  "from_session": "",
+  "queue_entrypoint": "",
+  "queue_db": "",
+  "registry_glob": "",
+  "lark_cli": "",
+  "lark_identity": "",
+  "receipt_path": "",
+  "output_path": ""
+}

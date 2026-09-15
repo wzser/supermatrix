@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "_doc": "No per-session overrides in the public bundle. An empty mapping selects each default snippet.",
+  "sessions": {}
+}

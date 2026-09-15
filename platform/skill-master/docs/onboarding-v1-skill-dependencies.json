@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "purpose": "Runtime and verification dependencies for the three-skill distributable.",
+  "runtime": {
+    "python": {
+      "version": "3.11.15",
+      "requires": ">=3.11,<3.12",
+      "third_party": []
+    },
+    "shell": {
+      "kind": "POSIX-compatible shell",
+      "required_commands": ["awk", "bash", "ln", "readlink"]
+    },
+    "frontmatter": {
+      "parser": "PyYAML 6.0.3 or Ruby Psych safe_load",
+      "network": false
+    }
+  },
+  "tools": {
+    "codex": {
+      "version": "0.153.4",
+      "discovery_root": "$HOME/.agents/skills",
+      "load_contract": "read <skill>/SKILL.md as UTF-8"
+    },
+    "pytest": {
+      "version": "9.0.3",
+      "required_for": "maintainer regression tests only"
+    }
+  },
+  "configuration": {
+    "canonical_root": "skills",
+    "public_example": "docs/onboarding-v1-public-example.md",
+    "index": "docs/onboarding-v1-skill-index.md",
+    "upgrade_sources": "docs/onboarding-v1-skill-upgrade-sources.json",
+    "mirror_contract": "docs/onboarding-v1-skill-registry.json",
+    "discovery_config": "docs/onboarding-v1-skill-discovery.json",
+    "portable_entrypoints": [
+      "scripts/sync-skills.sh",
+      "scripts/audit-skill-discovery.py",
+      "scripts/evaluate-skills.py",
+      "scripts/sync-skills-to-feishu.py",
+      "scripts/feishu_enqueue.py",
+      "scripts/validate-skill-frontmatter.py",
+      "scripts/record-tick.sh"
+    ]
+  }
+}

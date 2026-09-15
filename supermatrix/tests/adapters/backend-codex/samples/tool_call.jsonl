@@ -1,0 +1,3 @@
+{"type":"thread.started","thread_id":"bks-tool-1"}
+{"type":"event_msg","payload":{"type":"agent_message","phase":"commentary","message":"listing files"}}
+{"type":"item.completed","item":{"type":"agent_message","text":"found README.md and package.json"}}

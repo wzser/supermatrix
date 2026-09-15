@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-communication-review/judgment-table.schema.json",
+  "title": "Judgment table row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["judgment_id", "ts", "theme", "user_visible_symptom", "function_loss", "evidence", "confidence", "gray_zone_hit", "applied_to_rule"],
+  "properties": {
+    "judgment_id": {"type": "string", "pattern": "^judg-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$"},
+    "ts": {"type": "integer", "minimum": 0},
+    "theme": {"enum": ["communication_gap", "wrong_owner", "false_success", "duplicate_work", "other"]},
+    "user_visible_symptom": {"type": "string", "minLength": 1},
+    "function_loss": {"type": "string", "minLength": 1},
+    "evidence": {"type": "object", "minProperties": 1},
+    "confidence": {"enum": ["high", "medium", "low"]},
+    "gray_zone_hit": {"type": "string", "minLength": 1},
+    "applied_to_rule": {"type": ["string", "null"]},
+    "record_id": {"type": ["string", "null"], "readOnly": true},
+    "user_verdict": {"enum": ["accurate", "partly_accurate", "misclassified", null], "readOnly": true},
+    "user_note": {"type": ["string", "null"], "readOnly": true}
+  }
+}

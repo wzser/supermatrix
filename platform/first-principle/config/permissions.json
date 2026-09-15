@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "local_files": {
+    "read": ["the checked-out public bundle"],
+    "write": ["the caller-selected agent workdir", "FP_STATE_DIR"],
+    "create_symlinks": ["the caller-selected agent workdir/full-docs", "the caller-selected agent workdir/backend-model-effort-catalog.json"]
+  },
+  "external_effects": {
+    "network": false,
+    "remote_lark_or_github_write": false,
+    "authorization": false,
+    "runtime_reload_or_process_control": false
+  },
+  "queue_boundary": "Only an approved owner may bind a remote table and enqueue a data-time write; terminal read-back is required."
+}

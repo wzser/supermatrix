@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "sources": {
+    "skills": {
+      "root": "platform/skill-master/skills",
+      "owner": "skill-master",
+      "commit": "fixture-public-skill-commit",
+      "files": {
+      "diagnose/SKILL.md": { "bytes": 242, "sha256": "223fccdc3bf4d41955bed662647deb6c8d76fceb83a0b0cbcc824e77dcffe71b" },
+      "improve-codebase-architecture/SKILL.md": { "bytes": 274, "sha256": "5a482156d7914d917d8f977d04f957abd1cec236130f66ca108d20f00d797b30" },
+      "tdd/SKILL.md": { "bytes": 258, "sha256": "7d957b8043d582556395f4c7ff1071c672d9de868561b41959a08a34fa0e1e27" }
+      }
+    },
+    "templates": {
+      "root": "platform/first-principle/templates",
+      "owner": "first-principle",
+      "commit": "fixture-public-template-commit",
+      "files": {
+        "console-principles.md": { "bytes": 258, "sha256": "4843f0f8525959b52fe3aa2f64202e386d2bf78541c3b581e8795f5453391ca3" },
+        "coding-principles.md": { "bytes": 205, "sha256": "f78da7ec8536570d1ea4c45a1570aee420ce425681c9d7ed04ca5200c5e7354c" },
+        "business-principles.md": { "bytes": 229, "sha256": "3ddbfa58e79054724abfe7f1a6308d2f1863957fdf7d8a91482da62cca6977ee" },
+        "sop-template.md": { "bytes": 235, "sha256": "8d44abbe6873fb68bea8841ad99939e4db572c09685b218c3c37f5207c480d3f" }
+      }
+    }
+  },
+  "modules": [
+    { "name": "first-principle", "owner": "first-principle", "commit": "102d8141fcbcc3d932ff3735f25e3395d0577994", "sourceRoot": "exports/onboarding-v2", "destinationRoot": "platform/first-principle", "reviewStatus": "pending-owner-review", "include": [".python-version", "README.md", "bin/**", "scripts/**", "config/**", "data/backend-model-effort-catalog.json", "data/category-capability-defaults.json", "data/module-manifest.json", "data/session-variants.json", "examples/**", "snippets/**", "full-docs/**", "templates/**"] },
+    { "name": "scheduler", "owner": "scheduler", "commit": "1234567", "sourceRoot": "workspace:scheduler", "destinationRoot": "platform/scheduler", "reviewStatus": "pending-owner-review", "include": ["package.json"] },
+    { "name": "heartbeat", "owner": "heartbeat", "commit": "1234568", "sourceRoot": "workspace:heartbeat", "destinationRoot": "platform/heartbeat", "reviewStatus": "pending-owner-review", "include": ["scripts/**"] },
+    { "name": "autobitable", "owner": "autobitable", "commit": "4ce4592d9ba18b756a66b12ef353bc3e2b1f9f65", "sourceRoot": "workspace:autobitable", "destinationRoot": "platform/autobitable", "reviewStatus": "pending-owner-review", "include": ["src/server.mjs", "public-safe/.gitignore", "public-safe/README.md", "public-safe/package.json", "public-safe/package-lock.json", "public-safe/config/**", "public-safe/examples/**", "public-safe/registry/bitable-webhooks.empty.json", "public-safe/scripts/register-webhook-secret.mjs", "public-safe/src/**", "public-safe/tests/**"] },
+    { "name": "watchdog", "owner": "watchdog", "commit": "123456a", "sourceRoot": "workspace:watchdog", "destinationRoot": "platform/watchdog", "reviewStatus": "pending-owner-review", "include": ["package.json"] },
+    { "name": "socail-king", "owner": "socail-king", "commit": "5ba13b9382a735afc3e7b75c1de710a177f899c7", "sourceRoot": "public-safe", "destinationRoot": "platform/socail-king", "reviewStatus": "pending-owner-review", "include": ["package.json", "README.md", "CONFIG.md", "schemas/**", "scripts/**", "src/**"] },
+    { "name": "mythos", "owner": "mythos", "commit": "a10ab14e2096bd325366b039b3bd5d153c48b355", "sourceRoot": "public", "destinationRoot": "platform/mythos", "reviewStatus": "pending-owner-review", "include": ["public/**", "scripts/**", "tests/test_public_seed.py", ".python-version", "pyproject.toml"] },
+    { "name": "skill-master", "owner": "skill-master", "commit": "60a4b789b0433d4df59ba6246bd9873544b3e949", "sourceRoot": ".", "destinationRoot": "platform/skill-master", "reviewStatus": "pending-owner-review", "include": [".python-version", "pyproject.toml", "docs/**", "scripts/audit-skill-discovery.py", "scripts/evaluate-skills.py", "scripts/feishu_enqueue.py", "scripts/sync-skills-to-feishu.py", "scripts/sync-skills.sh", "scripts/validate-skill-frontmatter.py", "scripts/record-tick.sh", "tests/test_public_skill_inputs.py", "skills/diagnose/**", "skills/improve-codebase-architecture/**", "skills/tdd/**"] },
+    { "name": "localgit", "owner": "localgit", "commit": "123456b", "sourceRoot": "workspace:localgit", "destinationRoot": "platform/localgit", "reviewStatus": "pending-owner-review", "include": ["package.json"] },
+    { "name": "gitmaster", "owner": "gitmaster", "commit": "123456c", "sourceRoot": "workspace:gitmaster", "destinationRoot": "platform/gitmaster", "reviewStatus": "pending-owner-review", "include": [".python-version", "pyproject.toml", "scripts/**"] },
+    { "name": "larkc", "owner": "larkc", "commit": "6cdbcc216b2536e7d38358824bd01c6b00ddfc80", "sourceRoot": ".", "destinationRoot": "platform/larkc", "reviewStatus": "pending-owner-review", "include": ["public-input/**", "card-callback/**"] },
+    { "name": "wendangwang", "owner": "wendangwang", "commit": "8ed5b6be045ffb47f52fde90ea9ef2199001f97f", "sourceRoot": "exports/feishu-bitable-control-plane", "destinationRoot": "platform/wendangwang", "reviewStatus": "pending-owner-review", "include": [".gitignore", ".python-version", "pyproject.toml", "README.md", "bin/**", "config/**", "docs/**", "registry/README.md", "src/**", "tests/**"] }
+  ]
+}

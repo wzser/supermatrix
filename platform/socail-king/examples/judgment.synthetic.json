@@ -1,0 +1,20 @@
+{
+  "id": "judg-2099-01-02-001",
+  "judgment_id": "judg-2099-01-02-001",
+  "kind": "primary",
+  "theme": "communication_gap",
+  "user_visible_symptom": "The request was repeated twice because the intended answer was not recognizable.",
+  "function_loss": "The caller spent time repeating the request and the original work stayed blocked.",
+  "evidence": {
+    "source": "cross_session_log",
+    "source_comm_id": "comm_stub_001",
+    "interview_a": "A expected a concrete answer and had to repeat the request.",
+    "interview_b": "B understood the request as a status note, not a completion answer."
+  },
+  "interview_a": "A expected a concrete answer and had to repeat the request.",
+  "interview_b": "B understood the request as a status note, not a completion answer.",
+  "confidence": "high",
+  "gray_zone_hit": "none",
+  "applied_to_rule": null,
+  "status": "pending"
+}

@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "asset_id": "supermatrix.onboarding-v1.skills",
+  "owner": "skill-master",
+  "purpose": "Owner-approved public-safe metadata and complete directories for the three-skill onboarding-v1 distributable.",
+  "source": {
+    "repository": "workspace:skill-master",
+    "commit": "316f902030bfa95b32d1771c231f7dc41bd2c4d9",
+    "verification_scope": "private-source-acceptance-only",
+    "selection": "tracked files listed by distribution.required_include; only the three enabled skill trees are deployable",
+    "selected_paths_clean_at_commit": true
+  },
+  "distribution": {
+    "gitmaster_mapping_name": "skill-master",
+    "gitmaster_root": "workspace:skill-master",
+    "gitmaster_source_subpath": ".",
+    "gitmaster_destination_root": "platform/skill-master",
+    "enabled_skill_names": [
+      "diagnose",
+      "improve-codebase-architecture",
+      "tdd"
+    ],
+    "disabled_skill_trees": [
+      "skills/* (except the three enabled skill trees)"
+    ],
+    "required_include": [
+      "docs/onboarding-v1-skill-dependencies.json",
+      "docs/onboarding-v1-skill-discovery.json",
+      "docs/onboarding-v1-skill-index.md",
+      "docs/onboarding-v1-public-example.md",
+      "docs/onboarding-v1-skill-registry.json",
+      "docs/onboarding-v1-skill-upgrade-sources.json",
+      "scripts/audit-skill-discovery.py",
+      "scripts/evaluate-skills.py",
+      "scripts/feishu_enqueue.py",
+      "scripts/sync-skills-to-feishu.py",
+      "scripts/sync-skills.sh",
+      "scripts/validate-skill-frontmatter.py",
+      "scripts/record-tick.sh",
+      "skills/diagnose/**",
+      "skills/improve-codebase-architecture/**",
+      "skills/tdd/**"
+    ],
+    "required_exclude": [
+      "docs/** (except the six onboarding-v1 static files)",
+      "scripts/** (except the seven portable entrypoints above)",
+      "skills/** (except the three enabled skill trees)",
+      "config/**",
+      "metrics/**",
+      "data/**",
+      "external-upstreams/**",
+      "external-skill-packages/**"
+    ],
+    "copy_mode": "complete_directory",
+    "allow_same_name_placeholder": false
+  },
+  "static_files": [
+    {
+      "source": "docs/onboarding-v1-public-example.md",
+      "destination": "platform/skill-master/docs/onboarding-v1-public-example.md",
+      "bytes": 1728,
+      "sha256": "4f6213272b065954686472d14d9fc39ae2a66eeba7891cf36b4efccf78ea246e"
+    },
+    {
+      "source": "docs/onboarding-v1-skill-dependencies.json",
+      "destination": "platform/skill-master/docs/onboarding-v1-skill-dependencies.json",
+      "bytes": 1425,
+      "sha256": "e746446fd39ba9e6ed64053997afae16c295075c90ee6e561959003125a657a8"
+    },
+    {
+      "source": "docs/onboarding-v1-skill-discovery.json",
+      "destination": "platform/skill-master/docs/onboarding-v1-skill-discovery.json",
+      "bytes": 334,
+      "sha256": "129437e0e2d007e371a9643bc8c94db6ed5e45c39d14a30c998ce768f106f8c3"
+    },
+    {
+      "source": "docs/onboarding-v1-skill-index.md",
+      "destination": "platform/skill-master/docs/onboarding-v1-skill-index.md",
+      "bytes": 653,
+      "sha256": "22eb9d7969f757cb9167c67d3f915d800272bba7bd2badbd16d33e243f783f3a"
+    },
+    {
+      "source": "docs/onboarding-v1-skill-registry.json",
+      "destination": "platform/skill-master/docs/onboarding-v1-skill-registry.json",
+      "bytes": 1679,
+      "sha256": "2e82f7135e85d5fd8e4f02fab116af3b4e5bf1d5b09e020c9a448b8143307d5b"
+    },
+    {
+      "source": "docs/onboarding-v1-skill-upgrade-sources.json",
+      "destination": "platform/skill-master/docs/onboarding-v1-skill-upgrade-sources.json",
+      "bytes": 772,
+      "sha256": "cca9fc68ec1cd7d701718ba36bfff378956c64e64385900c08d45e76c85c0b18"
+    },
+    {
+      "source": "scripts/audit-skill-discovery.py",
+      "destination": "platform/skill-master/scripts/audit-skill-discovery.py",
+      "bytes": 17153,
+      "sha256": "adb1d61672798d83febe71a88c92995602b2270650f8884c894f95af74ec2328"
+    },
+    {
+      "source": "scripts/evaluate-skills.py",
+      "destination": "platform/skill-master/scripts/evaluate-skills.py",
+      "bytes": 107289,
+      "sha256": "71603c0c6acc1e617f1a582918dadd0421e7671e9b668c39ba784f9645e81a4d"
+    },
+    {
+      "source": "scripts/feishu_enqueue.py",
+      "destination": "platform/skill-master/scripts/feishu_enqueue.py",
+      "bytes": 8617,
+      "sha256": "f401a440e06a015063125d04101e2544506a529f8d2334c0f6a2654c7a30ae62"
+    },
+    {
+      "source": "scripts/sync-skills-to-feishu.py",
+      "destination": "platform/skill-master/scripts/sync-skills-to-feishu.py",
+      "bytes": 6547,
+      "sha256": "ee41f4ca23d4a33d5ab9fa47539f87f94d7ecaaebd56e25e379db1519be33760"
+    },
+    {
+      "source": "scripts/sync-skills.sh",
+      "destination": "platform/skill-master/scripts/sync-skills.sh",
+      "bytes": 5327,
+      "sha256": "18791d48daa34fb7a6a8306d363f2e44b43892ce1b605eef8152a4d80ee833e9"
+    },
+    {
+      "source": "scripts/validate-skill-frontmatter.py",
+      "destination": "platform/skill-master/scripts/validate-skill-frontmatter.py",
+      "bytes": 3638,
+      "sha256": "df788e702e0dd3b83d1402ada22c824ba90d53732bd5863547209421a5488cd2"
+    },
+    {
+      "source": "scripts/record-tick.sh",
+      "destination": "platform/skill-master/scripts/record-tick.sh",
+      "bytes": 1033,
+      "sha256": "b8926c665345859ea9fda420ad4d33a2830de1f06e10ba82b789d2e3546d8b5e"
+    }
+  ],
+  "skills": [
+    {
+      "name": "diagnose",
+      "source_directory": "skills/diagnose",
+      "destination_directory": "platform/skill-master/skills/diagnose",
+      "file_count": 2,
+      "files": [
+        {
+          "source": "skills/diagnose/SKILL.md",
+          "destination": "platform/skill-master/skills/diagnose/SKILL.md",
+          "bytes": 7481,
+          "sha256": "aab986737a76c7aa3deb3ce4281b5a84b9a93d786c6d2f7533da79599ef8d156"
+        },
+        {
+          "source": "skills/diagnose/scripts/hitl-loop.template.sh",
+          "destination": "platform/skill-master/skills/diagnose/scripts/hitl-loop.template.sh",
+          "bytes": 1164,
+          "sha256": "b2932630950e5210075bcd6f850e5accf30c101c5367b29eac3a29b4dd8084c8"
+        }
+      ]
+    },
+    {
+      "name": "improve-codebase-architecture",
+      "source_directory": "skills/improve-codebase-architecture",
+      "destination_directory": "platform/skill-master/skills/improve-codebase-architecture",
+      "file_count": 4,
+      "files": [
+        {
+          "source": "skills/improve-codebase-architecture/DEEPENING.md",
+          "destination": "platform/skill-master/skills/improve-codebase-architecture/DEEPENING.md",
+          "bytes": 2565,
+          "sha256": "9577485f4fc32c0267639a9151bb41c8af0f8f6086e4bf8b84d5b236e30604e9"
+        },
+        {
+          "source": "skills/improve-codebase-architecture/INTERFACE-DESIGN.md",
+          "destination": "platform/skill-master/skills/improve-codebase-architecture/INTERFACE-DESIGN.md",
+          "bytes": 2725,
+          "sha256": "678c3e34f1339015053212b3316bf0b676c70aa251050a0613667d4e755fb35e"
+        },
+        {
+          "source": "skills/improve-codebase-architecture/LANGUAGE.md",
+          "destination": "platform/skill-master/skills/improve-codebase-architecture/LANGUAGE.md",
+          "bytes": 3804,
+          "sha256": "6feca2140439c54a774749e8367f18350899ff69c777144ed2248cd4407949fa"
+        },
+        {
+          "source": "skills/improve-codebase-architecture/SKILL.md",
+          "destination": "platform/skill-master/skills/improve-codebase-architecture/SKILL.md",
+          "bytes": 5479,
+          "sha256": "109adda8293575da655ef393a597733785570818d90d2107f574b9af11766917"
+        }
+      ]
+    },
+    {
+      "name": "tdd",
+      "source_directory": "skills/tdd",
+      "destination_directory": "platform/skill-master/skills/tdd",
+      "file_count": 6,
+      "files": [
+        {
+          "source": "skills/tdd/SKILL.md",
+          "destination": "platform/skill-master/skills/tdd/SKILL.md",
+          "bytes": 4708,
+          "sha256": "4f44faa309a20fac741673b067bdd147a1b0fa19d20281e61ca5d4d7ec7fff20"
+        },
+        {
+          "source": "skills/tdd/deep-modules.md",
+          "destination": "platform/skill-master/skills/tdd/deep-modules.md",
+          "bytes": 1239,
+          "sha256": "f2123700bf953db1740625686c75bdd145efd486357c47c6818c869fee657a32"
+        },
+        {
+          "source": "skills/tdd/interface-design.md",
+          "destination": "platform/skill-master/skills/tdd/interface-design.md",
+          "bytes": 653,
+          "sha256": "764c5ff0e3fa6b4ab7095eb65ccc7201e090baf19fa16051dfdb72c06d27417d"
+        },
+        {
+          "source": "skills/tdd/mocking.md",
+          "destination": "platform/skill-master/skills/tdd/mocking.md",
+          "bytes": 1481,
+          "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef"
+        },
+        {
+          "source": "skills/tdd/refactoring.md",
+          "destination": "platform/skill-master/skills/tdd/refactoring.md",
+          "bytes": 387,
+          "sha256": "54fced22dd1911b7094c3fe7979b7c1a40d40be307482c4adf7dc0588f27d6cc"
+        },
+        {
+          "source": "skills/tdd/tests.md",
+          "destination": "platform/skill-master/skills/tdd/tests.md",
+          "bytes": 1640,
+          "sha256": "e12182f5c4c6a844b7c6ab4b8d2623b642aaaae5460fe58ed087efd4f3d5fb8a"
+        }
+      ]
+    }
+  ]
+}

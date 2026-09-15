@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "provenance": "public-static-example",
+  "backends": [
+    {"id":"claude","status":"unverified","selectable":false,"models":[]},
+    {"id":"codex","status":"unverified","selectable":false,"models":[]},
+    {"id":"kimi","status":"unverified","selectable":false,"models":[]}
+  ]
+}

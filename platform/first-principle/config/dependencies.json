@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "required": {
+    "python": {"version": "3.11.15", "compatibility": ">=3.11,<3.12", "selection": "FP_PYTHON absolute executable"},
+    "bash": {"version": ">=3.2", "selection": "existing system bash"}
+  },
+  "optional_for_template_json_write": {
+    "jq": {"version": ">=1.6", "selection": "existing user-managed executable"}
+  },
+  "not_required_for_static_generation": ["node", "npm", "sqlite runtime database", "network access"],
+  "verification": "scripts/verify-public-inputs.py prints the actual interpreter path and version"
+}

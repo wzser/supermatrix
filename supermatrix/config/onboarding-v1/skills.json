@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "owner": "skill-master",
+  "installationPolicy": "bundled-public-assets",
+  "allowed": [
+    "diagnose",
+    "improve-codebase-architecture",
+    "tdd"
+  ],
+  "excluded": {
+    "retired": ["email-admin", "first-principle", "lingxing-openapi"],
+    "businessOwned": ["amz-sql", "bitable-ops", "lark-*", "lingxing-*", "sorftime-amazon-data"],
+    "runtimePrivate": ["private credential pools", "shared runtime state", "host-specific operational skills"],
+    "experimental": ["unreviewed or non-canonical skill directories"]
+  },
+  "source": "platform/skill-master/skills",
+  "owner": "skill-master",
+  "provenance": "asset-provenance.json:sources.skills",
+  "handoff": "These exact owner-approved public skill assets are copied from the public distribution tree into the isolated runtime; shared host skill directories are never read or modified."
+}

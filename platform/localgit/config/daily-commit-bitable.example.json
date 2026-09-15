@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_key": "localgit.daily_commit",
+  "mode": "optional-native-lark-cli-mirror",
+  "authority": "localgit",
+  "required_environment": [
+    "LOCALGIT_BITABLE_BASE_TOKEN",
+    "LOCALGIT_BITABLE_TABLE_ID",
+    "SM_LARK_CLI_PATH"
+  ],
+  "unique_key": ["date", "repo_name"],
+  "key_behavior": "exact-key read-before-write; native lark-cli has no atomic business-key upsert",
+  "concurrency": "single writer; duplicate matches fail closed",
+  "fields": {
+    "date": {"type": "text", "required": true},
+    "repo_name": {"type": "text", "required": true},
+    "committed": {"type": "text", "options": ["yes", "no"]},
+    "commit_message": {"type": "text"},
+    "files_changed": {"type": "text"},
+    "skipped_reason": {"type": "text"}
+  },
+  "write_entrypoint": "lark-cli base +record-upsert",
+  "write_contract": {
+    "base_token": "$LOCALGIT_BITABLE_BASE_TOKEN",
+    "table_id": "$LOCALGIT_BITABLE_TABLE_ID",
+    "payload": "one JSON object containing exactly the fields above"
+  },
+  "readback": "Use the installed lark-cli help for the matching record-list or record-get operation and verify the same unique key and field values."
+}

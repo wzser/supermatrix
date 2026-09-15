@@ -1,0 +1,79 @@
+{
+  "contract": "card-callback-public-input.v1",
+  "source_root": "card-callback",
+  "source": {
+    "commit": "8e2bb079a4d5a1728bf54f43c3daaa0e3753301a",
+    "sha256": {
+      "README.md": "cfc4e862fd52c36349d7745865b581ede38e3455c54c7986a14fba0176f7b16a",
+      "package.json": "61caef103aa68d1349a8d693f8f98aa7709d9f3fec4a6e98d658506632b74276",
+      "package-lock.json": "f9828bcc1d127a16f25fa0470fb9594d077890e7eb71b7988c299fa4de1d3aaa",
+      "src/askBroker.js": "0fcf49f5e7febbae71b7aab3b1ba4a20132edb13aa4c4c1ad5546a9053d2e849",
+      "src/broker.js": "92757f821419b28c4315ef85a7e2e27d7b20aca0f64ee59b30f056db6eb57d73",
+      "src/card.js": "fef584bb24e226cbda302f4d7be751376292b3b5b2ec510b8d92729ad2be08f4",
+      "src/cardAction.js": "6998ceeba36c704f2203f90df390486ca630bf328d9bef8ec635008cf419d879",
+      "src/mcpAskServer.js": "0c2902a88f9d1843190fea4c8e1f2ed4f0d33bf95e0163e1d12cab024cb24168",
+      "src/pendingStore.js": "dc9bacafbedcb22c02895efd162ed53f5939bfb3da97580dcaea7829c5bc8816",
+      "test/askBroker.test.js": "4fcd7e345fbdbd467963cbcab690fc735d870636b290f6453a6f9154ce094dbb",
+      "test/card.test.js": "b1c7eafdbec1b3e0e07afe7651942023e7f289ce116efd79758876bfb1e892c5",
+      "test/cardAction.test.js": "d7e0f0eb9b39bf47c9b406bfaeb0d71034d164b48ee3e560465532ad861beb16",
+      "test/mcpAskServer.test.js": "fd1e1acd2a33e505e0598ce90f261cdab757e9437e9d696f2d3a64e8508802da",
+      "test/pendingStore.test.js": "e52c42506ec0395dd68b8c90df2662a0d2b492873e5cf3a9c80f7f4c61e9922c"
+    }
+  },
+  "materialized_card_subtree": {
+    "root": "card-callback",
+    "exact": true
+  },
+  "runtime_dependency": {
+    "node": ">=22",
+    "package": "@larksuiteoapi/node-sdk",
+    "version": "1.73.3"
+  },
+  "include": [
+    "README.md",
+    "package.json",
+    "package-lock.json",
+    "src/askBroker.js",
+    "src/broker.js",
+    "src/card.js",
+    "src/cardAction.js",
+    "src/mcpAskServer.js",
+    "src/pendingStore.js",
+    "test/askBroker.test.js",
+    "test/card.test.js",
+    "test/cardAction.test.js",
+    "test/mcpAskServer.test.js",
+    "test/pendingStore.test.js"
+  ],
+  "exclude": [
+    "test/e2e.test.js",
+    ".gitignore",
+    "node_modules/",
+    ".env",
+    ".env.*",
+    "*.pem",
+    "*.key"
+  ],
+  "required_config": {
+    "LARK_APP_ID": "Set locally to the recipient's app id; never commit it.",
+    "LARK_APP_SECRET": "Provide through a hidden prompt or secret manager; never use argv, chat, or a committed file.",
+    "BROKER_PORT": "Optional loopback HTTP port; default 8787.",
+    "ASK_TIMEOUT_MS": "Optional wait window; default 300000.",
+    "BROKER_URL": "MCP server loopback URL, normally http://127.0.0.1:8787.",
+    "CHAT_ID": "MCP run destination, supplied locally after the bot is added to the chat.",
+    "LARK_FAKE": "Set to 1 for the local no-network test only."
+  },
+  "integration_contract": {
+    "owner": "codexroot",
+    "ws_owner": "framework gateway",
+    "event": "card.action.trigger",
+    "routing_marker": "value.__ask_user === true",
+    "broker_route": "POST /click with {token,value}",
+    "ack": "Return a valid callback response within the provider ACK window for every card action, including non-ask actions.",
+    "single_consumer": "The framework gateway owns the only SDK WSClient; the broker is HTTP-only and lark-cli event consume is not used."
+  },
+  "public_safety": {
+    "allowed_identifiers": "Placeholders only; recipient replaces app/chat/resource values locally.",
+    "forbidden": ["private names", "tenant ids", "remote resource ids", "absolute private paths", "credentials", "Keychain files", "runtime databases"]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "card-callback",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Feishu card-click -> live run injection: broker daemon + ask_user MCP server",
+  "main": "src/broker.js",
+  "scripts": {
+    "test": "node --test test/askBroker.test.js test/card.test.js test/cardAction.test.js test/mcpAskServer.test.js test/pendingStore.test.js",
+    "broker": "node src/broker.js"
+  },
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "1.73.3"
+  },
+  "overrides": {
+    "axios": "1.18.0",
+    "form-data": "4.0.6",
+    "protobufjs": "8.8.0",
+    "qs": "6.16.0"
+  }
+}

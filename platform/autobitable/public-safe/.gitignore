@@ -1,0 +1,6 @@
+.secrets/
+.env.local
+data/*.jsonl
+data/*.jsonl.lock
+registry/bitable-webhooks.json
+node_modules/

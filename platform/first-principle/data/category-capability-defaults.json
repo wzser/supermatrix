@@ -1,0 +1,13 @@
+{
+  "_schema_version": 1,
+  "_doc": "Public fallback only. A live runtime capability registry, when present, remains authoritative.",
+  "defaults": {
+    "业务": ["coding-principle", "sop-principle", "python-runtime"],
+    "知识": ["coding-principle", "sop-principle", "python-runtime"],
+    "平台": ["coding-principle", "sop-principle", "python-runtime"],
+    "工具": ["coding-principle", "sop-principle", "python-runtime"],
+    "外部": ["coding-principle", "sop-principle", "python-runtime"],
+    "员工": ["python-runtime"]
+  },
+  "variants": {}
+}

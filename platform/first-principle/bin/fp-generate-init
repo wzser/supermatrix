@@ -1,0 +1,316 @@
+#!/usr/bin/env bash
+# fp-generate-init — emit CLAUDE.md/AGENTS.md content + Feishu sync hints for a new session.
+# Owned by first-principle. Modular model: the formal CLAUDE.md/AGENTS.md is the
+# ASSEMBLER output (scripts/fp_assemble.py) built from a concrete init-time
+# §000 self section + a category-default capability list. No category templates.
+set -euo pipefail
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+FP_ROOT="${FP_ROOT:-$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd -P)}"
+FP_STATE_DIR="${FP_STATE_DIR:-}"
+NDJSON_PATH="${FP_NDJSON_PATH:-}"
+
+resolve_python() {
+  if [[ -n "${FP_PYTHON:-}" && -x "${FP_PYTHON}" ]]; then
+    printf '%s\n' "${FP_PYTHON}"
+    return 0
+  fi
+  if [[ -x "${FP_ROOT}/.venv/bin/python" ]]; then
+    printf '%s\n' "${FP_ROOT}/.venv/bin/python"
+    return 0
+  fi
+  command -v python3.11 2>/dev/null || true
+}
+
+FP_PYTHON="$(resolve_python)"
+if [[ -z "${FP_PYTHON}" || ! -x "${FP_PYTHON}" ]]; then
+  printf '%s\n' '{"ok":false,"error":"Python 3.11 executable not found; set FP_PYTHON to an executable 3.11 interpreter"}'
+  exit 1
+fi
+if ! "${FP_PYTHON}" -c 'import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 11) else 1)'; then
+  printf '%s\n' '{"ok":false,"error":"FP_PYTHON must be Python 3.11"}'
+  exit 1
+fi
+
+CATEGORY=""
+ALIAS=""
+AVATAR=""
+PURPOSE=""
+BACKEND=""
+SESSION_NAME=""
+WORKDIR=""
+
+emit_err() {
+  local msg="$1"
+  printf '%s\n' "$msg" >&2
+  "${FP_PYTHON}" - "$msg" <<'PY'
+import json, sys
+print(json.dumps({"ok": False, "error": sys.argv[1]}, ensure_ascii=False))
+PY
+  exit 1
+}
+
+if [[ -z "$FP_STATE_DIR" && -z "$NDJSON_PATH" ]]; then
+  emit_err "set FP_STATE_DIR to an external writable state directory (or set FP_NDJSON_PATH explicitly); the public bundle is read-only"
+fi
+if [[ -z "$NDJSON_PATH" ]]; then
+  NDJSON_PATH="$FP_STATE_DIR/session-init.ndjson"
+fi
+
+if ! "${FP_PYTHON}" - "$FP_ROOT" "$FP_STATE_DIR" "$NDJSON_PATH" <<'PY'
+from pathlib import Path
+import sys
+
+root = Path(sys.argv[1]).resolve()
+for raw in sys.argv[2:]:
+    if not raw:
+        continue
+    candidate = Path(raw).expanduser().resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        continue
+    raise SystemExit(
+        f"state path must be outside the public bundle: {candidate}"
+    )
+PY
+then
+  emit_err "FP_STATE_DIR/FP_NDJSON_PATH must resolve outside FP_ROOT; the public bundle is read-only"
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --category)     CATEGORY="${2:-}"; shift 2 ;;
+    --alias)        ALIAS="${2:-}"; shift 2 ;;
+    --avatar)       AVATAR="${2:-}"; shift 2 ;;
+    --purpose)      PURPOSE="${2:-}"; shift 2 ;;
+    --backend)      BACKEND="${2:-}"; shift 2 ;;
+    --session-name) SESSION_NAME="${2:-}"; shift 2 ;;
+    --workdir)      WORKDIR="${2:-}"; shift 2 ;;
+    *) emit_err "unknown argument: $1" ;;
+  esac
+done
+
+[[ -z "$CATEGORY"     ]] && emit_err "missing --category"
+[[ -z "$ALIAS"        ]] && emit_err "missing --alias"
+[[ -z "$AVATAR"       ]] && emit_err "missing --avatar"
+[[ -z "$PURPOSE"      ]] && emit_err "missing --purpose"
+[[ -z "$BACKEND"      ]] && emit_err "missing --backend"
+[[ -z "$SESSION_NAME" ]] && emit_err "missing --session-name"
+
+case "$CATEGORY" in
+  业务|知识|平台|工具|外部|员工) ;;
+  *) emit_err "invalid --category: $CATEGORY (must be 业务|知识|平台|工具|外部|员工)" ;;
+esac
+
+case "$BACKEND" in
+  claude) CONFIG_FILENAME="CLAUDE.md" ;;
+  codex|kimi) CONFIG_FILENAME="AGENTS.md" ;;
+  *) emit_err "invalid --backend: $BACKEND (must be claude|codex|kimi)" ;;
+esac
+
+INITIALIZED_AT="$(date -u +%Y-%m-%dT%H:%M:%S+00:00)"
+
+export FP_ROOT="$FP_ROOT"
+export FP_CONFIG_FILENAME="$CONFIG_FILENAME"
+export FP_SESSION_NAME="$SESSION_NAME"
+export FP_ALIAS="$ALIAS"
+export FP_AVATAR="$AVATAR"
+export FP_PURPOSE="$PURPOSE"
+export FP_CATEGORY="$CATEGORY"
+export FP_BACKEND="$BACKEND"
+export FP_WORKDIR="$WORKDIR"
+export FP_INITIALIZED_AT="$INITIALIZED_AT"
+export FP_NDJSON_PATH="$NDJSON_PATH"
+export FP_PYTHON="$FP_PYTHON"
+
+"$FP_PYTHON" - <<'PY'
+import json, os, sys, subprocess, tempfile, pathlib
+
+FP_ROOT  = pathlib.Path(os.environ["FP_ROOT"])
+session  = os.environ["FP_SESSION_NAME"]
+alias    = os.environ["FP_ALIAS"]
+avatar   = os.environ["FP_AVATAR"]
+purpose  = os.environ["FP_PURPOSE"]
+category = os.environ["FP_CATEGORY"]
+backend  = os.environ["FP_BACKEND"]
+workdir  = os.environ["FP_WORKDIR"]
+ts       = os.environ["FP_INITIALIZED_AT"]
+
+
+def emit_fail(msg):
+    print(json.dumps({"ok": False, "error": msg}, ensure_ascii=False))
+    sys.exit(1)
+
+
+# --- Init-time concrete §000. -----------------------------------------------
+# Keep /new light: the new session still asks only alias/avatar/category/purpose.
+# Once those four fields exist, generate a clean first-pass §000 instead of
+# shipping the authoring template comments/placeholders as the formal doc. §002–
+# §004 remain preserve-optional and are omitted until the session has real
+# workspace/contract/playbook facts to add.
+def one_line(value):
+    return " ".join(str(value).split()).strip()
+
+
+session_s = one_line(session)
+alias_s = one_line(alias)
+purpose_s = one_line(purpose)
+category_s = one_line(category)
+backend_s = one_line(backend)
+
+if category_s == "员工":
+    self_section = "### 我是谁（身份）\n\n> 本段由该员工指定的归属 owner 接管编写与维护，非本 session 自助填写。\n> owner 应在 init 后第一次接管时，按该员工的真实角色与工作内容，\n> 写入完整的「身份 / 职责 / 工作记录规范 / 习惯与偏好」。\n> FP init 只保留此空白 stub，不预写任何身份内容。\n"
+else:
+    self_section = f"""### 我是谁（身份）
+
+- **一句话角色**：{alias_s}（{session_s}，{backend_s} 后端）—— {purpose_s}。
+- **我做什么**：
+  - 围绕「{purpose_s}」接收、拆解并执行用户交给本 session 的任务。
+  - 按「{category_s}」类 session 的默认能力列使用 SuperMatrix 的协作、通知、SOP 与治理模块，必要时通过通讯录把超出能力边界的事项转给对应 owner。
+- **我不做什么**：
+  - 不承接超出「{purpose_s}」的业务 / 平台动作；这类需求先查 §205 通讯录并转给对应 owner。
+  - 不改 FP 装配的 baseline 段（§001 与 §1xx–§2xx），也不替其他 session 写自有身份内容；baseline 问题转 first-principle 或对应 principle owner，自有内容转目标 session。
+
+### 我的职责（我 own 什么）
+
+- 维护本 session 的 §000 自有身份段，以及后续按需补充的 §002/§003/§004 自写运营段；对「{purpose_s}」范围内的任务结果、回执和本地产物负责。
+
+### 我的习惯与偏好（working habits，每条带 Why）
+
+- 涉及自身路由、群、文件路径时优先用 `$SM_SESSION_NAME` 和运行时绑定查询，不硬编码 session 名或群 ID。**Why**：同一 workdir / 脚本可能被复用，硬编码会把通知或状态写到错误对象。
+- 判定任务完成前先看产物、回执或可复现验证结果，不把命令 exit 0 / HTTP 200 当成业务完成。**Why**：触发成功只证明请求发出，不能证明下游状态已经按预期落地。
+"""
+
+stub = f"# {session_s}\n\n## 000 本 session 自有内容\n\n{self_section}\n"
+
+
+# --- Assemble via fp_assemble.py into a throwaway workdir, read back. ---------
+try:
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = pathlib.Path(tmp)
+        (tmp / "CLAUDE.md").write_text(stub, encoding="utf-8")
+        r = subprocess.run(
+            [os.environ["FP_PYTHON"], str(FP_ROOT / "scripts/fp_assemble.py"),
+             "--session", session, "--workdir", str(tmp), "--category-override", category, "--write"],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            emit_fail(f"fp_assemble failed (rc={r.returncode}): {(r.stderr or r.stdout).strip()}")
+        assembled = (tmp / "CLAUDE.md").read_text(encoding="utf-8")
+except OSError as e:
+    emit_fail(f"assembly io error: {e}")
+
+# Modular model: CLAUDE.md and AGENTS.md are byte-identical (assembler writes both).
+claude_content = assembled
+agents_content = assembled
+config_files = [
+    {"filename": "CLAUDE.md", "content": claude_content, "backend": "claude"},
+    {"filename": "AGENTS.md", "content": agents_content, "backend": "codex"},
+]
+# primary = the running backend's file; kept for backwards-compat with any
+# session still on the legacy single-file stub.
+primary_filename = os.environ["FP_CONFIG_FILENAME"]
+primary_content = claude_content if primary_filename == "CLAUDE.md" else agents_content
+
+CHAT_ID = "<CHAT_ID>"
+
+# Group rename + description: lark-cli im +chat-update accepts both in one call.
+# Probed via `lark-cli im +chat-update --help`: --chat-id, --name (<=60), --description (<=100).
+group_name = f"{alias}-{session}-{backend}"
+rename_cmd = (
+    f"lark-cli im +chat-update --as bot --chat-id {CHAT_ID} "
+    f"--name {json.dumps(group_name, ensure_ascii=False)}"
+)
+desc_cmd = (
+    f"lark-cli im +chat-update --as bot --chat-id {CHAT_ID} "
+    f"--description {json.dumps(purpose, ensure_ascii=False)}"
+)
+
+# Avatar: NOT pushed here (2026-09-12).  Until today this emitted a three-line shell
+# COMMENT marked supported="unknown"; the runbook runs unknown commands with `bash -c`
+# and treats exit 0 as success, so every new session truthfully reported "群头像同步成功"
+# while `bash -c "# ..."` did exactly nothing — amz-sql-ad kept the default group avatar
+# with a green checkmark next to it.  The avatar's real path is the two-hop one described
+# in step 7: first-principle's init-sync backfill uploads the image into the Bitable 头像
+# column, and the next sync-session-table.sh run pulls the file_token into sessions.avatar
+# and pushes it to the group.  So this instruction is now supported=False like
+# bitable_metadata_sync — skipped, never executed, never claimed.
+avatar_cmd = ":"
+
+# Bitable session-table sync is an FP-owned queue operation.  The generated
+# document runs in the new session, so it must leave the matching ndjson entry
+# pending for first-principle's owner-side init-sync backfill instead of
+# impersonating first-principle at the public enqueue boundary.
+bitable_sync_cmd = ":"
+
+result = {
+    "ok": True,
+    "config_md_filename": primary_filename,
+    "config_md_content": primary_content,
+    "config_files": config_files,
+    "ndjson_path": os.environ["FP_NDJSON_PATH"],
+    "feishu_sync_instructions": [
+        {
+            "type": "rename_group",
+            "command": rename_cmd,
+            "explanation": "把当前 session 群名改成三段式 {alias}-{session_name}-{backend}（lark-cli im +chat-update --name）",
+            "supported": True,
+        },
+        {
+            "type": "update_description",
+            "command": desc_cmd,
+            "explanation": "把群描述改成 purpose（lark-cli im +chat-update --description，最多 100 字）",
+            "supported": True,
+        },
+        {
+            "type": "update_avatar",
+            "command": avatar_cmd,
+            "explanation": (
+                "群头像不在本步骤推送，本条固定跳过。头像随 bitable_metadata_sync 一起"
+                "留在 ndjson pending 里，由 first-principle 按 init-sync SOP 传进飞书表"
+                "「头像」列，再由下一次 sync-session-table.sh 全量同步推给群。"
+                "新 session 不要自己上传 image_key 或 PUT /chats——那会绕开 sessions.avatar "
+                "的 file_token 契约，也不要在群里宣称头像已同步。"
+            ),
+            "supported": False,
+        },
+        {
+            "type": "bitable_metadata_sync",
+            "command": bitable_sync_cmd,
+            "explanation": (
+                "这是 first-principle 专属的公共队列操作：新 session 不得直接执行脚本或冒用 --from。"
+                "保留 ndjson pending，由 first-principle 按 init-sync SOP 执行并读回 verified_done；"
+                "在 owner 处理前本地按 pending / exit 75 记账，勿自行重试 enqueue。"
+            ),
+            "supported": False,
+        },
+    ],
+}
+
+print(json.dumps(result, ensure_ascii=False))
+
+# Append one ndjson record per session (the session name is the idempotency key).
+ndjson_path = os.environ["FP_NDJSON_PATH"]
+pathlib.Path(ndjson_path).parent.mkdir(parents=True, exist_ok=True)
+record = {
+    "session_name": session,
+    "alias": alias,
+    "avatar": avatar,
+    "category": category,
+    "purpose": purpose,
+    "backend": backend,
+    "initialized_at": ts,
+    "feishu_sync_ok": None,
+    "workdir": workdir,
+}
+existing = []
+path = pathlib.Path(ndjson_path)
+if path.exists():
+    existing = path.read_text(encoding="utf-8").splitlines()
+if not any(
+    line.strip() and json.loads(line).get("session_name") == session
+    for line in existing
+):
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+PY

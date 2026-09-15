@@ -1,0 +1,10 @@
+{
+  "session_name": "example-agent",
+  "alias": "Example agent",
+  "avatar": "emoji:🧪",
+  "category": "工具",
+  "affiliation": "first-principle",
+  "purpose": "示例身份与原则装配",
+  "backend": "codex",
+  "workdir": "/path/to/agent-workdir"
+}

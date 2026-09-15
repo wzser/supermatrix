@@ -1,0 +1,735 @@
+{
+  "version": 1,
+  "maxDeleteBytes": 85899345920,
+  "safeRoots": [
+    "/Users/LOCAL_USER/.cache",
+    "/Users/LOCAL_USER/.codex",
+    "/Users/LOCAL_USER/.codex/sessions",
+    "/Users/LOCAL_USER/.npm",
+    "/Users/LOCAL_USER/Library/Caches",
+    "/Users/LOCAL_USER/Library/Application Support/Google/GoogleUpdater/crx_cache",
+    "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces",
+    "/Users/LOCAL_USER/SuperMatrixRuntime/data",
+    "/Users/LOCAL_USER/CodexSkills",
+    "/Users/LOCAL_USER/.Trash",
+    "/private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X"
+  ],
+  "rules": [
+    {
+      "id": "codex-unmanaged-state-backups",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "scripts/codex-state-snapshot.ts",
+        "key": "codex-state-snapshot:{basename}",
+        "version": "codex-state-snapshot/v1",
+        "probe": "node_modules/.bin/tsx scripts/codex-state-snapshot.ts create --owner cachem --operation-id weekly-cache-cleanup-recovery-probe --reason recovery-probe --expiry-hours 1"
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.codex"
+      ],
+      "retentionDays": 3,
+      "includeBasenamePrefixes": [
+        "state_5.sqlite.bak-"
+      ],
+      "description": "Fail-safe cleanup for unmanaged legacy Codex state copies. New recovery snapshots must use scripts/codex-state-snapshot.ts, which requires owner/reason/expiry receipts and a maximum 72-hour lifetime. The active state_5.sqlite and its WAL/SHM files do not match this prefix."
+    },
+    {
+      "id": "uv-temp-cache",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "uv",
+        "key": "uv-cache-staging:{basename}",
+        "version": "uv-cache/v0",
+        "probe": "uv pip install --no-deps --reinstall --target \"$(mktemp -d)\" packaging && test -d /Users/LOCAL_USER/.cache/uv"
+      },
+      "owner": "cachem",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.cache/uv"
+      ],
+      "retentionDays": 1,
+      "includeBasenamePrefixes": [
+        ".tmp"
+      ],
+      "description": "Remove abandoned uv temporary cache entries only."
+    },
+    {
+      "id": "uv-archive-cache-old-entries",
+      "owner": "cachem",
+      "enabled": true,
+      "action": "uv_cache_prune",
+      "paths": [
+        "/Users/LOCAL_USER/.cache/uv"
+      ],
+      "retentionDays": 0,
+      "native": {
+        "kind": "uv-cache-prune",
+        "executable": "/Users/LOCAL_USER/.local/bin/uv",
+        "expectedVersion": "0.11.7",
+        "timeoutMs": 60000,
+        "lockTimeoutMs": 2000
+      },
+      "description": "Existing uv archive rule, controlled native-prune scope only. uv decides unused entries with its own cache schema and locks; no direct rm, no force, no claim of a fixed mtime candidate set."
+    },
+    {
+      "id": "sm-runtime-db-backups",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "scripts/managed-sqlite-snapshot.ts",
+        "key": "managed-sqlite-snapshot:{basename}",
+        "version": "managed-sqlite-snapshot/v1",
+        "probe": "cd /Users/LOCAL_USER/SuperMatrix && node_modules/.bin/tsx scripts/managed-sqlite-snapshot.ts create --source-db /Users/LOCAL_USER/SuperMatrixRuntime/data/supermatrix.db --owner cachem --operation-id weekly-cache-cleanup-recovery-probe --reason recovery-probe --expiry-hours 1"
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data",
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/supermatrix-recovery-backups"
+      ],
+      "retentionDays": 3,
+      "includeBasenamePrefixes": [
+        "supermatrix.db.bak",
+        "supermatrix.db.backup",
+        "supermatrix.db.pre-",
+        "supermatrix-before-",
+        "scheduler.db.bak",
+        "scheduler-before-",
+        "scheduler-v2.db.bak"
+      ],
+      "description": "Fail-safe cleanup for unmanaged legacy runtime-DB snapshots after 3 days. New SuperMatrix/scheduler pre-mutation snapshots must use scripts/managed-sqlite-snapshot.ts with owner, operationId, reason and a hard 1-72 hour expiry; verified completion releases the artifact immediately. This rule is deliberately independent of disaster-backup ledgers, never creates a replacement backup, and its prefixes cannot match live supermatrix.db / scheduler.db / scheduler-v2.db or their WAL/SHM files."
+    },
+    {
+      "id": "code-sign-clone-stale",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "macOS code-signing clone staging (launch/update of the owning app)",
+        "key": "code-sign-clone:{basename}",
+        "version": "macos-code-sign-clone/v1",
+        "probe": "open -a \"Google Chrome\" && open -a ziniao && sleep 20 && ls -d /private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X/*.code_sign_clone/code_sign_clone.*"
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X/org.ZiXun.ziniaobrowser.code_sign_clone",
+        "/private/var/folders/n4/vc_51r_17qvf1k9l8x4f17tw0000gn/X/com.google.Chrome.code_sign_clone"
+      ],
+      "retentionDays": 7,
+      "includeBasenamePrefixes": [
+        "code_sign_clone."
+      ],
+      "description": "Remove stale macOS code_sign_clone app-update leftovers (ziniao leaks ~4x343MB per day). Running apps only reference their newest clones; 7-day retention keeps those safe."
+    },
+    {
+      "id": "codex-session-transcripts-old-days",
+      "owner": "cachem",
+      "enabled": false,
+      "safetyState": "blocked",
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.codex/sessions/2026/01",
+        "/Users/LOCAL_USER/.codex/sessions/2026/02",
+        "/Users/LOCAL_USER/.codex/sessions/2026/03",
+        "/Users/LOCAL_USER/.codex/sessions/2026/04",
+        "/Users/LOCAL_USER/.codex/sessions/2026/05",
+        "/Users/LOCAL_USER/.codex/sessions/2026/06",
+        "/Users/LOCAL_USER/.codex/sessions/2026/07",
+        "/Users/LOCAL_USER/.codex/sessions/2026/08",
+        "/Users/LOCAL_USER/.codex/sessions/2026/09",
+        "/Users/LOCAL_USER/.codex/sessions/2026/10",
+        "/Users/LOCAL_USER/.codex/sessions/2026/11",
+        "/Users/LOCAL_USER/.codex/sessions/2026/12"
+      ],
+      "retentionDays": 45,
+      "description": "REGISTERED, SAFETY BLOCKED: legacy directory-mtime selection deleted recently active transcripts and must not be re-enabled. Future coverage requires codexroot-approved per-session terminal/activity identity, no shared or active session/process, complete external archive/member hashes, verified restore and index/resume compatibility, retention age and exact owner-contract candidates. Do not delete unique histories or runtime indexes. Coverage record: /Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-coverage/coverage-plan.json."
+    },
+    {
+      "id": "chrome-cache-old-profiles",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "Google Chrome disk cache",
+        "key": "chrome-profile-cache:{basename}",
+        "version": "chromium-simple-cache/v8",
+        "probe": "open -a \"Google Chrome\" https://www.google.com && sleep 20 && test -d \"/Users/LOCAL_USER/Library/Caches/Google/Chrome/{basename}\""
+      },
+      "owner": "cachem",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/Google/Chrome"
+      ],
+      "retentionDays": 7,
+      "description": "Remove stale Chrome profile cache directories under ~/Library/Caches only; Chrome profile data under Application Support is not touched."
+    },
+    {
+      "id": "ziniaobrowser-cache-old-profiles",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "ziniao browser disk cache",
+        "key": "ziniao-userdata-cache:{basename}",
+        "version": "chromium-simple-cache/v8",
+        "probe": "open -a ziniao && sleep 30 && test -d /Users/LOCAL_USER/Library/Caches/ziniaobrowser/userdata"
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/ziniaobrowser/userdata"
+      ],
+      "retentionDays": 7,
+      "description": "Remove stale ZiNiao browser userdata cache directories under ~/Library/Caches only; Application Support runtime/profile data is not touched."
+    },
+    {
+      "id": "google-updater-crx-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "GoogleUpdater (Omaha CRX download)",
+        "key": "googleupdater-crx:{basename}",
+        "version": "googleupdater-crx-cache/v1",
+        "probe": "\"/Users/LOCAL_USER/Library/Application Support/Google/GoogleUpdater/Current/GoogleUpdater.app/Contents/MacOS/GoogleUpdater\" --update && test -s \"/Users/LOCAL_USER/Library/Application Support/Google/GoogleUpdater/crx_cache/metadata.json\""
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Application Support/Google/GoogleUpdater/crx_cache"
+      ],
+      "retentionDays": 14,
+      "description": "Remove stale GoogleUpdater CRX package cache entries; updater can re-download these packages."
+    },
+    {
+      "id": "weekly-cache-cleanup-receipts",
+      "owner": "cachem",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup",
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/prune-message-runs"
+      ],
+      "retentionDays": 90,
+      "description": "REGISTERED, SAFETY BLOCKED: cleanup/prune receipts and audit sidecars are unique evidence. Preserve originals until a cachem-approved complete archive/member manifest on verified external storage, SHA-256 readback, isolated restore probe, consumer-reference check and independent release review permit exact online-copy removal. Reuse this rule ID via owner-contract selection; never enable its legacy directory-age selector. Do not archive live/open receipts or overwrite historical receipt paths. Coverage record: /Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-coverage/coverage-plan.json.",
+      "safetyState": "blocked"
+    },
+    {
+      "id": "skill-master-weekly-snapshot-generations",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "skill-master/scripts/skill-upgrade-rollback.py",
+        "key": "skill-master-weekly-snapshot:{basename}",
+        "version": "skill-master-weekly-snapshot/v2",
+        "probe": "isolated recovery contract: use the verified snapshot archives only; restore is dry-run with --skip-sync, never an actual restore"
+      },
+      "owner": "skill-master",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master/data/skill-upgrades/snapshots"
+      ],
+      "retentionDays": 14,
+      "protectedBasenames": [
+        "20260625T085722Z-baseline-before-weekly-skill-upgrade",
+        "20260625T090858Z-weekly-skill-upgrade"
+      ],
+      "description": "Owner-approved rolling retention: weekly complete four-root snapshot generations older than 14 days, retaining the newest 2 complete generations plus both explicit legacy holds. Every retained anchor and candidate must pass manifest/archive hashes, restore dry-run, verify-current and tar probes; any retained-anchor failure stops later candidates in that group. Approved owner policy: skill-master-owner-review.json (2026-09-10).",
+      "retention": {
+        "retainNewest": 2,
+        "groupBy": "parent",
+        "order": "manifest-created-at-desc-path-asc"
+      },
+      "gate": {
+        "kind": "snapshot-manifest",
+        "manifestName": "manifest.json",
+        "requiredReason": "weekly",
+        "snapshotIdMatchesBasename": true,
+        "requiredRootKeys": [
+          "skill-master",
+          "superpowers",
+          "gstack",
+          "skill-upgrade-baselines"
+        ],
+        "requireArchiveResultExists": true,
+        "tarProbe": {
+          "executable": "/usr/bin/tar",
+          "args": [
+            "-tzf",
+            "{archivePath}"
+          ],
+          "stdout": "discard"
+        },
+        "restoreDryRunProbe": {
+          "executable": "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master/.venv/bin/python",
+          "args": [
+            "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master/scripts/skill-upgrade-rollback.py",
+            "restore",
+            "{snapshotId}",
+            "--dry-run",
+            "--skip-sync"
+          ],
+          "cwd": "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master",
+          "timeoutMs": 120000,
+          "stdoutIncludes": [
+            "would_restore skill-master",
+            "would_restore superpowers",
+            "would_restore gstack",
+            "would_restore skill-upgrade-baselines",
+            "would_run_sync=False"
+          ]
+        },
+        "verifyCurrentProbe": {
+          "executable": "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master/.venv/bin/python",
+          "args": [
+            "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master/scripts/skill-upgrade-rollback.py",
+            "verify-current",
+            "--json",
+            "--no-report"
+          ],
+          "cwd": "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/skill-master",
+          "timeoutMs": 120000,
+          "stdoutJson": {
+            "requiredKeys": [
+              "ok"
+            ],
+            "equals": {
+              "ok": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "kimi-profile-pristine-generations",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "Kimi Code official release plus SM-PATCH recovery",
+        "key": "kimi-profile-pristine:{path}",
+        "version": "kimi-pristine-generation/v1",
+        "probe": "isolated download only: official 0.27.0 or 0.29.0 URL with HTTP 200 and byte-length receipt, then --version, codesign --verify --strict, and SM-PATCH verify/rebuild; never write any profile"
+      },
+      "owner": "codexroot",
+      "enabled": false,
+      "action": "delete_named_descendants_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/data/credential-profiles/kimi"
+      ],
+      "retentionDays": 30,
+      "matchBasenamePrefixes": [
+        "kimi.pristine-"
+      ],
+      "protectedBasenames": [
+        "kimi",
+        "kimi.pre-sm-patch"
+      ],
+      "retention": {
+        "retainNewest": 2,
+        "groupBy": "parent",
+        "order": "mtime-desc-path-asc"
+      },
+      "maxDepth": 3,
+      "description": "Across every Kimi credential profile, retain 30 days and at least two newest pristine generations per profile bin. Active bin/kimi and bin/kimi.pre-sm-patch are exact non-matches. Recovery is isolated download/version/codesign/SM-PATCH verify-rebuild and never profile mutation."
+    },
+    {
+      "id": "kimi-trash-pristine-duplicates",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "Kimi Code official release plus SM-PATCH recovery",
+        "key": "kimi-trash-pristine:{basename}",
+        "version": "kimi-trash-pristine-duplicate/v1",
+        "probe": "isolated download only: official matching-version URL with HTTP 200 and byte-length receipt, then --version, codesign --verify --strict, and SM-PATCH verify/rebuild; never write any profile"
+      },
+      "owner": "codexroot",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.Trash",
+        "/Users/LOCAL_USER/.Trash/.kimi-code.pre-profile-zs-20260731/bin"
+      ],
+      "retentionDays": 30,
+      "includeBasenamePrefixes": [
+        "kimi.pristine-"
+      ],
+      "gate": {
+        "kind": "sha256-authoritative",
+        "authoritativePaths": [
+          "/Users/LOCAL_USER/SuperMatrixRuntime/data/credential-profiles/kimi/zp/bin/{basename}"
+        ]
+      },
+      "description": "Only the two exact Trash roots and kimi.pristine-* basenames are in scope; every candidate SHA-256 must equal the current protected zp profile pristine of the same basename. Other Trash contents and kimi/kimi.bak/pre-sm-patch never match."
+    },
+    {
+      "id": "kimi-trash-active-backup",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "Kimi Code official release plus SM-PATCH recovery",
+        "key": "kimi-trash-active-backup:{basename}",
+        "version": "kimi-trash-active-backup/v1",
+        "probe": "isolated download only: official active-version URL with HTTP 200 and byte-length receipt, then --version, codesign --verify --strict, and SM-PATCH verify/rebuild; never write any profile"
+      },
+      "owner": "codexroot",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.Trash"
+      ],
+      "retentionDays": 30,
+      "exactBasenames": [
+        "kimi.bak"
+      ],
+      "gate": {
+        "kind": "sha256-authoritative",
+        "authoritativePaths": [
+          "/Users/LOCAL_USER/SuperMatrixRuntime/data/credential-profiles/kimi/zs/bin/kimi"
+        ]
+      },
+      "description": "Only .Trash/kimi.bak is eligible, and only when its SHA-256 equals the protected active zs profile bin/kimi. Trash kimi, kimi.pre-sm-patch, nested profile backups, and all other contents never match."
+    },
+    {
+      "id": "npm-npx-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "npm exec (npx)",
+        "key": "npx-cache:{basename}",
+        "version": "npm-npx-cache/v1",
+        "probe": "npx --yes cowsay@1.6.0 --version >/dev/null && test -n \"$(ls -A /Users/LOCAL_USER/.npm/_npx)\""
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.npm/_npx"
+      ],
+      "retentionDays": 14,
+      "description": "Remove old one-off npx package execution caches."
+    },
+    {
+      "id": "go-build-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "go build",
+        "key": "go-build-action:{basename}",
+        "version": "go-build-cache/v1",
+        "probe": "d=\"$(mktemp -d)\" && cd \"$d\" && go mod init probe >/dev/null && echo 'package main' > main.go && echo 'func main(){}' >> main.go && go build ./... && test -n \"$(ls -A \"$(go env GOCACHE)\")\""
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/go-build"
+      ],
+      "retentionDays": 14,
+      "description": "Remove old Go build cache entries."
+    },
+    {
+      "id": "pip-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "pip",
+        "key": "pip-http-cache:{basename}",
+        "version": "pip-http-cache/v2",
+        "probe": "pip3 download --no-deps --dest \"$(mktemp -d)\" packaging && test -d /Users/LOCAL_USER/Library/Caches/pip/http-v2"
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/pip"
+      ],
+      "retentionDays": 30,
+      "description": "Remove old pip HTTP/package cache entries."
+    },
+    {
+      "id": "yarn-v6-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "Yarn Classic via Corepack",
+        "key": "yarn-v6-package:{basename}",
+        "version": "yarn-classic-cache/v6",
+        "probe": "d=\"$(mktemp -d)\" && trap '/bin/rm -R \"$d\"' EXIT && mkdir \"$d/work\" \"$d/cache\" && cd \"$d/work\" && YARN_CACHE_FOLDER=\"$d/cache\" /usr/local/bin/corepack yarn@1.22.22 init -y >/dev/null && YARN_CACHE_FOLDER=\"$d/cache\" /usr/local/bin/corepack yarn@1.22.22 add --ignore-scripts --non-interactive is-number@7.0.0 >/dev/null && test -n \"$(find \"$d/cache/v6\" -mindepth 1 -maxdepth 1 -name 'npm-is-number-*' -print -quit)\""
+      },
+      "owner": "codexroot",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/Yarn/v6"
+      ],
+      "retentionDays": 14,
+      "includeBasenamePrefixes": [
+        "npm-"
+      ],
+      "description": "Remove only old Yarn Classic v6 package entries; Corepack regenerates an isolated package cache in the recovery probe."
+    },
+    {
+      "id": "python-bytecode-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "CPython PYTHONPYCACHEPREFIX",
+        "key": "apple-python-bytecode:{path}",
+        "version": "cpython-pyc-cache/v1",
+        "probe": "d=\"$(mktemp -d)\" && trap '/bin/rm -R \"$d\"' EXIT && PYTHONPYCACHEPREFIX=\"$d\" /usr/bin/python3 -c 'import json' && test -n \"$(find \"$d\" -type f -name '*.pyc' -print -quit)\""
+      },
+      "owner": "codexroot",
+      "enabled": true,
+      "action": "delete_matching_files_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/com.apple.python"
+      ],
+      "retentionDays": 7,
+      "suffixes": [
+        ".pyc"
+      ],
+      "maxDepth": 16,
+      "description": "Remove only old regular .pyc leaves from the Apple Python cache mirror; never delete mirrored directory roots or non-bytecode files."
+    },
+    {
+      "id": "playwright-cache-old-entries",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "playwright install",
+        "key": "playwright-browser:{basename}",
+        "version": "playwright-browsers/v1",
+        "probe": "cd /Users/LOCAL_USER/SuperMatrix && npx --yes playwright install chromium && test -n \"$(ls -A /Users/LOCAL_USER/Library/Caches/ms-playwright)\""
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/Library/Caches/ms-playwright"
+      ],
+      "retentionDays": 30,
+      "description": "Remove old Playwright browser cache entries; browsers can be downloaded again."
+    },
+    {
+      "id": "workspace-python-test-caches",
+      "recovery": {
+        "kind": "regenerable_cache",
+        "producer": "CPython bytecode compiler / pytest",
+        "key": "python-test-cache:{path}",
+        "version": "cpython-3.11-pyc-and-pytest-cache/v1",
+        "probe": "cd \"$(dirname '{path}')\" && python3 -m compileall . >/dev/null; python3 -m pytest -q --collect-only >/dev/null 2>&1; test -d '{path}'"
+      },
+      "owner": "cachem",
+      "enabled": true,
+      "action": "delete_named_descendants_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces",
+        "/Users/LOCAL_USER/CodexSkills"
+      ],
+      "names": [
+        "__pycache__",
+        ".pytest_cache"
+      ],
+      "retentionDays": 7,
+      "maxDepth": 8,
+      "description": "Remove stale Python bytecode and pytest cache directories inside managed workspaces."
+    },
+    {
+      "id": "huodaiduijie-attachments-owner-pending",
+      "owner": "huodaiduijie",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/huodaiduijie/.attachments/wechat-price-downloads",
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/huodaiduijie/.attachments/wechat-dw-delivery-window"
+      ],
+      "retentionDays": 30,
+      "description": "Pending owner approval. Do not enable until huodaiduijie confirms retention and receipt policy."
+    },
+    {
+      "id": "copysm-runs-owner-pending",
+      "owner": "copysm",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/copysm/runs"
+      ],
+      "retentionDays": 30,
+      "description": "Pending owner approval. Do not enable until copysm confirms recovery requirements."
+    },
+    {
+      "id": "monet-outputs-owner-pending",
+      "owner": "monet",
+      "enabled": false,
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/monet/outputs"
+      ],
+      "retentionDays": 45,
+      "description": "Pending owner approval. Do not enable until monet confirms asset archive requirements."
+    },
+    {
+      "id": "amz-sql-dashenlin-raw-exact-hash-duplicates",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "amz-sql retained exact-hash peer under productdata-raw/dashenlin",
+        "key": "amz-sql-dashenlin-raw:{basename}",
+        "version": "amz-sql-raw-cleanup-candidate/v1",
+        "probe": "isolated recovery contract: copy the contract retained_path back to {path}; both sides are re-hashed and must equal the contract sha256 before any delete"
+      },
+      "owner": "amz-sql",
+      "enabled": true,
+      "action": "delete_owner_contract_candidates",
+      "paths": [
+        "/Users/LOCAL_USER/CodexSkills/amz-sql/productdata-raw/dashenlin"
+      ],
+      "retentionDays": 14,
+      "contract": {
+        "path": "/Users/LOCAL_USER/SuperMatrixRuntime/data/storage-growth-governance/2026-08-24/T005-amz-sql.json",
+        "sha256": "d5bf1f01ff3e7f13d7fc17cab29ae1f0a7c6256808ff0db2b46e2cc32a31853e",
+        "owner": "amz-sql",
+        "taskId": "T005",
+        "recoveryMode": "retained-hash-peer",
+        "cohortField": "source",
+        "cohortValue": "dashenlin"
+      },
+      "description": "T005 owner-approved exact-hash redundant dashenlin raw artifacts. The digest-pinned contract is the whole candidate list: nothing is walked, globbed or matched by name. Each candidate must still be a regular file whose size and sha256 equal the contract, its retained exact-hash peer must exist outside the candidate set and re-hash to the same value, and an independent 14-day mtime floor applies on top. The xnurta_ad and lingxing_fba_cargo_api cohorts are blocked in the same contract and are rejected by the source=dashenlin cohort gate."
+    },
+    {
+      "id": "ad-adjust-daily-decision-archived-runs",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "ad-adjust build_report_retention_contract.py compact pack (ad-adjust-daily-decision-pack/v1)",
+        "key": "ad-adjust-daily-decision:{basename}",
+        "version": "ad-adjust-daily-decision-pack/v1",
+        "probe": "isolated recovery contract: the sealed tar.gz named by the run archive manifest is re-hashed and every live file in {path} must match an archived member by relative path, bytes and sha256 before any delete"
+      },
+      "owner": "ad-adjust",
+      "enabled": false,
+      "action": "delete_owner_contract_candidates",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/ad-adjust/reports/daily-decision"
+      ],
+      "retentionDays": 30,
+      "contract": {
+        "path": "/Users/LOCAL_USER/SuperMatrixRuntime/data/storage-growth-governance/2026-08-24/T006-ad-adjust.json",
+        "sha256": "1abcad5e117ba9a1a6fda7e785d913e17019e0ff106b25bbea610fd923c550fd",
+        "owner": "ad-adjust",
+        "taskId": "T006",
+        "recoveryMode": "verified-archive-manifest",
+        "crossCheck": {
+          "path": "/Users/LOCAL_USER/SuperMatrixRuntime/data/storage-growth-governance/2026-08-24/T006-ad-adjust-candidates.json",
+          "sha256": "3eaabd81946f06079003c65d08470eb526c5f691e8eca05668250c8f2908e4d4"
+        }
+      },
+      "description": "T006 owner-approved expired online copies of daily-decision runs that a verified compact pack already holds. The T006 receipt is a rich-info wrapper, so its referenced candidate manifest is digest-pinned as well and every candidate path/bytes/sha256 must agree item by item. Per candidate the sealed archive is re-hashed against the run manifest and the live tree must equal the archived member set file for file, so every byte deleted is provably inside the verified archive. Only the daily-decision class is in scope; compact-receipt-packs, legacy-sop-runs, manual-reconcile and other-reports stay blocked and are absent from the contract candidate list."
+    },
+    {
+      "id": "heartbeat-dryrun-cohort-per-candidate-recovery",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "heartbeat T017 per-candidate recovery archive (heartbeat.per-candidate-recovery-manifest/v1)",
+        "key": "heartbeat-t02-dryrun-candidate:{basename}",
+        "version": "heartbeat-per-candidate-recovery/v1",
+        "probe": "isolated recovery contract: restore the declared tar member for {path} from the T017 per-candidate recovery archive; before any delete the T017 verify probe re-runs that restore dry-run and re-hashes the restored bytes against the contract sha256"
+      },
+      "owner": "heartbeat",
+      "enabled": false,
+      "action": "delete_owner_contract_candidates",
+      "paths": [
+        "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/heartbeat/data/history-manifests/T02-dryrun-20260821"
+      ],
+      "retentionDays": 1,
+      "contract": {
+        "path": "/Users/LOCAL_USER/SuperMatrixRuntime/data/storage-growth-governance/2026-08-24/T004-heartbeat.json",
+        "sha256": "9c1216f7d4e30fd22d97aac3e0849dad88b6e5813ecb7ac76c5140e454e3d5a3",
+        "owner": "heartbeat",
+        "taskId": "T004",
+        "recoveryMode": "per-candidate-recovery-probe",
+        "recoveryProbe": {
+          "executable": "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/heartbeat/data/storage-retention/T017/verify-per-candidate-recovery",
+          "args": [
+            "{path}",
+            "{sha256}"
+          ],
+          "timeoutMs": 300000,
+          "stdoutJson": {
+            "requiredKeys": [
+              "status"
+            ],
+            "equals": {
+              "status": "passed"
+            }
+          }
+        }
+      },
+      "description": "T004 owner-approved T02-dryrun-20260821 reproducible dry-run acceptance artifacts, wired through the T017 per-candidate recovery source. The digest-pinned contract is the whole candidate list: each of the 5 exact files must still be a regular file whose size and sha256 equal the contract, and the owner-published T017 verify probe is re-run per candidate with the declared path and sha256 before any delete; a non-passing probe fail-closes that candidate and keeps it. production-20260820, the completion canonical objects and the active heartbeat SQLite/WAL/SHM stay protected by the config-independent never-sweep gate, which no rule or contract can switch off."
+    },
+    {
+      "id": "adhand-tmp-exact-eight-controlled",
+      "owner": "adhand",
+      "enabled": false,
+      "action": "delete_owner_contract_candidates",
+      "recovery": {
+        "kind": "restorable_artifact",
+        "producer": "adhand",
+        "key": "source-append-only-prefix-and-queue-final-audit/{path}",
+        "version": "adhand-tmp-owner-review/v1",
+        "probe": "adhand-tmp-recovery-probe.js --path {path} --sha256 {sha256}"
+      },
+      "paths": [
+        "/private/tmp/queue-all.json",
+        "/private/tmp/adhand-current-list.XXXXXX.json",
+        "/private/tmp/adhand-final-list.XXXXXX.json",
+        "/private/tmp/adhand-final-queue.json",
+        "/private/tmp/adhand-queue-current.json",
+        "/private/tmp/adhand-queue-after-stop.json",
+        "/private/tmp/adhand-queue-before-codexroot.json",
+        "/private/tmp/adhand-all-compact.json"
+      ],
+      "retentionDays": 0,
+      "description": "Controlled owner contract for exactly eight approved adhand temporary diagnostic files; exact contract list only, no glob, no directory-age selector, no future /tmp authorization. SAFETY BLOCKED pending F-001 managed-snapshot apply/dry-run scope closure and independent release review; /private/tmp has NOT been added to live safeRoots. Owner approval alone is not production release. See /Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-coverage/config-review.json.",
+      "contract": {
+        "path": "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-growth/adhand-tmp-controlled/storage-retention-contract.json",
+        "sha256": "76416d86e085e254905f1e2effaa26caddb16c6996f537a056b660fd22311d02",
+        "owner": "adhand",
+        "taskId": "adhand-tmp-20260910",
+        "recoveryMode": "per-candidate-recovery-probe",
+        "crossCheck": {
+          "path": "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-growth/adhand-tmp-controlled/candidate-manifest-crosscheck.json",
+          "sha256": "7d21cbbb6b33a259f432f91d422ba7ca4e78ba47f2a45fd07677bff4934b86b2"
+        },
+        "recoveryProbe": {
+          "executable": "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-growth/adhand-tmp-controlled/adhand-tmp-recovery-probe.js",
+          "args": [
+            "--path",
+            "{path}",
+            "--sha256",
+            "{sha256}",
+            "--manifest",
+            "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-growth/adhand-tmp-controlled/candidate-manifest-crosscheck.json"
+          ],
+          "cwd": "/Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-growth/adhand-tmp-controlled",
+          "timeoutMs": 120000,
+          "stdout": "capture",
+          "stdoutJson": {
+            "requiredKeys": [
+              "status",
+              "source",
+              "retained_audit",
+              "candidates"
+            ],
+            "equals": {
+              "status": "passed"
+            }
+          }
+        }
+      },
+      "safetyState": "blocked"
+    },
+    {
+      "id": "web-access-cache-owner-pending",
+      "owner": "cachem",
+      "enabled": false,
+      "safetyState": "blocked",
+      "action": "delete_children_older_than",
+      "paths": [
+        "/Users/LOCAL_USER/.web-acess"
+      ],
+      "retentionDays": 30,
+      "description": "REGISTERED ONLY, NOT APPROVED FOR DELETION. cachem coordinates asset-owner confirmation. Separate reproducible browser downloads/cache from profiles, cookies, credentials, sessions and active process data. No generic .web-acess sweep, no safeRoot expansion and no selection by name/age alone. Replace this disabled placeholder with exact owner-contract candidates after independent recovery and lifecycle proof; 30 days is an inactive placeholder, not approval. Coverage record: /Users/LOCAL_USER/SuperMatrixRuntime/data/weekly-cache-cleanup/2026-09-10-coverage/coverage-plan.json."
+    }
+  ]
+}

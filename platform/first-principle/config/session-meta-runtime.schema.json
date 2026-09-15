@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "purpose": "Runtime values for the existing session-meta queue/readback consumers.",
+  "required": {
+    "asset_id": "Registered wendangwang asset id; never inferred.",
+    "base_token": "User-owned Bitable base token; never stored in the public bundle.",
+    "table_id": "User-owned Bitable table id; never stored in the public bundle.",
+    "from_session": "The registered caller session allowed by the asset contract.",
+    "queue_entrypoint": "Existing feishu-sync-enqueue executable.",
+    "queue_db": "Absolute user-owned queue database path; never omitted to use a private default.",
+    "registry_glob": "Absolute user-owned asset registry glob; never omitted to use a private default.",
+    "lark_cli": "Existing lark-cli executable used only for read-back.",
+    "lark_identity": "Explicit lark-cli identity, normally bot or user.",
+    "receipt_path": "Absolute path outside FP_ROOT for the terminal receipt."
+  },
+  "optional": {
+    "state_dir": "External directory used by sync-session-table.sh when output is omitted.",
+    "status_entrypoint": "Existing feishu-sync-status executable for a non-waiting queue wrapper.",
+    "remote_fixture": "Controlled local read fixture; never a production fallback."
+  },
+  "defaults": "No remote coordinates, executable paths, identity, or output path are defaulted.",
+  "forbidden": [
+    "runtime database paths",
+    "private credentials or keychain material",
+    "direct lark-cli data-time writes",
+    "queue operation other than bitable_rows_create_if_absent for seed"
+  ]
+}

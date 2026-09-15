@@ -1,0 +1,1 @@
+ALTER TABLE sessions ADD COLUMN effort_locked INTEGER NOT NULL DEFAULT 0;

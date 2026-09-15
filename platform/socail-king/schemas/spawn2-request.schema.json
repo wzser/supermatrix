@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-communication-review/spawn2-request.schema.json",
+  "title": "Minimal Spawn2.0 v2 request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["from", "target", "prompt", "client_request_id", "closure"],
+  "properties": {
+    "from": {"type": "string", "minLength": 1},
+    "target": {"type": "string", "minLength": 1},
+    "prompt": {"type": "string", "minLength": 1},
+    "client_request_id": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}:"},
+    "closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "target"],
+      "properties": {
+        "kind": {"const": "message"},
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {"type": {"const": "inline"}}
+        }
+      }
+    }
+  }
+}

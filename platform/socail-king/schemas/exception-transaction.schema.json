@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-communication-review/exception-transaction.schema.json",
+  "title": "Spawn2 exception transaction event",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["ref", "comm_id", "event", "status"],
+  "properties": {
+    "ref": {"type": "string", "minLength": 1},
+    "comm_id": {"type": "string", "minLength": 1},
+    "event": {"enum": ["open", "intent", "closed"]},
+    "status": {"enum": ["open", "intent", "closed"]},
+    "verdict": {"enum": ["b_fault", "contract_fault", "business_satisfied_elsewhere", "false_alarm", "suspended", "retrying"]},
+    "verdict_reason": {"type": "string", "minLength": 1},
+    "snapshot": {
+      "type": "object",
+      "required": ["failed_phase", "failure_kind", "attempt_count", "async_status", "result_evidence", "target_evidence"],
+      "properties": {
+        "failed_phase": {"type": "string", "minLength": 1},
+        "failure_kind": {"type": "string", "minLength": 1},
+        "attempt_count": {"type": "integer", "minimum": 0},
+        "async_status": {"type": "string", "minLength": 1},
+        "result_evidence": {"type": "object"},
+        "target_evidence": {"type": "object"}
+      }
+    },
+    "action": {"type": "string", "minLength": 1},
+    "host_writeback": {
+      "type": "object",
+      "required": ["read_back_verified", "ref"],
+      "properties": {
+        "read_back_verified": {"const": true},
+        "ref": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"event": {"const": "intent"}}},
+      "then": {"required": ["action"]}
+    },
+    {
+      "if": {"properties": {"event": {"const": "closed"}}},
+      "then": {
+        "required": ["verdict", "verdict_reason", "host_writeback"],
+        "properties": {
+          "verdict": {"enum": ["b_fault", "contract_fault", "business_satisfied_elsewhere", "false_alarm", "suspended"]}
+        }
+      }
+    }
+  ]
+}

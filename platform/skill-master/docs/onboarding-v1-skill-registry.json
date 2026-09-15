@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "asset_id": "public.skill-registry",
+  "purpose": "Static, public-safe mirror contract for the three enabled skills.",
+  "source_index": "docs/onboarding-v1-skill-index.md",
+  "source_upgrade_config": "docs/onboarding-v1-skill-upgrade-sources.json",
+  "enabled_skill_names": [
+    "diagnose",
+    "improve-codebase-architecture",
+    "tdd"
+  ],
+  "fields": [
+    "Name",
+    "Origin",
+    "Scope",
+    "Owner",
+    "Purpose",
+    "Calls",
+    "Updated",
+    "AutoUpgrade",
+    "UpgradePolicy",
+    "GitHubRepo",
+    "UpstreamPath",
+    "UpgradeState",
+    "RegistrySource",
+    "HostedBy"
+  ],
+  "unique_key": ["Name"],
+  "mirror": {
+    "authority": "local",
+    "direction": "local_to_remote",
+    "conflict_policy": "local_wins",
+    "upsert_operation": "bitable_rows_upsert",
+    "terminal_acceptance": "terminal=true AND queue_state=done AND read_back_verified=true",
+    "rejected_admission_states": ["accepted", "queued", "pending", "terminal=false"]
+  },
+  "rows": [
+    {
+      "Name": "diagnose",
+      "Origin": "skill-master",
+      "Scope": "shared",
+      "Owner": "upstream-maintainer",
+      "Purpose": "Disciplined diagnosis for hard bugs and performance regressions"
+    },
+    {
+      "Name": "improve-codebase-architecture",
+      "Origin": "skill-master",
+      "Scope": "shared",
+      "Owner": "upstream-maintainer",
+      "Purpose": "Find deepening opportunities that improve locality, leverage, and testability"
+    },
+    {
+      "Name": "tdd",
+      "Origin": "skill-master",
+      "Scope": "shared",
+      "Owner": "upstream-maintainer",
+      "Purpose": "Test-driven development with a red-green-refactor loop"
+    }
+  ]
+}

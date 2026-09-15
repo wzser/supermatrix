@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "publicInput": {
+    "hashSchema": "sources.<kind>.files maps each repository-relative public path to {bytes,sha256}; both values describe the approved sanitized/public bytes consumed by onboarding",
+    "sourceProvenance": "owner source commits and pre-sanitization source hashes remain in gitmaster's private release receipt and are never substituted for the public file hashes",
+    "updateBoundary": "owners select and publish the public paths and source commit; the release publisher may refresh only the existing bytes/sha256 values after sanitization, without asking installers to edit bytes or hashes",
+    "allowedReleaseMetadata": [
+      "sources.<kind>.commit",
+      "sources.<kind>.files.<path>.bytes",
+      "sources.<kind>.files.<path>.sha256",
+      "modules[].commit",
+      "modules[].reviewStatus",
+      "modules[].archiveSha256",
+      "modules[].files.<path>.bytes",
+      "modules[].files.<path>.sha256"
+    ],
+    "acceptance": "gitmaster retains the original source hash privately, refreshes the existing public bytes/sha256 fields from approved sanitized bytes, and freezes its archive digest from those same approved bytes; onboarding validates exact bytes and introduces no runtime-derived replacement hash",
+    "finalArchiveDigest": "gitmaster freezes the archive digest from approved sanitized bytes in its private release receipt"
+  },
+  "sources": {
+    "skills": {
+      "root": "platform/skill-master/skills",
+      "owner": "skill-master",
+      "commit": "ebbe7c45d2e410c62ab951cd6284bf7efa11bbf5",
+      "files": {
+        "diagnose/SKILL.md": {
+          "bytes": 7481,
+          "sha256": "aab986737a76c7aa3deb3ce4281b5a84b9a93d786c6d2f7533da79599ef8d156"
+        },
+        "diagnose/scripts/hitl-loop.template.sh": {
+          "bytes": 1164,
+          "sha256": "b2932630950e5210075bcd6f850e5accf30c101c5367b29eac3a29b4dd8084c8"
+        },
+        "improve-codebase-architecture/DEEPENING.md": {
+          "bytes": 2565,
+          "sha256": "9577485f4fc32c0267639a9151bb41c8af0f8f6086e4bf8b84d5b236e30604e9"
+        },
+        "improve-codebase-architecture/INTERFACE-DESIGN.md": {
+          "bytes": 2725,
+          "sha256": "678c3e34f1339015053212b3316bf0b676c70aa251050a0613667d4e755fb35e"
+        },
+        "improve-codebase-architecture/LANGUAGE.md": {
+          "bytes": 3804,
+          "sha256": "6feca2140439c54a774749e8367f18350899ff69c777144ed2248cd4407949fa"
+        },
+        "improve-codebase-architecture/SKILL.md": {
+          "bytes": 5479,
+          "sha256": "109adda8293575da655ef393a597733785570818d90d2107f574b9af11766917"
+        },
+        "tdd/SKILL.md": {
+          "bytes": 4708,
+          "sha256": "4f44faa309a20fac741673b067bdd147a1b0fa19d20281e61ca5d4d7ec7fff20"
+        },
+        "tdd/deep-modules.md": {
+          "bytes": 1239,
+          "sha256": "f2123700bf953db1740625686c75bdd145efd486357c47c6818c869fee657a32"
+        },
+        "tdd/interface-design.md": {
+          "bytes": 653,
+          "sha256": "764c5ff0e3fa6b4ab7095eb65ccc7201e090baf19fa16051dfdb72c06d27417d"
+        },
+        "tdd/mocking.md": {
+          "bytes": 1481,
+          "sha256": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef"
+        },
+        "tdd/refactoring.md": {
+          "bytes": 387,
+          "sha256": "54fced22dd1911b7094c3fe7979b7c1a40d40be307482c4adf7dc0588f27d6cc"
+        },
+        "tdd/tests.md": {
+          "bytes": 1640,
+          "sha256": "e12182f5c4c6a844b7c6ab4b8d2623b642aaaae5460fe58ed087efd4f3d5fb8a"
+        }
+      }
+    },
+    "templates": {
+      "root": "platform/first-principle/templates",
+      "owner": "first-principle",
+      "commit": "b23981b2433698ab8ea79c69a93c717203a22caa",
+      "files": {
+        "console-principles.md": {
+          "bytes": 93370,
+          "sha256": "2d749ea9871fdc69f25087c994593f60190faf8d12d84b3a8bb50792b274ceb7"
+        },
+        "coding-principles.md": {
+          "bytes": 60694,
+          "sha256": "965866fc98473a049cfc6c65d3fbb7dc10db1a29f13738c63be7a86a15b00d64"
+        },
+        "business-principles.md": {
+          "bytes": 18116,
+          "sha256": "e3050cadc852be8534fe03f0e789994c82b2412f4fa4cfac2b71cbab0380def4"
+        },
+        "sop-template.md": {
+          "bytes": 6728,
+          "sha256": "9b505b4e3f508e2b8dcda2a0ad077ae0139a8f2d83638e95f345ec5afe6d08f3"
+        }
+      }
+    }
+  },
+  "modules": [
+    {
+      "name": "first-principle",
+      "owner": "first-principle",
+      "commit": "b23981b2433698ab8ea79c69a93c717203a22caa",
+      "sourceRoot": "exports/onboarding-v2",
+      "destinationRoot": "platform/first-principle",
+      "reviewStatus": "approved",
+      "include": [
+        ".python-version",
+        "README.md",
+        "asset-provenance.json",
+        "bin/**",
+        "config/**",
+        "examples/**",
+        "full-docs/**",
+        "scripts/**",
+        "snippets/**",
+        "templates/**",
+        "data/backend-model-effort-catalog.json",
+        "data/category-capability-defaults.json",
+        "data/module-manifest.json",
+        "data/session-variants.json"
+      ]
+    },
+    {
+      "name": "scheduler",
+      "owner": "scheduler",
+      "commit": "2138bd3934689f5ce08d95170e51a7f58e275fc0",
+      "sourceRoot": "workspace:scheduler",
+      "destinationRoot": "platform/scheduler",
+      "reviewStatus": "approved",
+      "include": [
+        "**"
+      ]
+    },
+    {
+      "name": "heartbeat",
+      "owner": "heartbeat",
+      "commit": "1b7c4390376da000a9a0999219cd18f5d33e7a93",
+      "sourceRoot": "workspace:heartbeat",
+      "destinationRoot": "platform/heartbeat",
+      "reviewStatus": "approved",
+      "include": [
+        ".gitignore",
+        ".python-version",
+        "pyproject.toml",
+        "config/heartbeat.env.example",
+        "docs/heartbeat-function-overview.md",
+        "heartbeat_patrol/**",
+        "scripts/enqueue-heartbeat-todo",
+        "scripts/evaluate-decision-prompt",
+        "scripts/heartbeat-control",
+        "scripts/heartbeat-log-rotate",
+        "scripts/heartbeat-patrol",
+        "scripts/heartbeat-temporary-snapshot",
+        "scripts/heartbeat-todo-watch",
+        "scripts/sync-heartbeat-events",
+        "tests/**"
+      ]
+    },
+    {
+      "name": "autobitable",
+      "owner": "autobitable",
+      "commit": "4ce4592d9ba18b756a66b12ef353bc3e2b1f9f65",
+      "sourceRoot": "workspace:autobitable",
+      "destinationRoot": "platform/autobitable",
+      "reviewStatus": "approved",
+      "include": [
+        "src/server.mjs",
+        "public-safe/.gitignore",
+        "public-safe/README.md",
+        "public-safe/package.json",
+        "public-safe/package-lock.json",
+        "public-safe/config/**",
+        "public-safe/examples/**",
+        "public-safe/registry/bitable-webhooks.empty.json",
+        "public-safe/scripts/register-webhook-secret.mjs",
+        "public-safe/src/**",
+        "public-safe/tests/**"
+      ]
+    },
+    {
+      "name": "watchdog",
+      "owner": "watchdog",
+      "commit": "ce4b923eef9e4cb8638c0ed101367eff4f6baefa",
+      "sourceRoot": "workspace:watchdog",
+      "destinationRoot": "platform/watchdog",
+      "reviewStatus": "approved",
+      "include": [
+        ".gitignore",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "vitest.config.ts",
+        "config/watchdog.example.env",
+        "src/cli.ts",
+        "src/config.ts",
+        "src/db/**",
+        "src/notify/**",
+        "src/sync/**",
+        "src/scripts/weekly-review-closure.ts",
+        "tests/cli.test.ts",
+        "tests/config.test.ts",
+        "tests/db/**",
+        "tests/notify/**",
+        "tests/sync/**",
+        "tests/scripts/weekly-review-closure.test.ts"
+      ]
+    },
+    {
+      "name": "mythos",
+      "owner": "mythos",
+      "commit": "a29638922f59a1e047f565a3c7f34a04d0c2a7de",
+      "sourceRoot": ".",
+      "destinationRoot": "platform/mythos",
+      "reviewStatus": "approved",
+      "include": [
+        ".python-version",
+        "pyproject.toml",
+        "public/.gitignore",
+        "public/README.md",
+        "public/DEPENDENCIES.md",
+        "public/THIRD_PARTY_NOTICES.md",
+        "public/third-party/a2a-LICENSE",
+        "public/third-party/mcp-LICENSE",
+        "public/config/**",
+        "public/fixtures/query-fixture.jsonl",
+        "public/kb/**",
+        "scripts/build-index.py",
+        "scripts/rebuild-map.py",
+        "scripts/log-query.py",
+        "scripts/sync-kb.sh",
+        "tests/test_public_seed.py"
+      ]
+    },
+    {
+      "name": "skill-master",
+      "owner": "skill-master",
+      "commit": "ebbe7c45d2e410c62ab951cd6284bf7efa11bbf5",
+      "sourceRoot": ".",
+      "destinationRoot": "platform/skill-master",
+      "reviewStatus": "approved",
+      "include": [
+        ".gitignore",
+        ".python-version",
+        "pyproject.toml",
+        "docs/onboarding-v1-skill-assets.json",
+        "docs/onboarding-v1-skill-dependencies.json",
+        "docs/onboarding-v1-skill-discovery.json",
+        "docs/onboarding-v1-skill-index.md",
+        "docs/onboarding-v1-public-example.md",
+        "docs/onboarding-v1-skill-registry.json",
+        "docs/onboarding-v1-skill-upgrade-sources.json",
+        "scripts/validate-skill-frontmatter.py",
+        "scripts/audit-skill-discovery.py",
+        "scripts/evaluate-skills.py",
+        "scripts/feishu_enqueue.py",
+        "scripts/sync-skills-to-feishu.py",
+        "scripts/sync-skills.sh",
+        "scripts/record-tick.sh",
+        "tests/test_public_skill_inputs.py",
+        "tests/test_evaluate_spawn_endpoint.py",
+        "skills/diagnose/**",
+        "skills/improve-codebase-architecture/**",
+        "skills/tdd/**"
+      ]
+    },
+    {
+      "name": "socail-king",
+      "owner": "socail-king",
+      "commit": "72a8f168b13d1d701221907bb67968a32312f28b",
+      "sourceRoot": "public-safe",
+      "destinationRoot": "platform/socail-king",
+      "reviewStatus": "approved",
+      "include": [
+        "README.md",
+        "CONFIG.md",
+        "package.json",
+        "docs/**",
+        "examples/**",
+        "references/**",
+        "schemas/**",
+        "scripts/**",
+        "sop/**",
+        "src/**"
+      ]
+    },
+    {
+      "name": "larkc",
+      "owner": "larkc",
+      "commit": "57cf7c6c9d7fdcb0a0053b0500196ceec5e1400c",
+      "sourceRoot": ".",
+      "destinationRoot": "platform/larkc",
+      "reviewStatus": "approved",
+      "include": [
+        "public-input/LARK_INSTALL_PERMISSIONS.md",
+        "public-input/VERIFICATION.md",
+        "public-input/lark-install-permissions.v1.json",
+        "public-input/card-callback-public-manifest.json",
+        "public-input/card-callback.env.example",
+        "public-input/verify-public-input.mjs",
+        "public-input/verify-public-input.test.mjs",
+        "card-callback/README.md",
+        "card-callback/package.json",
+        "card-callback/package-lock.json",
+        "card-callback/src/askBroker.js",
+        "card-callback/src/broker.js",
+        "card-callback/src/card.js",
+        "card-callback/src/cardAction.js",
+        "card-callback/src/mcpAskServer.js",
+        "card-callback/src/pendingStore.js",
+        "card-callback/test/askBroker.test.js",
+        "card-callback/test/card.test.js",
+        "card-callback/test/cardAction.test.js",
+        "card-callback/test/mcpAskServer.test.js",
+        "card-callback/test/pendingStore.test.js"
+      ]
+    },
+    {
+      "name": "localgit",
+      "owner": "localgit",
+      "commit": "cd6fe3018f644f1c9e55998b355c48372b115708",
+      "sourceRoot": ".",
+      "destinationRoot": "platform/localgit",
+      "reviewStatus": "approved",
+      "include": [
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "config/localgit-role.json",
+        "config/daily-commit-bitable.example.json",
+        "docs/INSTALL.md",
+        "scripts/run-branch-patrol.sh",
+        "scripts/run-daily-commit.sh",
+        "sop/INDEX.md",
+        "sop/references/daily-commit-ignore-policy.md",
+        "sop/references/owner-decision-rubric.md",
+        "sop/references/SOP-daily-commit-judgment-matrix-l2-review-prompt.md",
+        "sop/references/SOP-daily-commit-judgment-matrix-secret-patterns.md",
+        "sop/SOP-daily-commit-judgment-matrix-active-20260821-1a186q.md",
+        "sop/SOP-repo-branch-merge-patrol-active-20260714-68dd04.md",
+        "src/**"
+      ]
+    },
+    {
+      "name": "gitmaster",
+      "owner": "gitmaster",
+      "commit": "030ed022f8295d77d8e5e9373c956efb657c9888",
+      "sourceRoot": "workspace:gitmaster",
+      "destinationRoot": "platform/gitmaster",
+      "reviewStatus": "approved",
+      "include": [
+        ".gitignore",
+        ".python-version",
+        "AGENT_INSTALL.md",
+        "config/public-export.json",
+        "public-overrides/supermatrix/docs/SETUP.md",
+        "pyproject.toml",
+        "scripts/sanitized_release.py",
+        "sop/**",
+        "tests/test_sanitized_release.py",
+        "tests/test_agent_install.py"
+      ]
+    },
+    {
+      "name": "wendangwang",
+      "owner": "wendangwang",
+      "commit": "10e5a00d6d15333458dcb213391872b32fa5e0cb",
+      "sourceRoot": "exports/feishu-bitable-control-plane",
+      "destinationRoot": "platform/wendangwang",
+      "reviewStatus": "approved",
+      "include": [
+        ".gitignore",
+        ".python-version",
+        "pyproject.toml",
+        "README.md",
+        "bin/**",
+        "config/**",
+        "docs/**",
+        "src/**",
+        "tests/**",
+        "registry/README.md"
+      ]
+    }
+  ]
+}

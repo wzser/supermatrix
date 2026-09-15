@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","session_id":"bks-normal-1","model":"claude-opus-4-6"}
+{"type":"assistant","session_id":"bks-normal-1","message":{"content":[{"type":"text","text":"2 + 2 = "}]}}
+{"type":"assistant","session_id":"bks-normal-1","message":{"content":[{"type":"text","text":"4"}]}}
+{"type":"result","subtype":"success","session_id":"bks-normal-1","result":"2 + 2 = 4"}

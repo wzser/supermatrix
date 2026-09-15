@@ -1,0 +1,57 @@
+{
+  "fields": [
+    {"name": "Session", "type": "text", "required": true},
+    {"name": "主Backend当前", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "部门", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "头像", "type": "attachment", "required": false},
+    {"name": "Model", "type": "text", "required": false},
+    {"name": "Group ID", "type": "text", "required": false},
+    {"name": "Scope", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "Workdir", "type": "text", "required": false},
+    {"name": "分类", "type": "select", "required": false, "multiple": false, "options": [
+      {"name": "业务"}, {"name": "平台"}, {"name": "工具"}, {"name": "知识"}, {"name": "外部"}, {"name": "员工"}
+    ]},
+    {"name": "附属于", "type": "text", "required": false},
+    {"name": "Created", "type": "date_time", "required": false},
+    {"name": "Updated", "type": "date_time", "required": false},
+    {"name": "别称", "type": "text", "required": false},
+    {"name": "Purpose", "type": "text", "required": false},
+    {"name": "主model当前", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "主effort当前", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "主model默认值", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "主effort默认值", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "子backend", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "子model", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "子effort", "type": "select", "required": false, "multiple": false, "options": []},
+    {"name": "负责人", "type": "user", "required": false}
+  ],
+  "records": [
+    {
+      "record_id": "fixture-rec-existing",
+      "fields": {
+        "Session": "fixture-existing",
+        "主Backend当前": "codex",
+        "部门": "人工维护部门",
+        "头像": "human-avatar-token",
+        "Model": "fixture-model",
+        "Group ID": "fixture-group",
+        "Scope": "fixture-scope",
+        "Workdir": "/user-owned/fixture-existing",
+        "分类": "工具",
+        "附属于": "first-principle",
+        "Created": "2026-09-14T00:00:00+08:00",
+        "Updated": "2026-09-14T00:00:00+08:00",
+        "别称": "人工别称",
+        "Purpose": "人工 Purpose",
+        "主model当前": "fixture-model",
+        "主effort当前": "medium",
+        "主model默认值": "human-default-model",
+        "主effort默认值": "human-default-effort",
+        "子backend": "human-child-backend",
+        "子model": "human-child-model",
+        "子effort": "human-child-effort",
+        "负责人": "human-owner"
+      }
+    }
+  ]
+}

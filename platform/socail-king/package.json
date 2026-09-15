@@ -1,0 +1,13 @@
+{
+  "name": "agent-communication-review-public-input",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Public-safe inputs for interview-based judgment and Spawn2 exception adjudication.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "verify": "node scripts/verify-stub-flow.mjs"
+  }
+}

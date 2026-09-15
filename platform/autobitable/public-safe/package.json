@@ -1,0 +1,15 @@
+{
+  "name": "autobitable-public-safe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Public-safe profile entry point for the existing SuperMatrix autobitable owner",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm test"
+  }
+}

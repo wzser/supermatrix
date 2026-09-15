@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "missing_state_policy": "closed",
+  "reason": "public bundle has no live roster, runtime database, or remote bindings",
+  "allowed_modes": []
+}

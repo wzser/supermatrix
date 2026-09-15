@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "catalog_role": "first-principle.session_metadata",
+  "remote_required": "required",
+  "authority_model": "field_split",
+  "sync_direction": "two_way",
+  "unique_key": ["Session"],
+  "creation_owner": "jianbiao",
+  "creation_rule": "Create or register a user-owned table and read its schema back before enabling data-time sync. A table merely existing is not a sync binding.",
+  "schema_source": "config/public-bindings.json#/tables/session_meta/remote_fields",
+  "seed_allowlist": {
+    "operation": "bitable_rows_create_if_absent",
+    "fields": ["Session", "别称", "Purpose", "分类", "附属于"],
+    "unique_key": ["Session"],
+    "existing_row_behavior": "verified_skip; no field update",
+    "read_back": "required"
+  },
+  "human_authority_fields": [
+    "部门", "头像", "分类", "别称", "Purpose", "附属于",
+    "主model默认值", "主effort默认值", "子backend", "子model", "子effort", "负责人"
+  ],
+  "system_mirror_fields_not_seeded": [
+    "主Backend当前", "Model", "Group ID", "Scope", "Workdir", "Created", "Updated",
+    "主model当前", "主effort当前"
+  ],
+  "coordinates": {
+    "asset_id_env": "SM_SESSION_META_ASSET_ID",
+    "base_token_env": "SM_SESSION_META_BASE_TOKEN",
+    "table_id_env": "SM_SESSION_META_TABLE_ID",
+    "from_session_env": "SM_SESSION_META_FROM"
+  },
+  "provisioning": {
+    "entrypoint": "Existing lark-cli base +table-create or jianbiao schema-time delivery",
+    "not_in_bundle": true,
+    "reason": "Authentication, user approval, and registry publication belong to the platform owner; this export only supplies the static current-catalog field contract."
+  }
+}

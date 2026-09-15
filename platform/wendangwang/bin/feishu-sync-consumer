@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON_BIN="${SM_FEISHU_PYTHON:-$ROOT/.venv/bin/python}"
+if [ ! -x "$PYTHON_BIN" ]; then
+  echo "missing Python 3.11 executable: set SM_FEISHU_PYTHON or create $ROOT/.venv" >&2
+  exit 2
+fi
+PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" exec "$PYTHON_BIN" -m wendangwang_feishu.cli queue consumer "$@"

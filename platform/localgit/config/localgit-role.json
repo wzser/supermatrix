@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "role": "localgit",
+  "purpose": "Local Git governance and auditable repository convergence",
+  "managed": true,
+  "affiliation": "first-principle",
+  "session_defaults": {
+    "scope": "user",
+    "category": "平台"
+  },
+  "eligible_repository_rule": {
+    "status": "not-deleted",
+    "scope": "not-child",
+    "affiliated_to": "first-principle",
+    "category_excludes": ["外部", "员工"],
+    "workdir": "existing-git-repository"
+  },
+  "zero_eligible_repositories": "fail"
+}

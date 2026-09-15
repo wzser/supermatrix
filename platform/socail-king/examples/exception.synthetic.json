@@ -1,0 +1,33 @@
+[
+  {
+    "ref": "spawnq_stub_001",
+    "comm_id": "comm_stub_002",
+    "event": "open",
+    "status": "open",
+    "snapshot": {
+      "failed_phase": "delivery",
+      "failure_kind": "delivery_missing",
+      "attempt_count": 1,
+      "async_status": "waiting_child",
+      "result_evidence": {"present": true, "ref": "result_stub_002"},
+      "target_evidence": {"present": false, "reason": "no_delivery_receipt"}
+    }
+  },
+  {
+    "ref": "spawnq_stub_001",
+    "comm_id": "comm_stub_002",
+    "event": "intent",
+    "status": "intent",
+    "action": "verify_delivery_evidence"
+  },
+  {
+    "ref": "spawnq_stub_001",
+    "comm_id": "comm_stub_002",
+    "event": "closed",
+    "status": "closed",
+    "verdict": "contract_fault",
+    "verdict_reason": "The frozen snapshot shows missing target evidence; park the contract.",
+    "action": "park_contract",
+    "host_writeback": {"read_back_verified": true, "ref": "writeback_stub_002"}
+  }
+]

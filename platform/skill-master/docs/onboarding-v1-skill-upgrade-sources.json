@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "description": "Public upgrade metadata for the three approved skills only.",
+  "packages": [
+    {
+      "id": "approved-engineering-skills",
+      "kind": "mapped-skill-set",
+      "enabled": true,
+      "repo": "https://github.com/mattpocock/skills.git",
+      "remote_ref": "origin/main",
+      "local_root": "skills",
+      "policy": "baseline-three-way",
+      "mappings": [
+        {
+          "local": "diagnose",
+          "source": "skills/engineering/diagnosing-bugs"
+        },
+        {
+          "local": "improve-codebase-architecture",
+          "source": "skills/engineering/improve-codebase-architecture"
+        },
+        {
+          "local": "tdd",
+          "source": "skills/engineering/tdd"
+        }
+      ]
+    }
+  ]
+}

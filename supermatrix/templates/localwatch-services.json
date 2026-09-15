@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "services": [
+    {
+      "id": "clash-verge",
+      "label": "Clash Verge",
+      "enabled": true,
+      "probes": {
+        "primaryProcess": "/Applications/Clash Verge.app/Contents/MacOS/clash-verge",
+        "requiredProcesses": [
+          "/Applications/Clash Verge.app/Contents/MacOS/verge-mihomo"
+        ],
+        "tcp": {
+          "host": "127.0.0.1",
+          "port": 7897
+        }
+      },
+      "launch": {
+        "kind": "macos-app",
+        "bundleId": "io.github.clash-verge-rev.clash-verge-rev"
+      },
+      "repairPolicy": "relaunch-on-unhealthy",
+      "failureThreshold": 2,
+      "cooldownSec": 120,
+      "startupGraceSec": 30
+    },
+    {
+      "id": "ziniao",
+      "label": "ZiNiao",
+      "enabled": true,
+      "probes": {
+        "primaryProcess": "/Applications/ziniao.app/Contents/MacOS/ziniao",
+        "requiredProcesses": [],
+        "tcp": {
+          "host": "127.0.0.1",
+          "port": 9481
+        }
+      },
+      "launch": {
+        "kind": "macos-app",
+        "bundleId": "com.ziniao.fzzixun"
+      },
+      "repairPolicy": "launch-if-absent",
+      "failureThreshold": 2,
+      "cooldownSec": 120,
+      "startupGraceSec": 30
+    }
+  ]
+}

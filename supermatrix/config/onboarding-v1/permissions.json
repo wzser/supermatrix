@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "evidence": [
+    "src/adapters/lark-cli/realClient.ts",
+    "src/adapters/lark-cli/SPIKE_NOTES.md",
+    "scripts/setup-dogfood-session.sh",
+    "scripts/localwatch.sh",
+    "src/app/driveCommentMentions.ts"
+  ],
+  "identities": {
+    "user": {
+      "required": [
+        "base:app:create",
+        "base:field:create",
+        "base:field:read",
+        "base:field:update",
+        "base:record:create",
+        "base:record:update",
+        "base:table:create",
+        "base:table:delete",
+        "base:table:read",
+        "base:table:update",
+        "base:view:write_only",
+        "im:chat:create_by_user",
+        "im:chat:read",
+        "im:chat:update",
+        "im:chat.members:read",
+        "im:chat.members:write_only",
+        "im:message",
+        "im:message:readonly",
+        "im:message.send_as_user",
+        "contact:user.basic_profile:readonly",
+        "contact:user:search",
+        "base:record:read"
+      ],
+      "commands": [
+        "im +chat-create --as user",
+        "api POST /open-apis/im/v1/chats/{chat_id}/members --as user",
+        "api GET /open-apis/im/v1/chats/{chat_id} --as user",
+        "im +messages-send --as user",
+        "im +chat-search --as user"
+      ]
+    },
+    "bot": {
+      "required": [
+        "base:app:create",
+        "base:field:create",
+        "base:field:read",
+        "base:field:update",
+        "base:record:create",
+        "base:record:read",
+        "base:record:update",
+        "base:table:create",
+        "base:table:delete",
+        "base:table:read",
+        "base:table:update",
+        "base:view:write_only",
+        "contact:user.basic_profile:readonly",
+        "contact:user:search",
+        "docs:permission.member:create",
+        "im:chat.members:write_only",
+        "im:chat:create",
+        "im:chat:update",
+        "im:message:send_as_bot",
+        "im:message",
+        "im:message:readonly",
+        "im:message:update",
+        "im:message.p2p_msg:readonly",
+        "im:chat:read",
+        "im:chat.members:read",
+        "im:resource",
+        "docs:document.media:download",
+        "drive:file:download",
+        "drive:file:upload",
+        "docs:document.comment:read",
+        "docs:document.comment:create",
+        "docs:document.comment:write_only"
+      ],
+      "commands": [
+        "event +subscribe --as bot",
+        "im +messages-send --as bot",
+        "im +messages-mget --as bot",
+        "im +messages-resources-download --as bot",
+        "drive file.comments batch_query/create_v2 --as bot",
+        "drive file.comment.replys create --as bot",
+        "base +record-get --as user for bitable comment context"
+      ]
+    }
+  },
+  "conditional": [
+    {
+      "capability": "drive-comment-event-subscription",
+      "identity": "bot",
+      "scopes": ["docs:event:subscribe"],
+      "reason": "Only required when the installation enables drive-comment subscriptions; V1 does not create subscriptions."
+    },
+    {
+      "capability": "interactive-card-callback",
+      "identity": "bot",
+      "scopes": ["im:message"],
+      "reason": "The callback broker remains an owner-controlled optional capability; V1 does not race a production subscriber."
+    }
+  ],
+  "not_requested": [
+    "calendar:*",
+    "mail:*",
+    "approval:*",
+    "okr:*",
+    "vc:*",
+    "slides:*",
+    "mindnote:*",
+    "wiki:*",
+    "base:* write scopes beyond the documented comment-context read"
+  ]
+}

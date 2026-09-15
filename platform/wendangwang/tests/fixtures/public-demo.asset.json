@@ -1,0 +1,29 @@
+{
+  "asset_id": "public.demo",
+  "owner_session": "user-agent",
+  "contract_owner": "user-agent",
+  "object_type": "table",
+  "title": "公开队列演示表",
+  "business_problem": "为新用户验证队列入队、消费者写入和按记录 ID 读回的最小公开演示表。",
+  "asset_category": "platform_registry",
+  "placement_reason": "公开演示表放在 Supermatrix / 00 入口与控制台 的用户自有命名空间内，不引用维护者资产。",
+  "access_url": "https://example.invalid/base/public-demo?table=demo_table",
+  "authority_model": "local_authoritative",
+  "sync_direction": "local_to_remote",
+  "conflict_policy": "local_rebuild_from_source",
+  "queue_pending_policy": "fifo",
+  "base_token": "demo_base",
+  "table_id": "demo_table",
+  "feishu_path": ["Supermatrix", "00 入口与控制台", "用户公开演示"],
+  "parent_ref": "user-owned-public-demo-parent",
+  "tables": [{
+    "table_id": "demo_table",
+    "name_zh": "公开队列演示表",
+    "description_zh": "只用于本地 lark-cli stub 验证，不包含真实业务数据。",
+    "unique_key": ["键"],
+    "fields": [
+      {"name_zh": "键", "local_name": "key", "type": "text", "description_zh": "公开演示的稳定唯一键。", "authority": "local", "required": true},
+      {"name_zh": "值", "local_name": "value", "type": "text", "description_zh": "公开演示的示例值。", "authority": "local", "required": false}
+    ]
+  }]
+}

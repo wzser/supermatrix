@@ -1,0 +1,465 @@
+{
+  "schema_version": 1,
+  "namespace": "replace-with-user-namespace",
+  "description": "Public field contracts only. The recipient agent creates or adopts user-owned tables, fills IDs in a local contract, and points the queue at that contract directory.",
+  "creation_rule": "Create schema with the native Lark CLI after reviewing each owner module. Do not create tables from this catalog automatically.",
+  "queue_rule": "Only assets marked queue_consumer=true may be used with feishu-sync-enqueue. Assets with sync_direction=none are local ledgers and must not be made queueable by changing this file.",
+  "runtime_entrypoints": [
+    {"name": "enqueue", "path": "bin/feishu-sync-enqueue"},
+    {"name": "consumer", "path": "bin/feishu-sync-consumer"},
+    {"name": "status", "path": "bin/feishu-sync-status"},
+    {"name": "cli", "path": "bin/sm-feishu"}
+  ],
+  "seed_input": {
+    "availability": "installer-provided",
+    "source": "user-owned non-sensitive installation input",
+    "row_shape": "Use fields from the selected role, or each selected table, in catalog order.",
+    "identity": "Use unique_key from the selected role or table; do not infer a key from a display name.",
+    "stable_seed_key": "install_key:<asset_id_template>:<unique-key values>",
+    "read_back": "Read back schema and each initialized seed row with the same user identity before enabling the consumer.",
+    "prohibited": ["maintainer rows", "runtime database copies", "production IDs", "credentials"]
+  },
+  "catalog_state": {
+    "status": "partial",
+    "complete": false,
+    "platform_table_contracts": "not-verified",
+    "reason": "Remote IDs, schema readback, and permissions are intentionally absent from the public export. Empty or placeholder table names never count as a contract, and this catalog must not claim the platform-table contract set is complete."
+  },
+  "queue_consumer_semantics": {
+    "true": "The static contract permits the existing public queue adapter to consume the asset after a user-owned contract and readback gate exist. It does not assert that the owner runtime currently calls the queue.",
+    "false": "The public queue path is prohibited for this asset; its owner transport and authority remain unchanged.",
+    "runtime_transport_wins": true,
+    "catalog_cannot_rewrite_runtime": true
+  },
+  "owner_source_checks": {
+    "first-principle": {
+      "public_binding_source": "first-principle-public-onboarding/exports/onboarding-v2/config/public-bindings.json",
+      "public_local_schema_source": "first-principle-public-onboarding/exports/onboarding-v2/config/schema.sql",
+      "mapping_state": "static-only-unbound",
+      "consumer_refs": [
+        {"sourceRef": "first-principle/scripts/bitable-init-sync.sh", "availability": "owner-source-only"},
+        {"sourceRef": "first-principle/scripts/sync-session-table.sh", "availability": "owner-source-only"},
+        {"sourceRef": "first-principle/scripts/fp-sync-principle-table.sh", "availability": "owner-source-only"},
+        {"sourceRef": "first-principle/scripts/fp-patrol-enabled.sh", "availability": "owner-source-only"}
+      ]
+    },
+    "skill-master": {
+      "source": "skill-master/docs/onboarding-v1-skill-registry.json",
+      "source_field_count": 14,
+      "catalog_field_count": 14,
+      "status": "matched; no unowned fifteenth field added",
+      "consumer_refs": [
+        {"sourceRef": "skill-master/scripts/sync-skills-to-feishu.py", "availability": "owner-source-only"}
+      ]
+    },
+    "watchdog": {
+      "source": "watchdog/src/sync/bitable.ts",
+      "runtime_transport": "native-lark-cli",
+      "queue_consumer_value_is_not_runtime_routing": true,
+      "consumer_refs": [
+        {"sourceRef": "watchdog/src/sync/bitable.ts", "availability": "owner-source-only"},
+        {"sourceRef": "watchdog/src/cli.ts", "availability": "owner-source-only"},
+        {"sourceRef": "watchdog/src/sync-all.ts", "availability": "owner-source-only"}
+      ]
+    },
+    "localgit": {
+      "source": "localgit/src/scripts/daily-commit-bitable.ts",
+      "runtime_transport": "native-lark-cli",
+      "daily_commit_field_count": 6,
+      "consumer_refs": [
+        {"sourceRef": "localgit/src/scripts/daily-commit-bitable.ts", "availability": "owner-source-only"}
+      ]
+    }
+  },
+  "roles": [
+    {
+      "role": "first-principle",
+      "capability": "session_metadata",
+      "status": "required",
+      "owner": "first-principle",
+      "asset_id_template": "first-principle.session_metadata",
+      "authority_model": "field_split",
+      "sync_direction": "two_way",
+      "queue_consumer": true,
+      "unique_key": ["Session"],
+      "static_mapping": {
+        "source_local_table": "session_meta",
+        "source_local_key": ["session_name"],
+        "remote_table": "数据表",
+        "remote_table_title": "agent 映射表",
+        "remote_key": ["Session"],
+        "mapping_state": "partial-unbound",
+        "field_map": [
+          {"local": "session_name", "remote": "Session", "conversion": "identity", "boundary": "required"},
+          {"local": "alias", "remote": "别称", "conversion": "identity", "boundary": "required"},
+          {"local": "avatar_ref", "remote": "头像", "conversion": "attachment_ref_to_file_token", "boundary": "conditional"},
+          {"local": "category", "remote": "分类", "conversion": "identity", "boundary": "required"},
+          {"local": "purpose", "remote": "Purpose", "conversion": "identity", "boundary": "required"},
+          {"local": "backend", "remote": "主Backend当前", "conversion": "identity", "boundary": "conditional"},
+          {"local": "updated_at", "remote": "Updated", "conversion": "iso8601_text", "boundary": "conditional"}
+        ],
+        "remote_required_for_init": ["Session", "别称", "Purpose", "分类", "附属于"],
+        "remote_required_not_in_public_local_schema": ["附属于"],
+        "remote_conditional_or_runtime_fields": ["头像", "主Backend当前", "Model", "Group ID", "Scope", "Workdir", "Created", "Updated", "主model当前", "主effort当前", "主model默认值", "主effort默认值", "子backend", "子model", "子effort", "负责人"],
+        "consumer_refs": [
+          {"sourceRef": "first-principle/scripts/bitable-init-sync.sh", "availability": "owner-source-only"},
+          {"sourceRef": "first-principle/scripts/sync-session-table.sh", "availability": "owner-source-only"}
+        ]
+      },
+      "fields": [
+        ["Session", "text", "local", true],
+        ["主Backend当前", "single_select", "local", false],
+        ["部门", "single_select", "feishu", false],
+        ["头像", "attachment", "feishu", false],
+        ["Model", "text", "local", false],
+        ["Group ID", "text", "local", false],
+        ["Scope", "single_select", "local", false],
+        ["Workdir", "text", "local", false],
+        ["分类", "single_select", "feishu", false],
+        ["附属于", "text", "mixed", false],
+        ["Created", "date_time", "local", false],
+        ["Updated", "date_time", "local", false],
+        ["别称", "text", "feishu", false],
+        ["Purpose", "text", "feishu", false],
+        ["主model当前", "single_select", "local", false],
+        ["主effort当前", "single_select", "local", false],
+        ["主model默认值", "single_select", "feishu_on_edit_local_on_backend_switch", false],
+        ["主effort默认值", "single_select", "feishu_on_edit_local_on_backend_switch", false],
+        ["子backend", "single_select", "feishu", false],
+        ["子model", "single_select", "feishu", false],
+        ["子effort", "single_select", "feishu", false],
+        ["负责人", "user", "feishu", false]
+      ]
+    },
+    {
+      "role": "first-principle",
+      "capability": "principle_management_mirror",
+      "status": "conditional",
+      "condition": "Enable only when the user wants a remote Principles governance mirror.",
+      "owner": "first-principle",
+      "asset_id_template": "first-principle.principle_management_table",
+      "authority_model": "derived_mirror",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["模块名"],
+      "static_mapping": {
+        "source_local_table": "principle_modules",
+        "source_local_key": ["module"],
+        "remote_table": "原则管理表",
+        "remote_key": ["模块名"],
+        "mapping_state": "partial-unbound",
+        "field_map": [
+          {"local": "module", "remote": "模块名", "conversion": "identity", "boundary": "required"},
+          {"local": "section_no", "remote": "段号", "conversion": "integer", "boundary": "required"},
+          {"local": "title", "remote": "标题", "conversion": "identity", "boundary": "required"},
+          {"local": "content_sha256", "remote": "内容sha256", "conversion": "lowercase_hex", "boundary": "required"},
+          {"local": "enabled", "remote": "启用", "conversion": "0_1_to_checkbox", "boundary": "conditional"}
+        ],
+        "local_only_fields": ["updated_at"],
+        "remote_only_fields": ["Owner", "类别", "覆盖度", "飞书原版链接", "snippet路径", "原版文档路径", "上次蒸馏commit", "蒸馏内容", "蒸馏方法", "变体清单", "装配方式"],
+        "consumer_refs": [
+          {"sourceRef": "first-principle/scripts/fp-sync-principle-table.sh", "availability": "owner-source-only"},
+          {"sourceRef": "first-principle/data/module-manifest.json", "availability": "owner-source-only"}
+        ]
+      },
+      "fields": [
+        ["模块名", "text", "local", true], ["标题", "text", "local", false],
+        ["Owner", "text", "local", false], ["段号", "number", "local", false],
+        ["类别", "single_select", "local", false], ["覆盖度", "single_select", "local", false],
+        ["飞书原版链接", "text", "local", false], ["snippet路径", "text", "local", false],
+        ["原版文档路径", "text", "local", false], ["上次蒸馏commit", "text", "local", false],
+        ["蒸馏内容", "text", "local", false], ["蒸馏方法", "text", "local", false],
+        ["变体清单", "text", "local", false], ["内容sha256", "text", "local", false],
+        ["装配方式", "text", "local", false], ["启用", "checkbox", "mixed", false]
+      ]
+    },
+    {
+      "role": "first-principle",
+      "capability": "patrol_control",
+      "status": "conditional",
+      "condition": "Enable only after the owner confirms the remote patrol-control schema, IDs, permissions, and readback path.",
+      "owner": "first-principle",
+      "asset_id_template": "first-principle.patrol_control",
+      "authority_model": "feishu_authoritative",
+      "sync_direction": "none",
+      "queue_consumer": false,
+      "unique_key": ["配置项"],
+      "runtime_transport": "native-lark-cli-read",
+      "static_mapping": {
+        "source_local_table": "patrol_state",
+        "source_local_key": ["scope"],
+        "remote_table": "FP 巡检配置",
+        "remote_key": ["配置项"],
+        "mapping_state": "blocked-unbound",
+        "field_map": [
+          {"local": "scope", "remote": "配置项", "conversion": "identity", "boundary": "required"},
+          {"local": "enabled", "remote": "开关", "conversion": "0_1_to_boolean", "boundary": "conditional"},
+          {"local": "updated_at", "remote": "更新时间", "conversion": "iso8601_text", "boundary": "conditional"}
+        ],
+        "local_only_fields": ["missing_state_policy", "last_run_id"],
+        "remote_only_fields": ["说明", "ID"],
+        "initial_guard": {"enabled": 0, "missing_state_policy": "closed"},
+        "consumer_refs": [
+          {"sourceRef": "first-principle/scripts/fp-patrol-enabled.sh", "availability": "owner-source-only"}
+        ],
+        "write_authority": "not-granted-by-this-catalog"
+      },
+      "fields": [
+        ["配置项", "text", "feishu", true], ["开关", "checkbox", "feishu", false],
+        ["说明", "text", "feishu", false], ["更新时间", "date_time", "feishu", false],
+        ["ID", "text", "readonly", false]
+      ]
+    },
+    {
+      "role": "skill-master",
+      "capability": "skill_registry_mirror",
+      "status": "conditional",
+      "condition": "Enable only when remote skill registry management is selected.",
+      "owner": "skill-master",
+      "asset_id_template": "skill-master.registry.skills",
+      "authority_model": "derived_mirror",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["Name"],
+      "source_check": {
+        "source": "skill-master/docs/onboarding-v1-skill-registry.json",
+        "source_field_count": 14,
+        "catalog_field_count": 14,
+        "status": "matched",
+        "consumer_refs": [
+          {"sourceRef": "skill-master/scripts/sync-skills-to-feishu.py", "availability": "owner-source-only"}
+        ],
+        "fifteenth_field": "not-present-in-owner-source"
+      },
+      "fields": [
+        ["Name", "text", "local", true], ["Owner", "text", "local", false],
+        ["Calls", "number", "local", false], ["Purpose", "text", "local", false],
+        ["Origin", "single_select", "local", false], ["Updated", "date_time", "local", false],
+        ["Scope", "single_select", "local", false], ["AutoUpgrade", "text", "local", false],
+        ["UpgradePolicy", "text", "local", false], ["GitHubRepo", "text", "local", false],
+        ["UpstreamPath", "text", "local", false], ["UpgradeState", "text", "local", false],
+        ["RegistrySource", "text", "local", false], ["HostedBy", "text", "local", false]
+      ]
+    },
+    {
+      "role": "watchdog",
+      "capability": "issue_mirror",
+      "status": "conditional",
+      "condition": "Enable only when watchdog issue mirroring is selected.",
+      "owner": "watchdog",
+      "asset_id_template": "watchdog.issue.issues",
+      "authority_model": "field_split",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["issue_id"],
+      "runtime_transport": "native-lark-cli",
+      "queue_route_override": false,
+      "consumer_refs": [
+        {"sourceRef": "watchdog/src/sync/bitable.ts", "availability": "owner-source-only"},
+        {"sourceRef": "watchdog/src/cli.ts", "availability": "owner-source-only"},
+        {"sourceRef": "watchdog/src/sync-all.ts", "availability": "owner-source-only"}
+      ],
+      "fields": [
+        ["issue_id", "text", "local", true], ["title", "text", "local", false],
+        ["source", "single_select", "local", false], ["description", "text", "local", false],
+        ["status", "single_select", "local", false], ["result", "text", "local", false],
+        ["created_at", "text", "local", false], ["finished_at", "text", "local", false],
+        ["retry_count", "text", "local", false], ["编号", "text", "readonly", false]
+      ]
+    },
+    {
+      "role": "watchdog",
+      "capability": "release_log_mirror",
+      "status": "conditional",
+      "condition": "Enable only when the watchdog release log is selected.",
+      "owner": "watchdog",
+      "asset_id_template": "watchdog.release.release_log",
+      "authority_model": "field_split",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["date", "repo_name"],
+      "runtime_transport": "owner-source-not-queue-asserted",
+      "queue_route_override": false,
+      "fields": [
+        ["date", "text", "local", true], ["repo_name", "text", "local", true],
+        ["committed", "text", "local", false], ["commit_message", "text", "local", false],
+        ["files_changed", "text", "local", false], ["skipped_reason", "text", "local", false],
+        ["编号", "text", "readonly", false]
+      ]
+    },
+    {
+      "role": "scheduler",
+      "capability": "v2_task_mirror",
+      "status": "conditional",
+      "condition": "This is a mirror, not required to fire scheduler tasks.",
+      "owner": "scheduler",
+      "asset_id_template": "scheduler.mirror.v2_tasks",
+      "authority_model": "derived_mirror",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["task_id"],
+      "fields": [
+        ["owner", "text", "local", false], ["last_success_at", "date_time", "local", false],
+        ["type", "text", "local", false], ["ID", "text", "readonly", false],
+        ["name", "text", "local", false], ["task_id", "text", "local", true],
+        ["alert_threshold", "number", "local", false], ["prompt", "text", "local", false],
+        ["enabled", "checkbox", "local", false], ["config", "text", "local", false],
+        ["retry_enabled", "checkbox", "local", false], ["cron", "text", "local", false],
+        ["周期", "text", "local", false], ["alert_channel", "text", "local", false],
+        ["latest_outcome", "text", "local", false], ["category", "text", "local", false],
+        ["description", "text", "local", false]
+      ]
+    },
+    {
+      "role": "heartbeat",
+      "capability": "event_mirror",
+      "status": "conditional",
+      "condition": "Optional mirror; local event state remains authoritative.",
+      "owner": "heartbeat",
+      "asset_id_template": "heartbeat.runtime.events",
+      "authority_model": "local_authoritative",
+      "sync_direction": "none",
+      "queue_consumer": false,
+      "unique_key": [],
+      "fields": [
+        ["patrol_id", "text", "local", false], ["target_session", "text", "local", false],
+        ["child_session_id", "text", "local", false], ["trigger_source", "text", "local", false],
+        ["decision", "text", "local", false], ["source", "text", "local", false],
+        ["triggered_at", "date_time", "local", false], ["logical_key", "text", "local", false],
+        ["child_model", "text", "local", false], ["summary", "text", "local", false],
+        ["error", "text", "local", false], ["injected_message", "text", "local", false],
+        ["trigger_cause", "text", "local", false], ["trigger_location", "text", "local", false],
+        ["status", "single_select", "local", false], ["event_type", "text", "local", false]
+      ]
+    },
+    {
+      "role": "heartbeat",
+      "capability": "todo_mirrors",
+      "status": "conditional",
+      "condition": "Optional aggregate/pool mirrors; both are local-authoritative and not queue consumers.",
+      "owner": "heartbeat",
+      "asset_id_template": "heartbeat.runtime.todo_aggregate_and_pool",
+      "authority_model": "local_authoritative",
+      "sync_direction": "none",
+      "queue_consumer": false,
+      "tables": [
+        {"name": "Heartbeat 待办聚合", "unique_key": ["aggregate_key"], "fields": [
+          ["statuses", "text", "local", false], ["final_status", "text", "local", false], ["item_count", "number", "local", false],
+          ["target_sessions", "text", "local", false], ["triggered_count", "number", "local", false], ["batch_keys", "text", "local", false],
+          ["failed_count", "number", "local", false], ["sources", "text", "local", false], ["source_ref", "text", "local", false],
+          ["latest_error", "text", "local", false], ["ID", "auto_number", "readonly", false], ["latest_message", "text", "local", false],
+          ["last_finished_at", "date_time", "local", false], ["latest_todo_id", "text", "local", false], ["source_sessions", "text", "local", false],
+          ["latest_injected_message", "text", "local", false], ["latest_logical_key", "text", "local", false], ["last_injected_at", "date_time", "local", false],
+          ["aggregate_key", "text", "local", true], ["triggered", "text", "local", false], ["recorded_in_pool", "text", "local", false],
+          ["first_created_at", "date_time", "local", false], ["todo_types", "text", "local", false], ["last_claimed_at", "date_time", "local", false]
+        ]},
+        {"name": "Heartbeat 待办池", "unique_key": ["todo_id"], "fields": [
+          ["injected_message", "text", "local", false], ["todo_id", "text", "local", true], ["injected_at", "date_time", "local", false],
+          ["logical_key", "text", "local", false], ["claimed_at", "date_time", "local", false], ["source_session", "text", "local", false],
+          ["finished_at", "date_time", "local", false], ["status", "text", "local", false], ["detail", "text", "local", false],
+          ["created_at", "date_time", "local", false], ["source", "text", "local", false], ["message", "text", "local", false],
+          ["target_session", "text", "local", false], ["ID", "auto_number", "readonly", false], ["todo_type", "text", "local", false],
+          ["batch_key", "text", "local", false], ["source_ref", "text", "local", false]
+        ]}
+      ]
+    },
+    {
+      "role": "autobitable",
+      "capability": "webhook_config_ledger",
+      "status": "conditional",
+      "condition": "Required only when the user enables a remote webhook configuration ledger; it is not a webhook receiver.",
+      "owner": "autobitable",
+      "asset_id_template": "autobitable.runtime.webhook_config",
+      "authority_model": "local_authoritative",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["Webhook ID"],
+      "fields": [
+        ["Receipt proof", "text", "local", false], ["Webhook ID", "text", "local", true], ["幂等键模板", "text", "local", false],
+        ["Last dry-run at", "date_time", "local", false], ["POST 请求配置", "text", "local", false], ["Table ID", "text", "local", false],
+        ["字段白名单", "text", "local", false], ["状态", "single_select", "local", false], ["触发器", "single_select", "local", false],
+        ["业务分类", "text", "local", false], ["Owner session", "text", "local", false], ["Script name", "text", "local", false],
+        ["Secret alias", "text", "local", false], ["Webhook class", "single_select", "local", false], ["Workflow ID", "text", "local", false],
+        ["Target session", "text", "local", false], ["Last success at", "date_time", "local", false], ["Command type", "single_select", "local", false],
+        ["Updated at", "date_time", "local", false], ["Prompt 摘要", "text", "local", false], ["Feishu AI 配置 Prompt", "text", "local", false],
+        ["Base token alias", "text", "local", false], ["View ID", "text", "local", false], ["备注", "text", "local", false],
+        ["Record ID 来源", "text", "local", false], ["名称", "text", "local", false], ["15分钟聚合", "checkbox", "local", false]
+      ]
+    },
+    {
+      "role": "socail-king",
+      "capability": "judgment_records",
+      "status": "required",
+      "owner": "socail-king",
+      "asset_id_template": "socail-king.judgment.records",
+      "authority_model": "field_split",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "unique_key": ["judgment_id"],
+      "fields": [
+        ["judgment_id", "text", "local", true], ["ts", "date_time", "local", false], ["theme", "single_select", "local", false],
+        ["user_visible_symptom", "text", "local", false], ["function_loss", "text", "local", false], ["evidence", "text", "local", false],
+        ["confidence", "single_select", "local", false], ["gray_zone_hit", "single_select", "local", false], ["user_verdict", "single_select", "feishu", false],
+        ["user_note", "text", "feishu", false], ["applied_to_rule", "text", "local", false], ["ID", "auto_number", "readonly", false]
+      ]
+    },
+    {
+      "role": "mythos",
+      "capability": "knowledge_sources_and_queries",
+      "status": "conditional",
+      "condition": "Enable only when the user selects remote KB source/query mirrors; local KB indexing does not require a table.",
+      "owner": "mythos",
+      "asset_id_template": "mythos.kb.sources_and_queries",
+      "authority_model": "local_authoritative",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": true,
+      "tables": [
+        {"name": "mythos 原文索引 Sources", "unique_key": ["source_id"], "fields": [
+          ["source_id", "text", "local", true], ["title", "text", "local", false], ["author", "text", "local", false],
+          ["source_url", "text", "local", false], ["raw_url", "text", "local", false], ["published", "text", "local", false],
+          ["captured", "date_time", "local", false], ["content_type", "text", "local", false], ["language", "text", "local", false],
+          ["license", "text", "local", false], ["tags", "text", "local", false], ["summary", "text", "local", false], ["local_path", "text", "local", false]
+        ]},
+        {"name": "mythos 查询日志 Queries", "unique_key": ["timestamp"], "fields": [
+          ["timestamp", "text", "local", false], ["caller", "text", "local", false], ["intent", "single_select", "local", false],
+          ["kb_state", "single_select", "local", false], ["prompt", "text", "local", false], ["concepts", "text", "local", false],
+          ["sources", "text", "local", false], ["routing_target", "text", "local", false], ["answer_summary", "text", "local", false], ["notes", "text", "local", false]
+        ]}
+      ]
+    },
+    {
+      "role": "localgit",
+      "capability": "repo_management_docs",
+      "status": "required",
+      "owner": "localgit",
+      "asset_id_template": "localgit.file.repo_management",
+      "authority_model": "feishu_only",
+      "sync_direction": "none",
+      "queue_consumer": false,
+      "note": "The public localgit contract is a document/reference surface, not a Bitable queue asset. Repository selection, ledger and notifications remain localgit-owned."
+    },
+    {
+      "role": "localgit",
+      "capability": "daily_commit_mirror",
+      "status": "conditional",
+      "condition": "Enable only when the localgit daily-commit mirror is selected; repository selection and commit decisions remain localgit-owned.",
+      "owner": "localgit",
+      "asset_id_template": "localgit.daily_commit.mirror",
+      "authority_model": "local_authoritative",
+      "sync_direction": "local_to_remote",
+      "queue_consumer": false,
+      "runtime_transport": "native-lark-cli",
+      "queue_route_override": false,
+      "unique_key": ["date", "repo_name"],
+      "consumer_refs": [
+        {"sourceRef": "localgit/src/scripts/daily-commit-bitable.ts", "availability": "owner-source-only"}
+      ],
+      "fields": [
+        ["date", "text", "local", true], ["repo_name", "text", "local", true],
+        ["committed", "text", "local", false], ["commit_message", "text", "local", false],
+        ["files_changed", "text", "local", false], ["skipped_reason", "text", "local", false]
+      ],
+      "note": "The six-field daily-commit mirror is a native localgit consumer, not a public queue asset. auto_fixed is local result metadata and is intentionally not a remote field."
+    }
+  ]
+}

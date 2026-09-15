@@ -1,0 +1,9 @@
+# User-owned live-sync state must never enter a public export.
+config/*.env
+!config/sync.example.env
+kb/.feishu-manifest.json
+
+# Recipient-local runtime state is created by verification/query commands and
+# is intentionally excluded from the public export.
+_index/
+logs/queries/

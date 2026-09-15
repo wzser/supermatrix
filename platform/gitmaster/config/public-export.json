@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "max_file_bytes": 5242880,
+  "allowed_artifact_patterns": [
+    "supermatrix/tests/adapters/**/samples/*.jsonl",
+    "supermatrix/tests/adapters/**/samples-acp/*.jsonl",
+    "platform/mythos/public/kb/sources.jsonl",
+    "platform/mythos/public/fixtures/query-fixture.jsonl"
+  ],
+  "allowed_static_paths": [
+    "platform/first-principle/data/backend-model-effort-catalog.json",
+    "platform/first-principle/data/category-capability-defaults.json",
+    "platform/first-principle/data/module-manifest.json",
+    "platform/first-principle/data/session-variants.json"
+  ],
+  "mappings": [
+    {
+      "name": "supermatrix-core",
+      "root": "supermatrix",
+      "subpath": ".",
+      "destination": "supermatrix",
+      "required_files": ["package.json", "package-lock.json", "tsconfig.json", "src/cli/onboardingV1.ts", "config/onboarding-v1/platform-manifest.json", "config/onboarding-v1/permissions.json", "config/onboarding-v1/skills.json", "config/onboarding-v1/asset-provenance.json"],
+      "include": [
+        ".editorconfig",
+        ".gitignore",
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "vitest.config.ts",
+        "src/**",
+        "tests/**",
+        "templates/**",
+        "config/onboarding-v1/**",
+        "prd/00-skeleton.md",
+        "prd/01-domain-and-ports.md",
+        "prd/02-app-orchestration.md",
+        "prd/03-adapters.md",
+        "prd/04-cli-and-api.md",
+        "prd/05-scripts-and-ops.md",
+        "docs/SETUP.md",
+        "docs/SMOKE.md",
+        "docs/caller-provenance-boundary.md",
+        "docs/codemap.md",
+        "docs/codex-state-snapshot-lifecycle.md",
+        "docs/localwatch-and-boot-selfcheck.md",
+        "docs/localwatch-architecture.html",
+        "docs/managed-sqlite-snapshot-lifecycle.md",
+        "docs/onboarding-v1.md",
+        "principles/Spawn2.0 Principle.md",
+        "scripts/**"
+      ],
+      "exclude": [
+        "docs/SETUP.md",
+        "scripts/launchd/**",
+        "scripts/localwatch.sh",
+        "scripts/copysm-vpn-guard.zsh",
+        "scripts/package-dist.sh",
+        "scripts/setup-dogfood-session.sh",
+        "scripts/shipment-type-v2-initial-apply-runner.mjs",
+        "scripts/spike-*",
+        "scripts/test_argv3.ts",
+        "tests/app/autoFileDelivery.test.ts",
+        "tests/app/commands/idea.test.ts",
+        "tests/app/commands/rank.test.ts",
+        "tests/app/commands/todo.test.ts",
+        "tests/app/spawnPredicate/evaluate.test.ts",
+        "tests/scripts/localwatch.test.ts",
+        "tests/scripts/processObserve.test.ts",
+        "tests/scripts/sharedInfrastructureScripts.test.ts",
+        "tests/scripts/weeklyCacheCleanup.test.ts"
+      ]
+    },
+    {
+      "name": "supermatrix-public-setup",
+      "root": "workspace:gitmaster",
+      "subpath": "public-overrides/supermatrix",
+      "destination": "supermatrix",
+      "required_files": ["docs/SETUP.md"],
+      "include": ["docs/SETUP.md"],
+      "exclude": []
+    },
+    {
+      "name": "supermatrix-retired-lifecycle-entries",
+      "root": "supermatrix",
+      "subpath": "scripts/launchd",
+      "destination": "supermatrix/scripts/launchd",
+      "required_files": ["install.sh", "uninstall.sh", "supermatrix-launch.sh"],
+      "include": ["install.sh", "uninstall.sh", "supermatrix-launch.sh"],
+      "exclude": []
+    },
+    {
+      "name": "supermatrix-terminal-launcher",
+      "root": "supermatrix",
+      "subpath": "scripts/launchd",
+      "destination": "supermatrix/scripts/launchd",
+      "required_files": ["terminal-launcher.sh"],
+      "include": ["terminal-launcher.sh"],
+      "exclude": []
+    },
+    {
+      "name": "supermatrix-localwatch",
+      "root": "supermatrix",
+      "subpath": "scripts",
+      "destination": "supermatrix/scripts",
+      "required_files": ["localwatch.sh"],
+      "include": ["localwatch.sh"],
+      "exclude": []
+    },
+    {
+      "name": "supermatrix-localwatch-test",
+      "root": "supermatrix",
+      "subpath": "tests/scripts",
+      "destination": "supermatrix/tests/scripts",
+      "required_files": ["localwatch.test.ts"],
+      "include": ["localwatch.test.ts"],
+      "exclude": []
+    },
+    {
+      "name": "first-principle",
+      "root": "workspace:first-principle",
+      "subpath": "exports/onboarding-v2",
+      "destination": "platform/first-principle",
+      "required_files": [".python-version", "asset-provenance.json", "bin/fp-generate-init", "scripts/fp_assemble.py", "scripts/verify-public-inputs.py", "scripts/session-meta-schema-check.sh", "scripts/bitable-init-sync.sh", "scripts/sync-session-table.sh", "config/session-meta-table.json", "config/session-meta-runtime.schema.json", "examples/session-meta.runtime.example.json", "config/public-bindings.json", "config/schema.sql", "config/runtime.env.example", "templates/AGENTS.md", "templates/CLAUDE.md", "data/backend-model-effort-catalog.json", "data/category-capability-defaults.json", "data/module-manifest.json", "data/session-variants.json"],
+      "include": [".python-version", "README.md", "asset-provenance.json", "bin/**", "config/**", "examples/**", "full-docs/**", "scripts/**", "snippets/**", "templates/**", "data/backend-model-effort-catalog.json", "data/category-capability-defaults.json", "data/module-manifest.json", "data/session-variants.json"],
+      "exclude": []
+    },
+    {
+      "name": "first-principle-onboarding-v1-public-templates",
+      "root": "workspace:first-principle",
+      "subpath": "exports/onboarding-v1/first-principle",
+      "destination": "platform/first-principle",
+      "required_files": ["templates/business-principles.md", "templates/coding-principles.md", "templates/console-principles.md", "templates/sop-template.md"],
+      "include": [
+        "templates/business-principles.md",
+        "templates/coding-principles.md",
+        "templates/console-principles.md",
+        "templates/sop-template.md"
+      ],
+      "exclude": []
+    },
+    {
+      "name": "scheduler-v2",
+      "root": "workspace:scheduler",
+      "subpath": "v2",
+      "destination": "platform/scheduler",
+      "required_files": ["package.json", "package-lock.json", "tsconfig.json", "src/main.ts"],
+      "include": ["**"],
+      "exclude": ["node_modules/**", "dist/**", "data/**", "runs/**", "docs/superpowers/**"]
+    },
+    {
+      "name": "heartbeat",
+      "root": "workspace:heartbeat",
+      "subpath": ".",
+      "destination": "platform/heartbeat",
+      "required_files": [".python-version", "pyproject.toml", "config/heartbeat.env.example", "scripts/heartbeat-control", "scripts/heartbeat-patrol", "scripts/heartbeat-todo-watch", "tests/test_public_release_inputs.py"],
+      "include": [".gitignore", ".python-version", "pyproject.toml", "config/heartbeat.env.example", "docs/heartbeat-function-overview.md", "heartbeat_patrol/**", "scripts/enqueue-heartbeat-todo", "scripts/evaluate-decision-prompt", "scripts/heartbeat-control", "scripts/heartbeat-log-rotate", "scripts/heartbeat-patrol", "scripts/heartbeat-temporary-snapshot", "scripts/heartbeat-todo-watch", "scripts/sync-heartbeat-events", "tests/**"],
+      "exclude": ["tests/test_r26_history_apply.py", "**/__pycache__/**"]
+    },
+    {
+      "name": "autobitable",
+      "root": "workspace:autobitable",
+      "subpath": ".",
+      "destination": "platform/autobitable",
+      "required_files": ["src/server.mjs", "public-safe/README.md", "public-safe/package.json", "public-safe/package-lock.json", "public-safe/src/server.mjs", "public-safe/scripts/register-webhook-secret.mjs", "public-safe/registry/bitable-webhooks.empty.json", "public-safe/tests/adapter.test.mjs"],
+      "include": ["src/server.mjs", "public-safe/.gitignore", "public-safe/README.md", "public-safe/package.json", "public-safe/package-lock.json", "public-safe/config/**", "public-safe/examples/**", "public-safe/registry/bitable-webhooks.empty.json", "public-safe/scripts/register-webhook-secret.mjs", "public-safe/src/**", "public-safe/tests/**"],
+      "exclude": []
+    },
+    {
+      "name": "watchdog",
+      "root": "workspace:watchdog",
+      "subpath": ".",
+      "destination": "platform/watchdog",
+      "required_files": ["package.json", "package-lock.json", "tsconfig.json", "config/watchdog.example.env", "src/cli.ts", "src/config.ts", "src/sync/bitable.ts", "src/scripts/weekly-review-closure.ts"],
+      "include": [".gitignore", "package.json", "package-lock.json", "tsconfig.json", "vitest.config.ts", "config/watchdog.example.env", "src/cli.ts", "src/config.ts", "src/db/**", "src/notify/**", "src/sync/**", "src/scripts/weekly-review-closure.ts", "tests/cli.test.ts", "tests/config.test.ts", "tests/db/**", "tests/notify/**", "tests/sync/**", "tests/scripts/weekly-review-closure.test.ts"],
+      "exclude": []
+    },
+    {
+      "name": "socail-king",
+      "root": "workspace:socail-king",
+      "subpath": "public-safe",
+      "destination": "platform/socail-king",
+      "required_files": ["README.md", "CONFIG.md", "package.json", "schemas/judgment.schema.json", "src/public-safe-ledger.mjs"],
+      "include": ["README.md", "CONFIG.md", "package.json", "docs/**", "examples/**", "references/**", "schemas/**", "scripts/**", "sop/**", "src/**"],
+      "exclude": []
+    },
+    {
+      "name": "mythos",
+      "root": "workspace:mythos",
+      "subpath": ".",
+      "destination": "platform/mythos",
+      "required_files": [".python-version", "pyproject.toml", "public/README.md", "public/THIRD_PARTY_NOTICES.md", "public/third-party/a2a-LICENSE", "public/third-party/mcp-LICENSE", "public/kb/sources.jsonl", "scripts/build-index.py", "scripts/rebuild-map.py", "scripts/log-query.py", "scripts/sync-kb.sh", "tests/test_public_seed.py"],
+      "include": [".python-version", "pyproject.toml", "public/.gitignore", "public/README.md", "public/DEPENDENCIES.md", "public/THIRD_PARTY_NOTICES.md", "public/third-party/a2a-LICENSE", "public/third-party/mcp-LICENSE", "public/config/**", "public/fixtures/query-fixture.jsonl", "public/kb/**", "scripts/build-index.py", "scripts/rebuild-map.py", "scripts/log-query.py", "scripts/sync-kb.sh", "tests/test_public_seed.py"],
+      "exclude": []
+    },
+    {
+      "name": "skill-master",
+      "root": "workspace:skill-master",
+      "subpath": ".",
+      "destination": "platform/skill-master",
+      "required_files": [".python-version", "pyproject.toml", "docs/onboarding-v1-skill-assets.json", "docs/onboarding-v1-skill-index.md", "scripts/evaluate-skills.py", "scripts/audit-skill-discovery.py", "scripts/feishu_enqueue.py", "scripts/sync-skills-to-feishu.py", "scripts/sync-skills.sh", "scripts/record-tick.sh", "scripts/validate-skill-frontmatter.py", "tests/test_public_skill_inputs.py", "skills/diagnose/SKILL.md", "skills/improve-codebase-architecture/SKILL.md", "skills/tdd/SKILL.md"],
+      "include": [
+        ".gitignore",
+        ".python-version",
+        "pyproject.toml",
+        "docs/onboarding-v1-skill-assets.json",
+        "docs/onboarding-v1-skill-dependencies.json",
+        "docs/onboarding-v1-skill-discovery.json",
+        "docs/onboarding-v1-skill-index.md",
+        "docs/onboarding-v1-public-example.md",
+        "docs/onboarding-v1-skill-registry.json",
+        "docs/onboarding-v1-skill-upgrade-sources.json",
+        "scripts/validate-skill-frontmatter.py",
+        "scripts/audit-skill-discovery.py",
+        "scripts/evaluate-skills.py",
+        "scripts/feishu_enqueue.py",
+        "scripts/sync-skills-to-feishu.py",
+        "scripts/sync-skills.sh",
+        "scripts/record-tick.sh",
+        "tests/test_public_skill_inputs.py",
+        "tests/test_evaluate_spawn_endpoint.py",
+        "skills/diagnose/**",
+        "skills/improve-codebase-architecture/**",
+        "skills/tdd/**"
+      ],
+      "exclude": []
+    },
+    {
+      "name": "localgit",
+      "root": "workspace:localgit",
+      "subpath": ".",
+      "destination": "platform/localgit",
+      "required_files": ["package.json", "package-lock.json", "tsconfig.json", "config/localgit-role.json", "config/daily-commit-bitable.example.json", "docs/INSTALL.md", "scripts/run-branch-patrol.sh", "scripts/run-daily-commit.sh", "src/scripts/daily-commit.ts", "src/scripts/daily-commit-verify.ts", "src/scripts/branch-patrol.ts", "src/scripts/branch-patrol-verify.ts"],
+      "include": ["package.json", "package-lock.json", "tsconfig.json", "config/localgit-role.json", "config/daily-commit-bitable.example.json", "docs/INSTALL.md", "scripts/run-branch-patrol.sh", "scripts/run-daily-commit.sh", "sop/INDEX.md", "sop/references/daily-commit-ignore-policy.md", "sop/references/owner-decision-rubric.md", "sop/references/SOP-daily-commit-judgment-matrix-l2-review-prompt.md", "sop/references/SOP-daily-commit-judgment-matrix-secret-patterns.md", "sop/SOP-daily-commit-judgment-matrix-active-20260821-1a186q.md", "sop/SOP-repo-branch-merge-patrol-active-20260714-68dd04.md", "src/**"],
+      "exclude": []
+    },
+    {
+      "name": "larkc",
+      "root": "workspace:larkc",
+      "subpath": ".",
+      "destination": "platform/larkc",
+      "required_files": ["public-input/LARK_INSTALL_PERMISSIONS.md", "public-input/lark-install-permissions.v1.json", "public-input/card-callback-public-manifest.json", "public-input/card-callback.env.example", "public-input/verify-public-input.mjs", "card-callback/package.json", "card-callback/package-lock.json", "card-callback/src/askBroker.js", "card-callback/src/cardAction.js", "card-callback/src/mcpAskServer.js"],
+      "include": ["public-input/LARK_INSTALL_PERMISSIONS.md", "public-input/VERIFICATION.md", "public-input/lark-install-permissions.v1.json", "public-input/card-callback-public-manifest.json", "public-input/card-callback.env.example", "public-input/verify-public-input.mjs", "public-input/verify-public-input.test.mjs", "card-callback/README.md", "card-callback/package.json", "card-callback/package-lock.json", "card-callback/src/askBroker.js", "card-callback/src/broker.js", "card-callback/src/card.js", "card-callback/src/cardAction.js", "card-callback/src/mcpAskServer.js", "card-callback/src/pendingStore.js", "card-callback/test/askBroker.test.js", "card-callback/test/card.test.js", "card-callback/test/cardAction.test.js", "card-callback/test/mcpAskServer.test.js", "card-callback/test/pendingStore.test.js"],
+      "exclude": []
+    },
+    {
+      "name": "wendangwang",
+      "root": "workspace:wendangwang",
+      "subpath": "exports/feishu-bitable-control-plane",
+      "destination": "platform/wendangwang",
+      "required_files": [".python-version", "pyproject.toml", "README.md", "docs/SETUP.md", "config/public-table-contracts.json", "bin/feishu-sync-enqueue", "bin/feishu-sync-consumer", "bin/feishu-sync-status", "src/wendangwang_feishu/cli.py", "src/wendangwang_feishu/sync_queue.py", "tests/test_public_e2e.py"],
+      "include": [".gitignore", ".python-version", "pyproject.toml", "README.md", "bin/**", "config/**", "docs/**", "src/**", "tests/**", "registry/README.md"],
+      "exclude": ["**/__pycache__/**"]
+    },
+    {
+      "name": "gitmaster",
+      "root": "workspace:gitmaster",
+      "subpath": ".",
+      "destination": "platform/gitmaster",
+      "required_files": [".python-version", "pyproject.toml", "AGENT_INSTALL.md", "config/public-export.json", "scripts/sanitized_release.py", "sop/INDEX.md", "tests/test_sanitized_release.py", "tests/test_agent_install.py"],
+      "include": [".gitignore", ".python-version", "AGENT_INSTALL.md", "config/public-export.json", "public-overrides/supermatrix/docs/SETUP.md", "pyproject.toml", "scripts/sanitized_release.py", "sop/**", "tests/test_sanitized_release.py", "tests/test_agent_install.py"],
+      "exclude": ["sop/TEMPLATE.md", ".private/**", "**/__pycache__/**"]
+    }
+  ]
+}

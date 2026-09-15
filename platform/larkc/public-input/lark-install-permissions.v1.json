@@ -1,0 +1,152 @@
+{
+  "contract": "lark-install-permissions.v1",
+  "purpose": "Public input for a document-led installation; no installer is included.",
+  "lark_cli": {
+    "version": "1.0.93",
+    "scope_union_rule": "For each enabled profile, sort and de-duplicate its exact scopes, then join with commas for auth login --scope.",
+    "profile_rule": "Use a named profile selected with --profile; do not switch or overwrite the global profile."
+  },
+  "card_callback_carrier": {
+    "package": "@larksuiteoapi/node-sdk",
+    "version": "1.73.3",
+    "transport": "one shared SDK WSClient owned by the framework gateway",
+    "cli_event_consumer": false,
+    "event_or_callback": "card.action.trigger is a callback and requires a valid handler response within the provider ACK window."
+  },
+  "identities": {
+    "user_oauth": {
+      "required_scopes": [
+        "base:app:create",
+        "base:field:create",
+        "base:field:read",
+        "base:field:update",
+        "base:record:create",
+        "base:record:read",
+        "base:record:update",
+        "base:table:create",
+        "base:table:delete",
+        "base:table:read",
+        "base:table:update",
+        "base:view:write_only",
+        "contact:user.basic_profile:readonly",
+        "contact:user:search",
+        "im:chat.members:read",
+        "im:chat.members:write_only",
+        "im:chat:create_by_user",
+        "im:chat:read",
+        "im:chat:update",
+        "im:message",
+        "im:message.send_as_user",
+        "im:message:readonly"
+      ],
+      "admin_approval": "The tenant administrator must approve any restricted user scope shown by the consent page; user consent is still required.",
+      "resource_share": "The consenting user must be a member of every destination chat and have the required reader/editor/admin access to each Base, table, Wiki space/node, Drive document or folder used."
+    },
+    "app": {
+      "required_scopes": [
+        "base:app:create",
+        "base:field:create",
+        "base:field:read",
+        "base:field:update",
+        "base:record:create",
+        "base:record:read",
+        "base:record:update",
+        "base:table:create",
+        "base:table:delete",
+        "base:table:read",
+        "base:table:update",
+        "base:view:write_only",
+        "contact:user.basic_profile:readonly",
+        "contact:user:search",
+        "docs:permission.member:create",
+        "im:chat.members:read",
+        "im:chat.members:write_only",
+        "im:chat:create",
+        "im:chat:read",
+        "im:chat:update",
+        "im:message",
+        "im:message.p2p_msg:readonly",
+        "im:message:readonly",
+        "im:message:send_as_bot",
+        "im:message:update"
+      ],
+      "admin_approval": "Publish the app version after changing app permissions. A tenant administrator must approve restricted app permissions before the bot token can use them.",
+      "resource_share": "Add the bot to each destination chat. Share each Base/table, Wiki space/node, Drive file/folder and comment target with the bot at the least role needed; app scopes do not grant resource membership."
+    }
+  },
+  "conditional_capabilities": {
+    "wiki": {
+      "enabled_when": "The recipient enables Wiki listing or node creation.",
+      "user_oauth_scopes": ["wiki:node:create", "wiki:node:read", "wiki:node:retrieve", "wiki:space:read"],
+      "app_scopes": ["wiki:node:create", "wiki:node:read", "wiki:node:retrieve", "wiki:space:read"],
+      "admin_approval": "Publish/admin-approve the app scopes if the tenant requires it.",
+      "resource_share": "Share the target Wiki space and parent node with the acting identity."
+    },
+    "drive_read": {
+      "enabled_when": "The recipient enables Drive listing, Markdown fetch, or file download.",
+      "user_oauth_scopes": ["drive:drive.metadata:readonly", "drive:file:download"],
+      "app_scopes": ["drive:drive.metadata:readonly", "drive:file:download"],
+      "admin_approval": "Approve/publish the app permissions as required by the tenant.",
+      "resource_share": "Share the folder/file with the acting identity. Do not request every API alternative: use only the scope required by the selected CLI shortcut."
+    },
+    "comments": {
+      "enabled_when": "The recipient enables comment read, create, or reply on a specific document-like resource.",
+      "user_oauth_scopes": ["docs:document.comment:create", "docs:document.comment:read", "docs:document.comment:write_only"],
+      "app_scopes": ["docs:document.comment:create", "docs:document.comment:read", "docs:document.comment:write_only", "docx:document:readonly", "drive:drive.metadata:readonly"],
+      "conditional_scopes": {
+        "wiki_target": ["wiki:node:read", "wiki:node:retrieve"],
+        "drive_add_comment_shortcut": ["drive:drive.metadata:readonly", "docx:document:readonly"]
+      },
+      "admin_approval": "Comment write permissions may require tenant-admin approval and app-version publication.",
+      "resource_share": "The acting identity must have comment permission on the exact document, sheet, slide, Base or Wiki target. A comment scope does not authorize access to unrelated resources.",
+      "event_note": "No comment event subscription is part of this default contract. Do not add an event scope or a second CLI consumer unless a separately enabled SDK module supplies an exact event contract."
+    },
+    "card_callback": {
+      "enabled_when": "The recipient enables ask_user cards.",
+      "user_oauth_scopes": [],
+      "app_scopes": ["im:message:readonly", "im:message:send_as_bot", "im:message:update"],
+      "events": [
+        {
+          "key": "card.action.trigger",
+          "kind": "callback",
+          "auth_types": ["bot"],
+          "required_scopes": ["im:message:readonly"],
+          "console_action": "Enable card callback configuration and publish the app version."
+        },
+        {
+          "key": "im.message.receive_v1",
+          "kind": "event",
+          "auth_types": ["bot"],
+          "required_scopes": ["im:message.p2p_msg:readonly"],
+          "console_action": "Enable the message receive event only when the recipient enables that consumer."
+        }
+      ],
+      "admin_approval": "The app administrator must enable the callback/event subscriptions in the developer console and publish the version.",
+      "resource_share": "The bot must be a member of the chat containing the card and must be allowed to send and update its own card message.",
+      "transport_rule": "Use the existing shared Node SDK WSClient as the only long connection. Do not run lark-cli event consume beside it."
+    }
+  },
+  "base_contract": {
+    "resource_placeholders": ["BASE_TOKEN", "TABLE_ID", "FIELD_ID", "VIEW_ID", "RECORD_ID"],
+    "schema_example": {
+      "table_name": "Example Table",
+      "fields": [
+        {"name": "Title", "type": "text", "primary": true},
+        {"name": "Status", "type": "select", "multiple": false, "options": [{"name": "Todo"}, {"name": "Done"}]},
+        {"name": "Notes", "type": "text"}
+      ]
+    },
+    "operations": [
+      {"command": "base +base-create", "identity": "user", "scopes": ["base:app:create", "base:table:read", "base:table:create", "base:table:update", "base:table:delete"], "resource_access": "The user owns the newly created Base or has explicit destination access."},
+      {"command": "base +base-create", "identity": "bot", "scopes": ["base:app:create", "base:table:read", "base:table:create", "base:table:update", "base:table:delete", "docs:permission.member:create"], "resource_access": "The bot has destination access; the returned permission grant must be read back before claiming user access."},
+      {"command": "base +table-create", "identity": "user_or_bot", "scopes": ["base:table:create", "base:field:read", "base:field:create", "base:field:update", "base:view:write_only"], "resource_access": "Acting identity can edit the Base."},
+      {"command": "base +field-create|+field-list|+field-get|+field-update", "identity": "user_or_bot", "scopes": ["base:field:create", "base:field:read", "base:field:update"], "resource_access": "Acting identity can edit/read the target table schema."},
+      {"command": "base +table-list", "identity": "user_or_bot", "scopes": ["base:table:read"], "resource_access": "Acting identity can read the Base."},
+      {"command": "base +record-list|+record-get", "identity": "user_or_bot", "scopes": ["base:record:read"], "resource_access": "Acting identity can read the target table."},
+      {"command": "base +record-batch-create", "identity": "user_or_bot", "scopes": ["base:record:create"], "resource_access": "Acting identity can create records in the target table."},
+      {"command": "base +record-batch-update", "identity": "user_or_bot", "scopes": ["base:record:update"], "resource_access": "Acting identity can update records in the target table."},
+      {"command": "base +record-upsert", "identity": "user_or_bot", "scopes": ["base:record:create", "base:record:update"], "resource_access": "Acting identity can create/update; update-vs-create is selected by record_id, not a business key."}
+    ],
+    "writeback_rule": "Create or adopt resources only after explicit ownership/access is recorded. Save returned IDs and read back the semantic table/field/record state; exit 0 or an accepted request is not proof."
+  }
+}

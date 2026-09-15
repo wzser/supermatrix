@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "modules": [
+    {"module":"session-self","section_no":0,"title":"本 session 自有内容","owner":"__session__","coverage":"preserve","assembly":"verbatim"},
+    {"module":"session-runtime","section_no":1,"title":"本 session 运行时参数","owner":"framework-owner","coverage":"universal","assembly":"fp_runtime"},
+    {"module":"session-workspace","section_no":2,"title":"工作区与关键路径（本 session 自写）","owner":"__session__","coverage":"preserve-optional","assembly":"verbatim"},
+    {"module":"session-contract","section_no":3,"title":"协作契约（本 session 自写）","owner":"__session__","coverage":"preserve-optional","assembly":"verbatim"},
+    {"module":"session-playbook","section_no":4,"title":"运营手册（本 session 自写）","owner":"__session__","coverage":"preserve-optional","assembly":"verbatim"},
+    {"module":"coding-principle","section_no":121,"title":"Coding Principle 概括","owner":"principle-owner","full_doc_path":"full-docs/coding-principle.md","snippet_path":"snippets/coding-principle.md","coverage":"universal","assembly":"inline+pointer","distill_method":"public-approved"},
+    {"module":"sop-principle","section_no":122,"title":"SOP Principle 概括","owner":"principle-owner","full_doc_path":"full-docs/sop-principle.md","snippet_path":"snippets/sop-principle.md","coverage":"universal","assembly":"inline+pointer","distill_method":"public-approved"},
+    {"module":"python-runtime","section_no":123,"title":"Python 运行时公共规则","owner":"principle-owner","full_doc_path":"full-docs/python-runtime.md","snippet_path":"snippets/python-runtime.md","coverage":"universal","assembly":"inline+pointer","distill_method":"public-approved"}
+  ]
+}
