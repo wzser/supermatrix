@@ -19,7 +19,7 @@ Initialize C and inventory M/B/N/L before authorization. Separate supported conf
 
 ## Inputs and Outputs
 
-- Input: AGENT_INSTALL.md version 1.2.0; the v0.3.0 pilot must pass S1 with matching published metadata and assets. Do not pair this revision with the old 1.0.1 candidate. Sample: `{"document_version":"1.2.0","release_tag":"v0.3.0","backend":"codex","package_status":"awaiting_S1_verification"}`.
+- Input: AGENT_INSTALL.md version 1.2.0; the v0.3.1 pilot must pass S1 with matching published metadata and assets. Do not pair this revision with the old 1.0.1 candidate. Sample: `{"document_version":"1.2.0","release_tag":"v0.3.1","backend":"codex","package_status":"awaiting_S1_verification"}`.
 - Output: H's report with every C row and M capability/subfeature. Sample: `{"document_version":"1.2.0","verdict":"BLOCKED","capabilities":{"autobitable":{"gap_kind":"package","status":"blocked"}},"next_action":"Obtain a supported public adapter; continue independent configuration inventory"}`.
 - Idempotency: use P's install_key formula and saved resource/operation IDs. A repeated communication or unknown result must be read back, not redriven under a new ID.
 - Per-role and per-test evidence follows V/H. Transport closure, package install and core health do not substitute for live acceptance.
@@ -52,7 +52,7 @@ Initialize C and inventory M/B/N/L before authorization. Separate supported conf
 
 ## Validation and Publication Boundary
 
-- Draft SOP registration is intentional while full live acceptance remains unverified. Document 1.2.0 is a versioned agent-operated runbook for the v0.3.0 pilot. Earlier 1.0.1 approval does not certify these inputs; require this version's package report and S1 readback.
+- Draft SOP registration is intentional while full live acceptance remains unverified. Document 1.2.0 is a versioned agent-operated runbook for the v0.3.1 pilot. Earlier 1.0.1 approval does not certify these inputs; require this version's package report and S1 readback.
 - gitmaster owns the contract and public package handoff. Framework defects return to the framework owner; managed-device changes remain with the device/deployment owners.
 - Do not publish a new product tag, push, replace a candidate, install on a device or activate a service merely to register this document.
 - The closed export mapping includes AGENT_INSTALL.md with this SOP so its relative link stays valid. This admission change does not rebuild the paired archive or authorize publication. Future packaging must retain the document/package binding and pass the normal explicit release gates.

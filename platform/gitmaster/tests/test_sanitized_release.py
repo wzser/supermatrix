@@ -481,6 +481,43 @@ class SanitizedReleaseTest(unittest.TestCase):
         self.assertEqual((output / "supermatrix/docs/SETUP.md").read_text(), pointer)
         self.assertTrue(payload["ok"])
 
+    def test_root_dual_license_is_closed_release_input(self) -> None:
+        current = json.loads((SCRIPT.parent.parent / "config/public-export.json").read_text())
+        mapping = next(item for item in current["mappings"] if item["name"] == "public-license")
+        expected = ["LICENSE", "LICENSE-APACHE", "LICENSE-MIT", "NOTICE"]
+        self.assertEqual(mapping["root"], "workspace:gitmaster")
+        self.assertEqual(mapping["subpath"], "public-release")
+        self.assertEqual(mapping["destination"], ".")
+        self.assertEqual(mapping["required_files"], expected)
+        self.assertEqual(mapping["include"], expected)
+        self.assertEqual(mapping["exclude"], [])
+
+        gitmaster_mapping = next(item for item in current["mappings"] if item["name"] == "gitmaster")
+        for name in expected:
+            source_path = f"public-release/{name}"
+            self.assertIn(source_path, gitmaster_mapping["required_files"])
+            self.assertIn(source_path, gitmaster_mapping["include"])
+
+        owner = self.make_repo("workspaces/gitmaster")
+        for name in expected:
+            self.write(owner, f"public-release/{name}", f"public {name}\n")
+        output, _, payload = self.build(self.write_config([mapping]))
+
+        self.assertEqual(payload["mapping_counts"], {"public-license": len(expected)})
+        self.assertEqual(payload["required_files"], {"public-license": expected})
+        for name in expected:
+            self.assertTrue((output / name).is_file())
+        self.assertFalse((output / "public-release").exists())
+
+        source_root = SCRIPT.parent.parent / "public-release"
+        self.assertIn("SPDX-License-Identifier: MIT OR Apache-2.0", (source_root / "LICENSE").read_text())
+        self.assertIn("MIT License", (source_root / "LICENSE-MIT").read_text())
+        self.assertIn("Apache License", (source_root / "LICENSE-APACHE").read_text())
+        notice = (source_root / "NOTICE").read_text()
+        self.assertIn("Third-party materials", notice)
+        self.assertNotIn("Project-owned", notice)
+        self.assertNotIn("MIT License or", notice)
+
     def test_public_modules_use_closed_owner_inputs(self) -> None:
         current = json.loads((SCRIPT.parent.parent / "config/public-export.json").read_text())
         mappings = {item["name"]: item for item in current["mappings"]}

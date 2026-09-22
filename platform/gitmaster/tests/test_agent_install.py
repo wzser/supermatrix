@@ -143,6 +143,18 @@ class AgentInstallDocumentTest(unittest.TestCase):
             self.assertNotIn("1.1.0", text)
         self.assertLess(self.document.splitlines().index("## S1. Establish the Contract Before Writing"), 25)
 
+    def test_install_contract_is_bound_to_the_v031_release_assets(self) -> None:
+        documents = [
+            self.document,
+            (ROOT / "sop/SOP-agent-install-draft-20260914-83e8f1.md").read_text(encoding="utf-8"),
+            (ROOT / "public-overrides/supermatrix/docs/SETUP.md").read_text(encoding="utf-8"),
+        ]
+        for document in documents:
+            self.assertIn("v0.3.1", document)
+            self.assertNotIn("v0.3.0", document)
+        self.assertIn("supermatrix-v0.3.1.tar", self.document)
+        self.assertIn("supermatrix-v0.3.1/", self.document)
+
 
 if __name__ == "__main__":
     unittest.main()

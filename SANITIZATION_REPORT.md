@@ -1,16 +1,16 @@
-# Sanitization Report: v0.3.0
+# Sanitization Report: v0.3.1
 
-Date: 2026-09-15. Product version: `v0.3.0`. Agent installation contract: `1.2.0`.
+Date: 2026-09-22. Product version: `v0.3.1`. Agent installation contract: `1.2.0`.
 
 ## Scope
 
-The closed export selected 943 source files from 13 exact source commits. The final tree contains 950 regular UTF-8 files after adding seven public release files. It contains no symlinks, installed dependencies, runtime databases, logs, caches, archives, media, credentials, private workspaces, or private evidence.
+The closed export selected 951 source files from 13 exact source commits. The final tree contains 958 regular UTF-8 files after adding seven public release files. It contains no symlinks, installed dependencies, runtime databases, logs, caches, archives, media, credentials, private workspaces, or private evidence.
 
-All files were frozen from exact Git commits and copied with per-file source/output SHA-256 evidence. No executable or template was inherited from an earlier public release. Only public release metadata, versions, and the existing provenance byte/hash entries were refreshed after sanitization.
+This patch starts from the published v0.3.0 public snapshot. Apart from root release metadata, only the reviewed Gitmaster license/installation inputs and the reviewed core release-gate regression test changed. All other platform bytes remain from the v0.3.0 public snapshot; no live runtime or unreviewed workspace content was imported.
 
 | Source | Approved commit |
 | --- | --- |
-| Core | `0307c29b75908ab8a4dd21b37c5f0ad103eea89c` |
+| Core | `bda216512c0698c7f173441d230ba7295c10e039` |
 | First Principle | `b23981b2433698ab8ea79c69a93c717203a22caa` |
 | Scheduler | `2138bd3934689f5ce08d95170e51a7f58e275fc0` |
 | Heartbeat | `1b7c4390376da000a9a0999219cd18f5d33e7a93` |
@@ -22,13 +22,13 @@ All files were frozen from exact Git commits and copied with per-file source/out
 | Public knowledge | `a29638922f59a1e047f565a3c7f34a04d0c2a7de` |
 | Lark support | `57cf7c6c9d7fdcb0a0053b0500196ceec5e1400c` |
 | Table queue | `10e5a00d6d15333458dcb213391872b32fa5e0cb` |
-| Gitmaster | `030ed022f8295d77d8e5e9373c956efb657c9888` |
+| Gitmaster | `4ef7c2f07e9cdeaecf2dc794f0ec9b360c692c78` |
 
 Source commits are provenance records, not instructions to fetch private repositories. Install only the uploaded public archive. Raw source paths, private review logs, raw scan findings, and private keyword values remain outside this repository.
 
 ## Scan Gates
 
-The private bilingual list contains 83 terms: 66 English/transliterated and 17 Chinese. It covers people, handles, company, brand, product, contact, private host, resource, and workflow references. Individual terms and fingerprints are not published.
+The private bilingual list contains 52 terms: 35 English/transliterated and 17 Chinese. It covers people, handles, company, brand, product, contact, private host, resource, and workflow references. Individual terms and fingerprints are not published.
 
 Publication requires zero unwaived findings from all of the following:
 
@@ -37,17 +37,17 @@ Publication requires zero unwaived findings from all of the following:
 3. Generic contact, product, resource, and decoded escaped-text checks.
 4. Reachable public commit contents, removed blobs, author/committer metadata, and annotated-tag metadata.
 
-Build evidence SHA-256: `7ed30708bdb29268797f73c413f4c8e8f9f01a580c610107572b16bc5970754b`.
-Frozen-input receipt SHA-256: `b4610d830844f0baadc0885ad34fb306906f802ea55f9fe33b3ba6e59083e16f`.
-Final-tree scan: 950 files, 0 findings; its exact digest is retained only in the private release receipt to avoid self-referential report hashing.
+Build evidence SHA-256: `5ec8511e06866b76686a540f6ad0ad836738a6d2eda4ad4d1a7fdb61cd6b2df3`.
+Frozen-input receipt SHA-256: `3c387e856cf26020470fa35177d414235d721197386253173f22eb7679b983c7`.
+Final-tree scan: 958 files, 0 findings; its exact digest is retained only in the private release receipt to avoid self-referential report hashing.
 
-The new public snapshot is parentless. Authorized release work removes the legacy public branch ancestry and old release ref without publishing a backup ref. This cannot retract previously downloaded copies, forks, caches, or exposed credentials.
+The v0.3.1 patch preserves the v0.3.0 public snapshot as its parent. It does not rewrite history or delete public refs. Previously downloaded copies and third-party caches remain outside this repository's control.
 
 ## Verification
 
-- A clean isolated package install used Node `v24.14.1` and npm `11.11.0`; `npm ci` completed successfully.
+- A clean isolated package install used npm from the verified package lock; `npm ci` completed successfully.
 - The same final package passed dependency lint, typecheck, build, unit `2005/2005`, adapters `858/858`, end-to-end `31/31`, and an official-registry production dependency audit with zero vulnerabilities.
-- First Principle and table-queue public-contract verifiers were independently reviewed after their respective scan fixes. All source inputs are represented in a private frozen-input receipt.
+- Gitmaster's exported release/installation tests passed `44/44`. The core release-gate regression admits v0.3.1 as an approved final package while preserving the pending v0.1.0 source path.
 - Production audits are point-in-time checks, not a permanent security guarantee. The installation runbook remains the authority for recipient-side package integrity, authorization, infrastructure, and live acceptance.
 
 ## Acceptance Boundary

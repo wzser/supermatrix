@@ -303,8 +303,8 @@ esac
     const manifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/platform-manifest.json"), "utf8"));
     const packageVersion = (JSON.parse(await readFile(join(process.cwd(), "package.json"), "utf8")) as { version: string }).version;
     const packageProvenance = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/asset-provenance.json"), "utf8"));
-    expect(["0.1.0", "0.3.0"]).toContain(packageVersion);
-    const isFinalPackage = packageVersion === "0.3.0";
+    expect(["0.1.0", "0.3.0", "0.3.1"]).toContain(packageVersion);
+    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1";
     const expectedPackageStatus = isFinalPackage ? "approved" : "pending-owner-review";
     expect(packageProvenance.modules.every((entry: { reviewStatus: string }) => entry.reviewStatus === expectedPackageStatus)).toBe(true);
     const finalPackageProvenance = isFinalPackage

@@ -15,6 +15,15 @@
   ],
   "mappings": [
     {
+      "name": "public-license",
+      "root": "workspace:gitmaster",
+      "subpath": "public-release",
+      "destination": ".",
+      "required_files": ["LICENSE", "LICENSE-APACHE", "LICENSE-MIT", "NOTICE"],
+      "include": ["LICENSE", "LICENSE-APACHE", "LICENSE-MIT", "NOTICE"],
+      "exclude": []
+    },
+    {
       "name": "supermatrix-core",
       "root": "supermatrix",
       "subpath": ".",
@@ -256,8 +265,8 @@
       "root": "workspace:gitmaster",
       "subpath": ".",
       "destination": "platform/gitmaster",
-      "required_files": [".python-version", "pyproject.toml", "AGENT_INSTALL.md", "config/public-export.json", "scripts/sanitized_release.py", "sop/INDEX.md", "tests/test_sanitized_release.py", "tests/test_agent_install.py"],
-      "include": [".gitignore", ".python-version", "AGENT_INSTALL.md", "config/public-export.json", "public-overrides/supermatrix/docs/SETUP.md", "pyproject.toml", "scripts/sanitized_release.py", "sop/**", "tests/test_sanitized_release.py", "tests/test_agent_install.py"],
+      "required_files": [".python-version", "pyproject.toml", "AGENT_INSTALL.md", "config/public-export.json", "public-release/LICENSE", "public-release/LICENSE-APACHE", "public-release/LICENSE-MIT", "public-release/NOTICE", "scripts/sanitized_release.py", "sop/INDEX.md", "tests/test_sanitized_release.py", "tests/test_agent_install.py"],
+      "include": [".gitignore", ".python-version", "AGENT_INSTALL.md", "config/public-export.json", "public-overrides/supermatrix/docs/SETUP.md", "public-release/LICENSE", "public-release/LICENSE-APACHE", "public-release/LICENSE-MIT", "public-release/NOTICE", "pyproject.toml", "scripts/sanitized_release.py", "sop/**", "tests/test_sanitized_release.py", "tests/test_agent_install.py"],
       "exclude": ["sop/TEMPLATE.md", ".private/**", "**/__pycache__/**"]
     }
   ]
