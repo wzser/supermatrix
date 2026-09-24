@@ -12,7 +12,7 @@ Give your own agent this complete file and the matching code archive. Follow one
 
 ## S1. Establish the Contract Before Writing
 
-Open [C: Installation Checklist](#c-installation-checklist) and [M: Platform Configuration](#m-platform-configuration); initialize every row as pending. Inspect all prerequisites before asking for login or buying infrastructure. This runbook targets the v0.3.1 pilot; do not pair it with the old document 1.0.1 archive. A local source copy is not publication evidence: S1 requires the exact published document/package pair before execution. The absence of a purpose-built installer is not a blocker; missing package code, unsafe ownership or absent authorization is.
+Open [C: Installation Checklist](#c-installation-checklist) and [M: Platform Configuration](#m-platform-configuration); initialize every row as pending. Inspect all prerequisites before asking for login or buying infrastructure. This runbook targets the v0.3.2 pilot; do not pair it with the old document 1.0.1 archive. A local source copy is not publication evidence: S1 requires the exact published document/package pair before execution. The absence of a purpose-built installer is not a blocker; missing package code, unsafe ownership or absent authorization is.
 
 For each capability distinguish a **configuration gap** (the shipped code already supports the required setting; the agent supplies it) from a **package gap** (an executable, schema, dependency or supported interface is absent/incompatible). Continue independent read-only investigation and authorized preparation when another capability is blocked; do not activate the blocked capability or label the whole platform complete. A supplier implementation defect cannot be fixed by checking a box or copying a private installation.
 
@@ -24,18 +24,18 @@ Verify the exact archive before extraction. Do not substitute GitHub main, v0.2.
 
 | Locked package input | Required value |
 |---|---|
-| Release | `wzser/supermatrix`, tag `v0.3.1`; never `latest` or `main` |
-| Archive | `supermatrix-v0.3.1.tar`, asset of that exact Release |
+| Release | `wzser/supermatrix`, tag `v0.3.2`; never `latest` or `main` |
+| Archive | `supermatrix-v0.3.2.tar`, asset of that exact Release |
 | Archive and document SHA-256 | Exact filename rows in that Release's `SHA256SUMS`; both must also match their GitHub asset `digest` values |
-| Public snapshot commit | Resolve the exact annotated `v0.3.1` tag to its commit and record it; the release title or target branch alone is not a commit receipt |
+| Public snapshot commit | Resolve the exact annotated `v0.3.2` tag to its commit and record it; the release title or target branch alone is not a commit receipt |
 | Framework source provenance | Record the frozen source commit declared in the verified archive's `SANITIZATION_REPORT.md` |
-| Archive prefix | `supermatrix-v0.3.1/` |
+| Archive prefix | `supermatrix-v0.3.2/` |
 | Pilot execution platform | macOS, Apple Silicon (`Darwin`, `arm64`) |
 | Runtime backend for this pilot | Codex; the agent performing installation may be a different product |
 
-Fetch the [exact Release metadata](https://api.github.com/repos/wzser/supermatrix/releases/tags/v0.3.1) over HTTPS and require `tag_name=v0.3.1`, `draft=false`, and a publication timestamp. Require exactly one uploaded asset for each of `AGENT_INSTALL.md`, `supermatrix-v0.3.1.tar` and `SHA256SUMS`. Download only the asset URLs returned by that response for this repository/version. Verify the checksum file's own bytes against its GitHub `sha256:` asset digest, then verify the document and archive against both their checksum rows and their own asset digests. Missing/malformed/conflicting digests or duplicate filename rows are R01; do not calculate a local digest and call it trusted. Do not execute a downloaded checksum file or trust a checksum from an arbitrary mirror. See the [GitHub Release API contract](https://docs.github.com/en/rest/releases/releases).
+Fetch the [exact Release metadata](https://api.github.com/repos/wzser/supermatrix/releases/tags/v0.3.2) over HTTPS and require `tag_name=v0.3.2`, `draft=false`, and a publication timestamp. Require exactly one uploaded asset for each of `AGENT_INSTALL.md`, `supermatrix-v0.3.2.tar` and `SHA256SUMS`. Download only the asset URLs returned by that response for this repository/version. Verify the checksum file's own bytes against its GitHub `sha256:` asset digest, then verify the document and archive against both their checksum rows and their own asset digests. Missing/malformed/conflicting digests or duplicate filename rows are R01; do not calculate a local digest and call it trusted. Do not execute a downloaded checksum file or trust a checksum from an arbitrary mirror. See the [GitHub Release API contract](https://docs.github.com/en/rest/releases/releases).
 
-Record the release ID, resolved tag commit, asset IDs, complete digests and document version. The archive has no installed dependency tree. After extraction require root `VERSION`, core package version and lockfile root version to equal `0.3.1`, and require both bundled copies of this document to match the verified standalone document. Missing Release/assets: R01; contact the package supplier, not a guessed download URL. GitHub's automatic source archives and older local candidates are not substitutes.
+Record the release ID, resolved tag commit, asset IDs, complete digests and document version. The archive has no installed dependency tree. After extraction require root `VERSION`, core package version and lockfile root version to equal `0.3.2`, and require both bundled copies of this document to match the verified standalone document. Missing Release/assets: R01; contact the package supplier, not a guessed download URL. GitHub's automatic source archives and older local candidates are not substitutes.
 
 Use the operating system's SHA-256 tool, such as `shasum -a 256`, to compare all 64 hex digits. List archive members first; reject absolute paths, `..` components, symlinks, hardlinks and entries outside its prefix. Defer extraction until S2 has recorded ownership of the installation directory; S1 must not create an unrecorded installation root. Never erase an existing directory to make this gate pass.
 
@@ -633,7 +633,7 @@ Record path/tool choices before S3; append generated IDs by readback after S5, n
 | Field | Deterministic rule |
 |---|---|
 | `INSTALL_ROOT` | `USER_HOME/.local/share/supermatrix-agent-v1`; existing unowned path is R03 |
-| `PACKAGE_ROOT` | `INSTALL_ROOT/package/supermatrix-v0.3.1` after verified extraction |
+| `PACKAGE_ROOT` | `INSTALL_ROOT/package/supermatrix-v0.3.2` after verified extraction |
 | `APP_ROOT` | `PACKAGE_ROOT/supermatrix` |
 | `RUNTIME_ROOT` | `INSTALL_ROOT/runtime` |
 | `INSTALL_ID`, `LABEL` | After S5 read `RUNTIME_ROOT/onboarding-v1/state.json`'s `installId`; read `service.json.nativeOS.launchAgent.label` and require it to equal `com.supermatrix.onboarding.` plus that same ID. Retain both in the report; never edit core state or generate a replacement ID |
@@ -659,7 +659,7 @@ Record path/tool choices before S3; append generated IDs by readback after S5, n
 Input example (illustrative username; derive actual absolute paths and executable locations):
 
 ```json
-{"document_version":"1.2.0","release_tag":"v0.3.1","archive_sha256":"<verified-release-asset-sha256>","runtime_root":"/Users/LOCAL_USER/.local/share/supermatrix-agent-v1/runtime","profile":"agent-install-v1","backend":"codex","api_port":3511,"scheduler_port":3512,"last_completed_step":"S2"}
+{"document_version":"1.2.0","release_tag":"v0.3.2","archive_sha256":"<verified-release-asset-sha256>","runtime_root":"/Users/LOCAL_USER/.local/share/supermatrix-agent-v1/runtime","profile":"agent-install-v1","backend":"codex","api_port":3511,"scheduler_port":3512,"last_completed_step":"S2"}
 ```
 
 Complete the saved record with the actual document hash, install_key, all P paths, executable versions/paths/digests, TOOL_PATH, authorized effects, owned directories and original source-file inventory. Do not proceed with example values or missing fields. Record the provider/supplier contact from the channel through which the user received this package; do not invent a support endpoint or contact an internal maintainer session.

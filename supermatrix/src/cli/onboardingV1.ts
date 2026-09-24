@@ -332,7 +332,7 @@ export function redact(text: string): string {
     .replace(/(app[_-]?secret|access[_-]?token|refresh[_-]?token|device[_-]?code|authorization|LARK_APP_SECRET|SM_INTERNAL_[A-Z0-9_]+)(\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;"'}]+)/giu, "$1$2[redacted]");
 }
 
-async function runCli(
+export async function runCli(
   cliPath: string,
   profile: string,
   args: string[],
@@ -347,13 +347,14 @@ async function runCli(
     });
     const raw = redact(result.stdout);
     const parsed = JSON.parse(result.stdout) as CliResult;
-    return { ...parsed, raw };
+    return { ...parsed, ok: true, raw };
   } catch (error) {
     const e = error as NodeJS.ErrnoException & { stdout?: string; stderr?: string };
     const raw = redact(e.stdout ?? e.stderr ?? e.message ?? String(error));
     try {
       const parsed = JSON.parse(e.stdout ?? "") as CliResult;
-      return { ...parsed, raw };
+      const exitCode = typeof e.code === "number" ? e.code : undefined;
+      return { ...parsed, ok: parsed.ok === true || exitCode === 0, raw };
     } catch {
       return { ok: false, error: { type: e.code === "ETIMEDOUT" ? "timeout" : "cli" }, raw };
     }
@@ -1395,7 +1396,7 @@ async function authPreflight(options: OnboardingOptions, appId: string | undefin
   summary.botStatus = sanitizeAuthStatus(botStatus);
   const botIdentity = identityFromPayload(resultPayload(botStatus));
   if (botIdentity.appId) summary.botAppId = botIdentity.appId;
-  if (!botStatus.ok || !Object.keys(resultPayload(botStatus)).some((key) => ["appId", "app_id", "identity", "profile"].includes(key))) {
+  if (!botStatus.ok || !Object.keys(resultPayload(botStatus)).some((key) => ["appId", "app_id", "identity", "identities", "profile"].includes(key))) {
     failures.push("application/bot authorization is not readable; tenant/admin approval is not proven");
   }
 
@@ -1528,7 +1529,15 @@ export function parseBackendProbeOutput(backend: BackendKind, stdout: string): {
   return { ok: structured && marker, structured, marker };
 }
 
-async function backendPreflight(options: OnboardingOptions, environment: OnboardingChildEnvironment): Promise<{
+export function buildBackendProbeArgs(backend: BackendKind, prompt: string): string[] {
+  return backend === "claude"
+    ? ["-p", "--output-format", "json", "--no-session-persistence", "--max-budget-usd", "0.25", prompt]
+    : backend === "codex"
+      ? ["exec", "--ephemeral", "--json", "--sandbox", "read-only", "--skip-git-repo-check", prompt]
+      : ["-p", "--output-format", "stream-json", prompt];
+}
+
+export async function backendPreflight(options: OnboardingOptions, environment: OnboardingChildEnvironment): Promise<{
   failures: string[];
   summary: Record<string, unknown>;
 }> {
@@ -1543,11 +1552,7 @@ async function backendPreflight(options: OnboardingOptions, environment: Onboard
   const failures = version.ok ? [] : [`selected backend ${command} is unavailable: ${version.version}`];
   if (!version.ok) return { failures, summary };
   const prompt = "Reply with exactly SM_ONBOARDING_PROBE_OK and no other text. Do not use tools.";
-  const args = options.backend === "claude"
-    ? ["-p", "--output-format", "json", "--no-session-persistence", "--max-budget-usd", "0.01", prompt]
-    : options.backend === "codex"
-      ? ["exec", "--ephemeral", "--json", "--sandbox", "read-only", "--skip-git-repo-check", prompt]
-      : ["-p", "--output-format", "stream-json", prompt];
+  const args = buildBackendProbeArgs(options.backend, prompt);
   try {
     const result = await execFileAsync(command, args, { timeout: 120_000, maxBuffer: 4 * 1024 * 1024, env: childProcessEnv(environment) });
     const parsed = parseBackendProbeOutput(options.backend, result.stdout);

@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 import { createFakeLarkGateway } from "../fakes/fakeLarkGateway.ts";
 import {
   assertPortAvailable,
+  buildBackendProbeArgs,
   buildEnv,
   parseBackendProbeOutput,
   parseOnboardingArgs,
@@ -17,6 +18,8 @@ import {
   ensureProfile,
   renderStartScript,
   renderSchedulerStartScript,
+  runCli,
+  backendPreflight,
   localwatchOwnerReceiptPath,
   readProcessIdentity,
   scopeList,
@@ -147,6 +150,20 @@ describe("onboarding V1", () => {
     );
   });
 
+  test("treats parseable JSON on an exit-0 CLI call as successful without a top-level ok", async () => {
+    const root = await mkdtemp("/tmp/sm-onboard-cli-result-");
+    const cli = join(root, "lark-cli");
+    try {
+      await writeFile(cli, "#!/bin/sh\nprintf '%s\\n' '{\"verified\":true,\"identities\":[\"user\"],\"tokenStatus\":\"valid\"}'\n", { mode: 0o700 });
+      await expect(runCli(cli, "isolated", ["auth", "status", "--json", "--verify"])).resolves.toMatchObject({
+        ok: true,
+        verified: true,
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   test("copies a real temporary tree with executable bits and no special bits", async () => {
     const root = await mkdtemp("/tmp/sm-onboard-copy-tree-");
     const source = join(root, "source");
@@ -252,6 +269,48 @@ esac
     });
   });
 
+  test("gives Claude provider-routed probes enough budget to emit the marker", () => {
+    const args = buildBackendProbeArgs("claude", "SM_ONBOARDING_PROBE_OK");
+    expect(args).toEqual([
+      "-p", "--output-format", "json", "--no-session-persistence", "--max-budget-usd", "0.25", "SM_ONBOARDING_PROBE_OK",
+    ]);
+    expect(args).not.toContain("0.01");
+  });
+
+  test("accepts the Claude probe after the provider-routed budget adjustment", async () => {
+    const root = await mkdtemp("/tmp/sm-onboard-backend-probe-");
+    const backend = join(root, "claude");
+    const argsFile = join(root, "args");
+    const environment = {
+      home: join(root, "home"),
+      xdgConfigHome: join(root, "xdg-config"),
+      codexHome: join(root, "codex-home"),
+      path: "/usr/bin:/bin",
+      nodePath: "/usr/bin/node",
+      npmPath: "/usr/bin/npm",
+      pythonPath: "/usr/bin/python3",
+      larkCliPath: "/usr/bin/lark-cli",
+      backendPath: backend,
+    };
+    try {
+      await writeFile(backend, `#!/bin/sh
+set -eu
+if [ "\${1:-}" = "--version" ]; then
+  printf '%s\\n' 'claude fixture'
+else
+  printf '%s\\n' "$*" > "${argsFile}"
+  printf '%s\\n' '{"type":"result","result":"SM_ONBOARDING_PROBE_OK"}'
+fi
+`, { mode: 0o700 });
+      const options = parseOnboardingArgs(["--backend", "claude", "--runtime-root", root], {});
+      await expect(backendPreflight(options, environment)).resolves.toMatchObject({ failures: [] });
+      expect(await readFile(argsFile, "utf8")).toContain("--max-budget-usd 0.25");
+      expect(await readFile(argsFile, "utf8")).not.toContain("0.01");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   test("ships the public module inventory and refuses missing module sources before writes", async () => {
     const manifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/platform-manifest.json"), "utf8")) as {
       publicRoles: Array<{ name: string; modulePath?: string; run?: string; requiredFiles?: string[] }>;
@@ -303,8 +362,8 @@ esac
     const manifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/platform-manifest.json"), "utf8"));
     const packageVersion = (JSON.parse(await readFile(join(process.cwd(), "package.json"), "utf8")) as { version: string }).version;
     const packageProvenance = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/asset-provenance.json"), "utf8"));
-    expect(["0.1.0", "0.3.0", "0.3.1"]).toContain(packageVersion);
-    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1";
+    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.2"]).toContain(packageVersion);
+    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.2";
     const expectedPackageStatus = isFinalPackage ? "approved" : "pending-owner-review";
     expect(packageProvenance.modules.every((entry: { reviewStatus: string }) => entry.reviewStatus === expectedPackageStatus)).toBe(true);
     const finalPackageProvenance = isFinalPackage

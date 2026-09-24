@@ -1,16 +1,16 @@
-# Sanitization Report: v0.3.1
+# Sanitization Report: v0.3.2
 
-Date: 2026-09-22. Product version: `v0.3.1`. Agent installation contract: `1.2.0`.
+Date: 2026-09-24. Product version: `v0.3.2`. Agent installation contract: `1.2.0`.
 
 ## Scope
 
-The closed export selected 951 source files from 13 exact source commits. The final tree contains 958 regular UTF-8 files after adding seven public release files. It contains no symlinks, installed dependencies, runtime databases, logs, caches, archives, media, credentials, private workspaces, or private evidence.
+The closed export selected 951 source files from 13 exact source commits, then replaced only the two public onboarding-v1 files from the exact repair commit. The final tree contains 958 regular UTF-8 files after adding seven public release files. It contains no symlinks, installed dependencies, runtime databases, logs, caches, archives, media, credentials, private workspaces, or private evidence.
 
-This patch starts from the published v0.3.0 public snapshot. Apart from root release metadata, only the reviewed Gitmaster license/installation inputs and the reviewed core release-gate regression test changed. All other platform bytes remain from the v0.3.0 public snapshot; no live runtime or unreviewed workspace content was imported.
+This patch starts from the published v0.3.1 public snapshot and adds only the exact onboarding-v1 repair plus release-layer version and installation metadata. All other platform bytes remain from the v0.3.1 public snapshot; no live runtime or unreviewed workspace content was imported.
 
 | Source | Approved commit |
 | --- | --- |
-| Core | `bda216512c0698c7f173441d230ba7295c10e039` |
+| Core | `abc41ad064e6eaa544d560721d26ea0d77f906b1` (repair commit; parent `bda216512c0698c7f173441d230ba7295c10e039`) |
 | First Principle | `b23981b2433698ab8ea79c69a93c717203a22caa` |
 | Scheduler | `2138bd3934689f5ce08d95170e51a7f58e275fc0` |
 | Heartbeat | `1b7c4390376da000a9a0999219cd18f5d33e7a93` |
@@ -37,17 +37,17 @@ Publication requires zero unwaived findings from all of the following:
 3. Generic contact, product, resource, and decoded escaped-text checks.
 4. Reachable public commit contents, removed blobs, author/committer metadata, and annotated-tag metadata.
 
-Build evidence SHA-256: `5ec8511e06866b76686a540f6ad0ad836738a6d2eda4ad4d1a7fdb61cd6b2df3`.
-Frozen-input receipt SHA-256: `3c387e856cf26020470fa35177d414235d721197386253173f22eb7679b983c7`.
+Build evidence SHA-256: `01b37317a0b0e6bc27cc1803bf3f98d8a33c2ee8bad509c47cd66f3b9e250689`.
+Frozen-input receipt SHA-256 is retained in the private release receipt; the exact source receipt covers the commit, parent, dirty-source status and closed three-file diff.
 Final-tree scan: 958 files, 0 findings; its exact digest is retained only in the private release receipt to avoid self-referential report hashing.
 
-The v0.3.1 patch preserves the v0.3.0 public snapshot as its parent. It does not rewrite history or delete public refs. Previously downloaded copies and third-party caches remain outside this repository's control.
+The v0.3.2 patch preserves the v0.3.1 public snapshot as its publication base and carries only the exact onboarding-v1 repair scope: `src/cli/onboardingV1.ts`, `tests/cli/onboardingV1.test.ts`, and the source ledger `SM-SOURCE-CHANGES.md` (the ledger remains outside the closed public export allowlist). It does not rewrite history or delete public refs. Previously downloaded copies and third-party caches remain outside this repository's control.
 
 ## Verification
 
 - A clean isolated package install used npm from the verified package lock; `npm ci` completed successfully.
-- The same final package passed dependency lint, typecheck, build, unit `2005/2005`, adapters `858/858`, end-to-end `31/31`, and an official-registry production dependency audit with zero vulnerabilities.
-- Gitmaster's exported release/installation tests passed `44/44`. The core release-gate regression admits v0.3.1 as an approved final package while preserving the pending v0.1.0 source path.
+- The package passed the focused onboarding-v1 tests, typecheck, dependency lint and build against the rebuilt public tree. Archive member, provenance/manifest and final archive scan readbacks are recorded in the private release receipt.
+- The public package onboarding regression passed `32/32`; the release-gate compatibility line admits v0.3.2 as an approved final package while preserving the pending v0.1.0 source path. Gitmaster export tests and the final archive scan are retained in the private release receipt.
 - Production audits are point-in-time checks, not a permanent security guarantee. The installation runbook remains the authority for recipient-side package integrity, authorization, infrastructure, and live acceptance.
 
 ## Acceptance Boundary

@@ -1,29 +1,20 @@
-# Super Matrix v0.3.1
+# Super Matrix v0.3.2
 
-## Agent Installation 1.2.0
+## Onboarding V1 Framework Fix
 
-The product release is `v0.3.1`; the agent-run installation document remains version `1.2.0`. Use the exact uploaded `AGENT_INSTALL.md`, `supermatrix-v0.3.1.tar` and `SHA256SUMS` together. Verify their GitHub asset digests before extraction or execution.
-
-This patch does not change installation behavior, runtime activation, user authorization, live-acceptance requirements or the 57-item checklist. It updates the package identity that S1 verifies.
-
-## License
-
-Project-owned code and documentation are available under **MIT OR Apache-2.0**. The root `LICENSE`, `LICENSE-MIT` and `LICENSE-APACHE` provide the applicable texts. [NOTICE](NOTICE) is reserved for third-party notices; third-party materials keep their own licenses and notices.
-
-## New Platform Capabilities
-
-None. v0.3.1 is a licensing and publication-metadata patch; it adds no platform runtime behavior, command, adapter, service or installer.
+The exact onboarding-v1 repair from source commit `abc41ad064e6eaa544d560721d26ea0d77f906b1` is included in this sanitized public package. It makes exit-zero parseable Lark CLI JSON successful, accepts the returned bot identity shape, and raises the bounded Claude probe budget for provider-routed probes.
 
 ## Updated Platform Capabilities
 
-- The exact installation contract now verifies the v0.3.1 tag, archive name, asset manifest and extraction prefix while retaining Agent Installation 1.2.0.
-- The public export independently includes license inputs at the release root and under `platform/gitmaster/public-release/`, with required-file and byte-closure tests.
-- The patch derives from the published v0.3.0 snapshot and preserves all unrelated platform bytes.
+- The public onboarding CLI now preserves valid exit-zero JSON results even when the response has no top-level `ok` field.
+- Bot authorization readback accepts the provider's `identities` shape.
+- Claude onboarding probes use the bounded `$0.25` budget required for the provider-routed minimal probe.
+- The package keeps the existing public provenance, platform manifest, isolated-runtime and installation boundaries.
 
-## Upgrade From v0.3.0
+## Upgrade From v0.3.1
 
-No runtime migration is required. Existing v0.3.0 installations keep their isolated identity, credentials, database, tables and subscriptions. For new installations, obtain the exact v0.3.1 Release assets and follow S1 before execution. Do not mix v0.3.0 and v0.3.1 assets or perform cleanup without separate authorization.
+No runtime migration is required. New installations should use the exact v0.3.2 Release assets and verify the published tag, archive digest and `SHA256SUMS` before extraction. Existing installations may remain unchanged until a separately authorized upgrade. Do not mix v0.3.1 and v0.3.2 Release assets.
 
 ## Verification Boundary
 
-Exact package tests, sanitization scope, dependency audits and source provenance are recorded in `SANITIZATION_REPORT.md`. This bounded pilot does not claim full private-platform parity or substitute local fixtures for actual account authorization, group interaction, external relay delivery or reboot acceptance. Only the runbook's completed checklist permits an installation verdict of `VERIFIED`.
+The package was rebuilt from the v0.3.1 public snapshot plus only the sanitized three-file onboarding-v1 source diff named above. Sanitization, provenance/manifest validation, package tests and archive readback are recorded in `SANITIZATION_REPORT.md` and the private release receipt. No target-device authentication, group creation or service activation is part of this release.
