@@ -4,11 +4,11 @@
 
 Super Matrix 将本地 CLI Agent 接入飞书/Lark，为每个会话保留独立群聊、工作区、上下文和运行状态。代码与凭据由使用者自己的机器和账号管理。
 
-产品版本：`v0.3.3`。安装文档版本：**Agent Installation 1.2.0**。两者是不同版本号；这不是 GitHub `v1.0.0`，也不代表维护者整套私有平台均已开源。
+产品版本：`v0.3.4`。安装文档版本：**Agent Installation 1.2.0**。两者是不同版本号；这不是 GitHub `v1.0.0`，也不代表维护者整套私有平台均已开源。
 
 ## 安装入口
 
-把 [AGENT_INSTALL.md](AGENT_INSTALL.md) 和 [v0.3.3 Release](https://github.com/wzser/supermatrix/releases/tag/v0.3.3) 中的同版本代码归档交给你自己的 agent。文档要求先核对 Release、tag、资产 digest 与 `SHA256SUMS`，再安装；不要以 `main`、GitHub 自动源码包或旧安装目录代替。
+把 [AGENT_INSTALL.md](AGENT_INSTALL.md) 和 [v0.3.4 Release](https://github.com/wzser/supermatrix/releases/tag/v0.3.4) 中的同版本代码归档交给你自己的 agent。文档要求先核对 Release、tag、资产 digest 与 `SHA256SUMS`，再安装；不要以 `main`、GitHub 自动源码包或旧安装目录代替。
 
 只有这一条安装路径。Agent 使用已有 CLI、配置文件与系统服务完成工作，不需要再开发安装器。**任何报错、疑问、中断或换 agent，都先回到该文档的 R 节处理；不得跳过检查或从维护者机器复制配置。**
 
@@ -20,17 +20,17 @@ Super Matrix 将本地 CLI Agent 接入飞书/Lark，为每个会话保留独立
 
 ## 新增的平台能力
 
-v0.3.3 修复 onboarding-v1 的 Lark CLI exit-zero JSON 判定、bot 身份读回和 provider-routed Claude 探针预算；不新增平台、安装器或授权能力。
+v0.3.4 修复 onboarding-v1 的 Lark CLI exit-zero JSON 判定、bot 身份读回和 provider-routed Claude 探针预算；不新增平台、安装器或授权能力。
 
 ## 更新的平台能力
 
-- **发布合同**：安装文档继续保持 57 项检查和 Agent Installation 1.2.0 合同，但明确绑定同版本的 `v0.3.3` tag、归档、校验清单和解压前缀。
+- **发布合同**：安装文档继续保持 57 项检查和 Agent Installation 1.2.0 合同，但明确绑定同版本的 `v0.3.4` tag、归档、校验清单和解压前缀。
 - **公开包边界**：根目录与 `platform/gitmaster/public-release/` 都携带 MIT、Apache-2.0 和第三方 notices 输入，构建器用精确 allowlist 与回归测试校验这两处字节闭合。
-- **脱敏发布**：本补丁从已发布的 v0.3.1 快照出发，只纳入指定 onboarding-v1 三文件修复及发布层版本/安装元数据；其他平台文件保持原字节。
+- **脱敏发布**：本补丁从已发布的 v0.3.2 快照出发，只纳入指定提交中的两个公开 onboarding-v1 文件及发布层版本/安装元数据；其他平台文件保持原字节。
 
 ## 从 v0.3.1 升级
 
-已完成的 v0.3.1 隔离安装不需要 runtime 迁移或重新授权。新安装必须使用 v0.3.3 的 `AGENT_INSTALL.md`、`supermatrix-v0.3.3.tar` 和 `SHA256SUMS`；不要混用旧 Release 资产。继续保留既有凭据、数据库、生产表记录和事件订阅，任何清理都需要单独授权。
+已完成的 v0.3.1 隔离安装不需要 runtime 迁移或重新授权。新安装必须使用 v0.3.4 的 `AGENT_INSTALL.md`、`supermatrix-v0.3.4.tar` 和 `SHA256SUMS`；不要混用旧 Release 资产。继续保留既有凭据、数据库、生产表记录和事件订阅，任何清理都需要单独授权。
 
 从更早版本首次迁入时，仍采用新的隔离安装：不得复制旧 `.env`、凭据、数据库、生产表记录或事件订阅。先按安装文档验证新实例，再另行决定是否停止或清理旧实例。
 

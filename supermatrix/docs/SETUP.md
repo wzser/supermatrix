@@ -1,10 +1,10 @@
-# SuperMatrix v0.3.3 Installation
+# SuperMatrix v0.3.4 Installation
 
-The installation document is AGENT_INSTALL.md version 1.2.0 for the v0.3.3
+The installation document is AGENT_INSTALL.md version 1.2.0 for the v0.3.4
 pilot. Give that document and its matching
 archive to your own agent. It uses existing tools and configuration, not a new
 SuperMatrix installer. Do not combine it with the older 1.0.1 archive. The
-product target is v0.3.3; require S1's published metadata and asset digests
+product target is v0.3.4; require S1's published metadata and asset digests
 before execution. A local copy is not proof that a Release exists.
 
 In the extracted archive the same document is at its root, `AGENT_INSTALL.md`.

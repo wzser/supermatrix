@@ -19,6 +19,7 @@ import {
   renderStartScript,
   renderSchedulerStartScript,
   runCli,
+  authPreflight,
   backendPreflight,
   localwatchOwnerReceiptPath,
   readProcessIdentity,
@@ -125,6 +126,70 @@ fs.renameSync(tmp, receiptPath);
 `) } $$ ${quote(receiptPath)} ${quote(root)} ${quote(scriptPath)} ${quote(join(root, "start.sh"))} ${quote(`http://127.0.0.1:${options.apiPort}/api/health`)} ${quote(`http://127.0.0.1:${options.schedulerPort}/health`)}\n`;
 }
 
+async function writeAuthPreflightCli(cli: string, applicationScopesOk = true): Promise<void> {
+  const permissionManifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/permissions.json"), "utf8")) as {
+    identities: { user: { required: string[] }; bot: { required: string[] } };
+  };
+  const responses = {
+    "auth status --json --verify": {
+      verified: true,
+      appId: "cli_app",
+      identity: "user",
+      identities: { user: { status: "ready", available: true, openId: "ou_owner", tokenStatus: "valid" } },
+    },
+    "whoami --as bot": {
+      appId: "cli_app",
+      profile: "isolated",
+      identity: "bot",
+      identities: { bot: { status: "ready", available: true } },
+    },
+    "auth scopes --json": { userScopes: permissionManifest.identities.user.required },
+    "api GET /open-apis/application/v6/scopes --as bot": {
+      ...(applicationScopesOk ? {} : { ok: false, error: { type: "auth", message: "fixture scope readback denied" } }),
+      data: { scopes: permissionManifest.identities.bot.required.map((name) => ({ name, grant_status: 1 })) },
+    },
+    "whoami --as user": {
+      appId: "cli_app",
+      openId: "ou_owner",
+      profile: "isolated",
+      identity: "user",
+      identities: { user: { status: "ready", available: true, openId: "ou_owner" } },
+    },
+  };
+  await writeFile(cli, `#!${process.execPath}
+const args = process.argv.slice(2);
+if (args.length === 1 && args[0] === "--version") {
+  process.stdout.write("lark-cli version 1.0.96\\n");
+  process.exit(0);
+}
+const command = args[0] === "--profile" ? args.slice(2).join(" ") : args.join(" ");
+if (command === "config show") {
+  process.stdout.write("{}\\n");
+  process.exit(0);
+}
+const responses = ${JSON.stringify(responses)};
+if (!(command in responses)) {
+  process.stderr.write("unexpected fixture command: " + command + "\\n");
+  process.exit(2);
+}
+process.stdout.write(JSON.stringify(responses[command]) + "\\n");
+`, { mode: 0o700 });
+}
+
+function authPreflightEnvironment(root: string, cli: string) {
+  return {
+    home: join(root, "home"),
+    xdgConfigHome: join(root, "xdg-config"),
+    codexHome: join(root, "codex-home"),
+    path: "/usr/bin:/bin",
+    nodePath: process.execPath,
+    npmPath: "/usr/bin/npm",
+    pythonPath: "/usr/bin/python3",
+    larkCliPath: cli,
+    backendPath: "/usr/bin/true",
+  };
+}
+
 describe("onboarding V1", () => {
   test("uses one isolated path with a non-production default", () => {
     const options = parseOnboardingArgs(["--profile", "xj-v1", "--backend", "codex"], {});
@@ -170,6 +235,35 @@ describe("onboarding V1", () => {
     try {
       await writeFile(cli, "#!/bin/sh\nprintf '%s\\n' '{\"ok\":false,\"error\":{\"type\":\"auth\"}}'\n", { mode: 0o700 });
       await expect(runCli(cli, "isolated", ["auth", "status", "--json"])).resolves.toMatchObject({ ok: false });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("runs authPreflight through exit-zero CLI JSON without top-level ok and the identities bot shape", async () => {
+    const root = await mkdtemp("/tmp/sm-onboard-auth-preflight-");
+    const cli = join(root, "lark-cli");
+    try {
+      await writeAuthPreflightCli(cli);
+      const options = parseOnboardingArgs(["--profile", "isolated", "--app-id", "cli_app", "--runtime-root", root], {});
+      await expect(authPreflight(options, "cli_app", authPreflightEnvironment(root, cli))).resolves.toMatchObject({
+        failures: [],
+        userOpenId: "ou_owner",
+        botAppId: "cli_app",
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("authPreflight rejects an explicit exit-zero ok false scope readback", async () => {
+    const root = await mkdtemp("/tmp/sm-onboard-auth-preflight-false-");
+    const cli = join(root, "lark-cli");
+    try {
+      await writeAuthPreflightCli(cli, false);
+      const options = parseOnboardingArgs(["--profile", "isolated", "--app-id", "cli_app", "--runtime-root", root], {});
+      const result = await authPreflight(options, "cli_app", authPreflightEnvironment(root, cli));
+      expect(result.failures).toContain("application scope readback failed; tenant/admin approval is not proven");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -288,10 +382,11 @@ esac
     expect(args).not.toContain("0.01");
   });
 
-  test("accepts the Claude probe after the provider-routed budget adjustment", async () => {
+  test("accepts a deterministic DeepSeek-routed Claude probe only after reaching the provider cutoff", async () => {
     const root = await mkdtemp("/tmp/sm-onboard-backend-probe-");
     const backend = join(root, "claude");
     const argsFile = join(root, "args");
+    const savedRoute = process.env.SM_ONBOARD_TEST_CLAUDE_ROUTE;
     const environment = {
       home: join(root, "home"),
       xdgConfigHome: join(root, "xdg-config"),
@@ -304,20 +399,39 @@ esac
       backendPath: backend,
     };
     try {
+      process.env.SM_ONBOARD_TEST_CLAUDE_ROUTE = "deepseek";
       await writeFile(backend, `#!/bin/sh
 set -eu
 if [ "\${1:-}" = "--version" ]; then
   printf '%s\\n' 'claude fixture'
 else
-  printf '%s\\n' "$*" > "${argsFile}"
-  printf '%s\\n' '{"type":"result","result":"SM_ONBOARDING_PROBE_OK"}'
+  route="\${SM_ONBOARD_TEST_CLAUDE_ROUTE:-}"
+  budget=""
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = "--max-budget-usd" ]; then
+      shift
+      budget="\${1:-}"
+    fi
+    shift
+  done
+  printf 'route=%s\\nbudget=%s\\n' "$route" "$budget" > "${argsFile}"
+  if [ "$route" != "deepseek" ]; then
+    printf '%s\\n' 'fixture expected the DeepSeek route' >&2
+    exit 3
+  fi
+  if awk -v cap="$budget" 'BEGIN { exit !((cap + 0) >= 0.25) }'; then
+    printf '%s\\n' '{"type":"result","result":"SM_ONBOARDING_PROBE_OK"}'
+  else
+    printf '%s\\n' '{"type":"result","result":"","stop_reason":"max_budget"}'
+  fi
 fi
 `, { mode: 0o700 });
       const options = parseOnboardingArgs(["--backend", "claude", "--runtime-root", root], {});
       await expect(backendPreflight(options, environment)).resolves.toMatchObject({ failures: [] });
-      expect(await readFile(argsFile, "utf8")).toContain("--max-budget-usd 0.25");
-      expect(await readFile(argsFile, "utf8")).not.toContain("0.01");
+      expect(await readFile(argsFile, "utf8")).toBe("route=deepseek\nbudget=0.25\n");
     } finally {
+      if (savedRoute === undefined) delete process.env.SM_ONBOARD_TEST_CLAUDE_ROUTE;
+      else process.env.SM_ONBOARD_TEST_CLAUDE_ROUTE = savedRoute;
       await rm(root, { recursive: true, force: true });
     }
   });
@@ -373,8 +487,8 @@ fi
     const manifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/platform-manifest.json"), "utf8"));
     const packageVersion = (JSON.parse(await readFile(join(process.cwd(), "package.json"), "utf8")) as { version: string }).version;
     const packageProvenance = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/asset-provenance.json"), "utf8"));
-    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.3"]).toContain(packageVersion);
-    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.3";
+    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.2", "0.3.4"]).toContain(packageVersion);
+    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.2" || packageVersion === "0.3.4";
     const expectedPackageStatus = isFinalPackage ? "approved" : "pending-owner-review";
     expect(packageProvenance.modules.every((entry: { reviewStatus: string }) => entry.reviewStatus === expectedPackageStatus)).toBe(true);
     const finalPackageProvenance = isFinalPackage

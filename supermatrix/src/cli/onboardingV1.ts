@@ -1367,7 +1367,7 @@ async function startUserAuthorization(cli: string, options: OnboardingOptions, s
   return "lark-cli auth login did not return a verification URL/device code";
 }
 
-async function authPreflight(options: OnboardingOptions, appId: string | undefined, environment: OnboardingChildEnvironment): Promise<AuthPreflight> {
+export async function authPreflight(options: OnboardingOptions, appId: string | undefined, environment: OnboardingChildEnvironment): Promise<AuthPreflight> {
   const cli = environment.larkCliPath;
   const failures: string[] = [];
   const summary: Record<string, unknown> = { profile: options.profile, cliPath: cli };
