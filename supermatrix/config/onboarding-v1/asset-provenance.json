@@ -345,7 +345,7 @@
     {
       "name": "gitmaster",
       "owner": "gitmaster",
-      "commit": "030ed022f8295d77d8e5e9373c956efb657c9888",
+      "commit": "c52e79e082cea9c50186f5abbd669d60bfd6faea",
       "sourceRoot": "workspace:gitmaster",
       "destinationRoot": "platform/gitmaster",
       "reviewStatus": "approved",

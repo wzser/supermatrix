@@ -92,7 +92,7 @@ describe("SqliteBindingStore backend account switches", () => {
       await store.recordBackendAccountSwitch({
         clientRequestId: "req-1",
         backend: "kimi",
-        caller: "private_workflow_02795d76f57fcc9a",
+        caller: "sm-switch",
         fromProfile: "work",
         toProfile: "personal",
         switchedAt: "2026-07-31T09:00:00Z",
@@ -104,7 +104,7 @@ describe("SqliteBindingStore backend account switches", () => {
       expect(await store.findBackendAccountSwitch("req-1")).toEqual({
         clientRequestId: "req-1",
         backend: "kimi",
-        caller: "private_workflow_02795d76f57fcc9a",
+        caller: "sm-switch",
         fromProfile: "work",
         toProfile: "personal",
         switchedAt: "2026-07-31T09:00:00Z",
@@ -117,7 +117,7 @@ describe("SqliteBindingStore backend account switches", () => {
         store.recordBackendAccountSwitch({
           clientRequestId: "req-1",
           backend: "kimi",
-          caller: "private_workflow_02795d76f57fcc9a",
+          caller: "sm-switch",
           clearedSessions: 0,
           clearedBranches: 0,
           createdAt: asTimestamp(6_000),

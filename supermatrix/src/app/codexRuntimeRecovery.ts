@@ -450,7 +450,7 @@ async function selectFallbackModel(
   // unavailable advances; transient evidence stops the repair because later
   // candidates cannot turn an uncertain probe path into a safe mutation.
   //
-  // `skipped` means an private_workflow_02795d76f57fcc9a route serves the runs and does not serve that
+  // `skipped` means an sm-switch route serves the runs and does not serve that
   // candidate, so it could not be probed. Swapping a session onto a model whose
   // availability nobody measured would be a blind mutation, and the model that
   // actually serves the run is the route's anyway — so stop and report the

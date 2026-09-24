@@ -166,7 +166,7 @@ export type DispatcherDeps = {
   cardAskHealthFilter?: (input: RunInput) => Promise<RunInput>;
   codexRuntimeRecovery?: Omit<CodexRuntimeRecoveryDeps, "store" | "logger">;
   /**
-   * Reads the private_workflow_02795d76f57fcc9a route-state contract: is a non-openai codex route
+   * Reads the sm-switch route-state contract: is a non-openai codex route
    * active right now? Wired to the codex adapter in bootstrap (app must not
    * import adapters). Absent → false, i.e. the pre-route-state behavior.
    */
@@ -1112,7 +1112,7 @@ export function createDispatcher(deps: DispatcherDeps) {
         }
         // Persist runtime model & thinking extracted from the Claude system event.
         if (!wasCleared) {
-          // While a non-openai private_workflow_02795d76f57fcc9a route is active, a codex run's runtime
+          // While a non-openai sm-switch route is active, a codex run's runtime
           // model is a routing fact (deepseek-v4-flash), not a model this
           // session ever asked for. Learning it into sessions.model would pin
           // the intent layer to a route-specific — and off-catalog — value that

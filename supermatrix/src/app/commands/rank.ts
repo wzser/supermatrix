@@ -18,13 +18,13 @@ void CONSOLE_GROUP_ID;
 
 const DISPLAY_NAME_TTL_MS = 24 * 60 * 60 * 1000;
 
-// Cold-miss path runs YOUR_EMPLOYEE_PARENT's refresh script directly (Feishu
+// Cold-miss path runs hrhrhrhrhr's refresh script directly (Feishu
 // contact API + sqlite upsert, ~1s). The previous implementation went
 // through /api/spawn → Claude Opus 4.7 child to invoke the same script,
 // which observed at 28-63s and always tripped the client AbortController.
 // Owner contract for the script (path + argv) is documented in
-// YOUR_EMPLOYEE_PARENT/scripts/refresh_user_display_names.py docstring.
-const HRHR_SESSION_NAME = "YOUR_EMPLOYEE_PARENT";
+// hrhrhrhrhr/scripts/refresh_user_display_names.py docstring.
+const HRHR_SESSION_NAME = "hrhrhrhrhr";
 const REFRESH_SCRIPT_RELATIVE = "scripts/refresh_user_display_names.py";
 const REFRESH_TIMEOUT_MS = 30_000;
 const OPEN_ID_RE = /^ou_[A-Za-z0-9]+$/u;
@@ -91,7 +91,7 @@ async function defaultResolveNames(
         if (entry) result.set(id, entry.displayName);
       }
     } catch (err) {
-      // Refresh failed (script missing, YOUR_EMPLOYEE_PARENT down, Feishu API
+      // Refresh failed (script missing, hrhrhrhrhr down, Feishu API
       // unreachable, etc). Fall through to id-suffix placeholder so the
       // /rank reply still renders. Do NOT change the fallback to "未知用户"
       // — it hides the real ID and complicates manual lookup.

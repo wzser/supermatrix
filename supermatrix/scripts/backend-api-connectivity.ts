@@ -72,13 +72,13 @@ const DEFAULT_TIMEOUT_MS = 90_000;
 const DEFAULT_CLAUDE_AUTH_TIMEOUT_MS = 15_000;
 const DEFAULT_KIMI_ACP_HEALTH_TIMEOUT_MS = 15_000;
 const OUTPUT_LIMIT = 20_000;
-const CODEX_ROUTE_STATE_CONTRACT_VERSION = "private_workflow_02795d76f57fcc9a.route-state/v1";
+const CODEX_ROUTE_STATE_CONTRACT_VERSION = "sm-switch.route-state/v1";
 
 function defaultCodexRouteStatePath(env: NodeJS.ProcessEnv): string {
   const override = env["SM_CODEX_ROUTE_STATE_PATH"]?.trim();
   if (override) return override;
   const runtimeRoot = env["SM_RUNTIME_ROOT"] || "/Users/LOCAL_USER/SuperMatrixRuntime";
-  return resolve(runtimeRoot, "data", "private_workflow_02795d76f57fcc9a", "route-state.json");
+  return resolve(runtimeRoot, "data", "sm-switch", "route-state.json");
 }
 
 type CodexRouteState = {
@@ -87,8 +87,8 @@ type CodexRouteState = {
 };
 
 /**
- * Read-only consumer of the private_workflow_02795d76f57fcc9a route state (contract
- * private_workflow_02795d76f57fcc9a.route-state/v1), mirroring src/adapters/backend-codex/routeState.ts.
+ * Read-only consumer of the sm-switch route state (contract
+ * sm-switch.route-state/v1), mirroring src/adapters/backend-codex/routeState.ts.
  * Every failure mode (file missing, unreadable JSON, unknown contractVersion,
  * unknown route) returns null so the caller fails open to the route=openai
  * status quo — route-state problems must never fail the probe itself.
@@ -131,7 +131,7 @@ function redact(text: string): string {
 export function classifyBackendConnectivityError(text: string, codexRoute?: string): ConnectivityFailureKind {
   const normalized = text.toLowerCase();
   if (normalized.includes("model_not_served")) {
-    // Under route=deepseek the served model set is owned by private_workflow_02795d76f57fcc9a/sm-proxy;
+    // Under route=deepseek the served model set is owned by sm-switch/sm-proxy;
     // model_not_served means route-state/proxy drift, not a repairable codex
     // connectivity failure — the gpt-5.4 fallback repair must not fire there.
     return codexRoute === "deepseek" ? "degraded" : "model_access";
@@ -695,7 +695,7 @@ async function runConnectivityCheck(args: string[]): Promise<CheckSummary> {
     env: mergedEnv,
     claudeCli,
   });
-  // Route-aware codex probe: read-only private_workflow_02795d76f57fcc9a route state, fail-open to the
+  // Route-aware codex probe: read-only sm-switch route state, fail-open to the
   // route=openai status quo (gpt-5.5 + gpt-5.4 fallback) whenever the state is
   // missing/corrupt/unrecognized or explicitly openai.
   const codexRouteState = await readCodexRouteState(defaultCodexRouteStatePath(mergedEnv));
@@ -760,7 +760,7 @@ async function runConnectivityCheck(args: string[]): Promise<CheckSummary> {
 
   const codexProbe = probes.find((probe) => probe.backend === "codex");
   // The gpt-5.4 fallback repair is openai-route only: under route=deepseek the
-  // served set is owned by private_workflow_02795d76f57fcc9a/sm-proxy and model failures there mean
+  // served set is owned by sm-switch/sm-proxy and model failures there mean
   // route-state drift (classified "degraded"), never a reason to rewrite
   // SM_CODEX_DEFAULT_MODEL.
   if (repair && codexRoute !== "deepseek" && codexProbe && !codexProbe.ok && codexProbe.failureKind === "model_access") {

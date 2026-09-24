@@ -206,7 +206,7 @@ const callerIdentityBodySchema = z.object({
   token: z.string().trim().min(1, "token is required"),
 }).strict();
 
-// private_workflow_02795d76f57fcc9a (词元管家) callback after a successful kimi account switch: the
+// sm-switch (词元管家) callback after a successful kimi account switch: the
 // framework bulk-invalidates every persisted kimi backend_session_id (ACP
 // sessions are stored per account) and recycles the shared ACP process.
 // .strict(): only the five documented fields are accepted.
@@ -218,7 +218,7 @@ const kimiAccountSwitchedSchema = z.object({
   switched_at: z.string().optional(),
 }).strict();
 
-// The platform owns the fence. private_workflow_02795d76f57fcc9a is the sole external caller and is
+// The platform owns the fence. sm-switch is the sole external caller and is
 // identified by this route, not by a caller-controlled body field. The lease
 // token is an opaque, per-switch secret; only its SHA-256 digest reaches the
 // durable store.
@@ -333,7 +333,7 @@ const FRAMEWORK_INTERNAL_SPAWN_CALLERS = new Set(["supermatrix-root"]);
 const PREDICATE_WARNING_TARGET_SESSION = "first-principle";
 const PREDICATE_WARNING_SOURCE_SESSION = "supermatrix-root";
 const DEFAULT_SYNC_SPAWN_RESPONSE_TIMEOUT_MS = 240_000;
-const CLAUDE_MAINTENANCE_OWNER = "private_workflow_02795d76f57fcc9a";
+const CLAUDE_MAINTENANCE_OWNER = "sm-switch";
 const predicateWarningChildDedupe = new Set<string>();
 const legacySpawnDisabled = () => process.env.SM_DISABLE_LEGACY_SPAWN === "1";
 

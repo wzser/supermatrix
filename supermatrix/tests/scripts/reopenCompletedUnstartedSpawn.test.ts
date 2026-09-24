@@ -11,10 +11,10 @@ import {
 const input: CompletedUnstartedSpawnRecoveryInput = {
   commId: "comm-old-refusal",
   fromSessionName: "hualin001",
-  toSessionName: "YOUR_EMPLOYEE_PARENT",
-  childSessionName: "child_YOUR_EMPLOYEE_PARENT_12f3d5",
+  toSessionName: "hrhrhrhrhr",
+  childSessionName: "child_hrhrhrhrhr_12f3d5",
   messageRunId: "mr-old-refusal",
-  clientRequestId: "2026-07-27:hualin001:YOUR_EMPLOYEE_PARENT:previous-milestone-context",
+  clientRequestId: "2026-07-27:hualin001:hrhrhrhrhr:previous-milestone-context",
   refusalMarker: "无法验证为",
   forbiddenStreamMarker: "weekly_report_v1.py",
 };

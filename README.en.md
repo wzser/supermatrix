@@ -4,11 +4,11 @@
 
 Super Matrix connects local CLI agents to Feishu/Lark. Each session keeps its own chat, workspace, context and runtime state. Users manage their own machine, accounts and credentials.
 
-Product version: `v0.3.4`. Runbook version: **Agent Installation 1.2.0**. These are separate versions: this is not GitHub `v1.0.0` or a complete copy of the maintainers' private platform.
+Product version: `v0.3.5`. Runbook version: **Agent Installation 1.2.0**. These are separate versions: this is not GitHub `v1.0.0` or a complete copy of the maintainers' private platform.
 
 ## Installation Entry
 
-Give your own agent [AGENT_INSTALL.md](AGENT_INSTALL.md) and the matching code archive from the [v0.3.4 Release](https://github.com/wzser/supermatrix/releases/tag/v0.3.4). The runbook verifies the exact Release, tag, asset digests and `SHA256SUMS` first. Do not substitute `main`, GitHub's automatic source archive or an existing installation.
+Give your own agent [AGENT_INSTALL.md](AGENT_INSTALL.md) and the matching code archive from the [v0.3.5 Release](https://github.com/wzser/supermatrix/releases/tag/v0.3.5). The runbook verifies the exact Release, tag, asset digests and `SHA256SUMS` first. Do not substitute `main`, GitHub's automatic source archive or an existing installation.
 
 There is one installation path. The agent uses existing CLIs, configuration and native OS services; it does not need to create another installer. **Every error, uncertainty, interruption or agent handover returns to section R of that document.** Checks cannot be bypassed by copying a maintainer's configuration.
 
@@ -20,17 +20,17 @@ Except for third-party material identified by [NOTICE](NOTICE) or its own licens
 
 ## New Platform Capabilities
 
-v0.3.4 fixes onboarding-v1 handling of exit-zero Lark CLI JSON, bot identity readback and the provider-routed Claude probe budget; it adds no platform, installer or authorization capability.
+v0.3.5 fixes onboarding-v1 handling of exit-zero Lark CLI JSON, bot identity readback and the provider-routed Claude probe budget; it adds no platform, installer or authorization capability.
 
 ## Updated Platform Capabilities
 
-- **Publication contract:** the 57-check Agent Installation 1.2.0 contract remains unchanged, but is bound to the matching `v0.3.4` tag, archive, checksum manifest and extraction prefix.
+- **Publication contract:** the 57-check Agent Installation 1.2.0 contract remains unchanged, but is bound to the matching `v0.3.5` tag, archive, checksum manifest and extraction prefix.
 - **Public-package boundary:** the root and `platform/gitmaster/public-release/` both carry MIT, Apache-2.0 and third-party-notice inputs. The builder uses an exact allowlist and regression tests to close both byte paths.
 - **Sanitized publication:** this patch starts from the published v0.3.2 snapshot and includes only the two public onboarding-v1 files from the specified source commit plus release-layer version and installation metadata. All other platform files retain their prior bytes.
 
 ## Upgrade From v0.3.1
 
-An already completed v0.3.1 isolated installation needs no runtime migration or new authorization. New installations must use the v0.3.4 `AGENT_INSTALL.md`, `supermatrix-v0.3.4.tar` and `SHA256SUMS`; do not mix Release assets. Keep existing credentials, databases, production table records and event subscriptions. Any cleanup needs separate authorization.
+An already completed v0.3.1 isolated installation needs no runtime migration or new authorization. New installations must use the v0.3.5 `AGENT_INSTALL.md`, `supermatrix-v0.3.5.tar` and `SHA256SUMS`; do not mix Release assets. Keep existing credentials, databases, production table records and event subscriptions. Any cleanup needs separate authorization.
 
 For a first move from older versions, continue to use a new isolated installation. Do not import old environment files, credentials, databases, production table rows or subscriptions. Validate the new instance through the runbook before any separately authorized shutdown or cleanup.
 

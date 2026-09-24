@@ -113,7 +113,7 @@ describe("createRouteAwareCodexModelAvailability", () => {
   test.each([
     ["missing file", null],
     ["corrupt JSON", "{not json"],
-    ["unknown contract version", deepseekState({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v2" })],
+    ["unknown contract version", deepseekState({ contractVersion: "sm-switch.route-state/v2" })],
     ["non-codex backend", deepseekState({ backend: "claude" })],
     ["no usable defaultModel", deepseekState({ defaultModel: "  " })],
   ])("fails open and probes when the contract is unusable: %s", async (_label, state) => {

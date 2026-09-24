@@ -135,7 +135,7 @@ describe("/model read view route awareness", () => {
   });
 
   test("fails open to the catalog default when route-state is missing / corrupt / unknown-version", async () => {
-    for (const state of [undefined, "{not json", deepseekState({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v2" })]) {
+    for (const state of [undefined, "{not json", deepseekState({ contractVersion: "sm-switch.route-state/v2" })]) {
       const text = await overview(state);
       expect(text).toContain(`codex: configured=default, effective=${intended}`);
       expect(text).not.toContain("路由覆盖");

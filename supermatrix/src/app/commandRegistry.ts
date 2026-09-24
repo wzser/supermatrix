@@ -150,8 +150,8 @@ export function buildCommandRegistry(): CommandRegistry {
         name: "usage",
         description: "查看各订阅账号（Codex / Claude / Kimi）的剩余额度与重置时间",
         notes:
-          "操作：只读 private_workflow_02795d76f57fcc9a 生成的额度快照（契约 private_workflow_02795d76f57fcc9a.quota-snapshot/v1），按厂商 → 账号 → 窗口渲染剩余百分比与重置时间。\n" +
-          "本命令不触发任何额度采集或账号刷新，也不会触发登录；数值新鲜度完全取决于 private_workflow_02795d76f57fcc9a 的快照。\n\n" +
+          "操作：只读 sm-switch 生成的额度快照（契约 sm-switch.quota-snapshot/v1），按厂商 → 账号 → 窗口渲染剩余百分比与重置时间。\n" +
+          "本命令不触发任何额度采集或账号刷新，也不会触发登录；数值新鲜度完全取决于 sm-switch 的快照。\n\n" +
           "标注含义：\n" +
           "  • 当前账号 / 非当前账号 — 该厂商下是否为正在使用的账号\n" +
           "  • 实时 — 快照写入时该账号刚采集成功\n" +

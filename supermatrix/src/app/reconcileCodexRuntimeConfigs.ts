@@ -23,7 +23,7 @@ export type ReconcileSummary = {
   verifiedDefault: string | null;
   /**
    * Set when the default-model probe was skipped rather than run — an active
-   * private_workflow_02795d76f57fcc9a route serves codex runs, so catalog models cannot be probed (see
+   * sm-switch route serves codex runs, so catalog models cannot be probed (see
    * the `skipped` availability result). Carries the route reason verbatim and
    * stays separate from `verifiedDefault: null` so a skip is never reported as
    * a verification verdict, in either direction.
@@ -107,7 +107,7 @@ type DefaultVerification =
 async function verifyDefault(availability: CodexModelAvailability): Promise<DefaultVerification> {
   const currentDefault = getCodexModelCatalogSnapshot().defaultModel;
   const candidates = [currentDefault, ...getCodexBundledModels().filter((model) => model !== currentDefault)];
-  // An active private_workflow_02795d76f57fcc9a route decides which model serves a codex run, so the
+  // An active sm-switch route decides which model serves a codex run, so the
   // catalog models it does not serve cannot be probed at all. Those candidates
   // come back `skipped`: keep walking the list (a served candidate would still
   // be probed for real), and if nothing gets verified report the route reason

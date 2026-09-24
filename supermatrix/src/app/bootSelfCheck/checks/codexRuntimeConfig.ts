@@ -13,7 +13,7 @@ export function createCodexRuntimeConfigCheck(deps: {
         const message = formatSummary(summary);
         // verifiedDefault===null means no bundled model was confirmed available
         // (transient evidence, all candidates confirmed unavailable, or the probe
-        // skipped because an private_workflow_02795d76f57fcc9a route serves the runs): the service may not
+        // skipped because an sm-switch route serves the runs): the service may not
         // be safely ready for a future model=null/new session, so warn even when
         // there are no default-dependent rows and every count is zero. A skip is
         // reported as a skip with its route reason — never as a clean run.

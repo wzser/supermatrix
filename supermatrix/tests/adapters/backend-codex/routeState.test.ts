@@ -78,7 +78,7 @@ describe("resolveCodexRouteModel", () => {
   });
 
   test("unknown contract version fails open to the requested model", () => {
-    const path = writeState(deepseekState({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v2" }));
+    const path = writeState(deepseekState({ contractVersion: "sm-switch.route-state/v2" }));
     expect(resolveCodexRouteModel("gpt-5.6-sol", path)).toBe("gpt-5.6-sol");
   });
 
@@ -119,7 +119,7 @@ describe("resolveCodexRouteExecution", () => {
     for (const path of [
       join(dir, "does-not-exist.json"),
       writeState("{not json"),
-      writeState(deepseekState({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v2" })),
+      writeState(deepseekState({ contractVersion: "sm-switch.route-state/v2" })),
       writeState(deepseekState({ activatedAt: "not-a-timestamp" })),
     ]) {
       expect(resolveCodexRouteExecution("gpt-5.6-sol", path)).toEqual({
@@ -160,7 +160,7 @@ describe("resolveCodexRouteOverride", () => {
     expect(
       resolveCodexRouteOverride(
         "gpt-5.6-sol",
-        writeState(deepseekState({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v2" })),
+        writeState(deepseekState({ contractVersion: "sm-switch.route-state/v2" })),
       ),
     ).toBeNull();
   });
@@ -195,7 +195,7 @@ describe("isCodexRouteOverrideActive", () => {
   test("fails open to false on unknown version / non-codex backend / no defaultModel", () => {
     expect(
       isCodexRouteOverrideActive(
-        writeState(deepseekState({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v2" })),
+        writeState(deepseekState({ contractVersion: "sm-switch.route-state/v2" })),
       ),
     ).toBe(false);
     expect(isCodexRouteOverrideActive(writeState(deepseekState({ backend: "claude" })))).toBe(false);
@@ -222,6 +222,6 @@ describe("defaultCodexRouteStatePath", () => {
   test("derives from SM_RUNTIME_ROOT when no override is set", () => {
     delete process.env["SM_CODEX_ROUTE_STATE_PATH"];
     process.env["SM_RUNTIME_ROOT"] = "/rt";
-    expect(defaultCodexRouteStatePath()).toBe("/rt/data/private_workflow_02795d76f57fcc9a/route-state.json");
+    expect(defaultCodexRouteStatePath()).toBe("/rt/data/sm-switch/route-state.json");
   });
 });

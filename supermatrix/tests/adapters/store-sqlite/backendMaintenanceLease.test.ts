@@ -37,7 +37,7 @@ function leaseInput(overrides: Partial<{
 }> = {}) {
   return {
     backend: "claude" as const,
-    owner: "private_workflow_02795d76f57fcc9a",
+    owner: "sm-switch",
     tokenHash: "sha256:lease-token-a",
     requestId: "switch-001",
     acquiredAt: asTimestamp(1_700_000_000_010),
@@ -66,7 +66,7 @@ describe("SqliteBindingStore Claude maintenance lease", () => {
       const eventsBeforeLookup = await store.listBackendMaintenanceLeaseEvents("claude");
       await expect(store.getBackendMaintenanceLease("claude")).resolves.toEqual({
         backend: "claude",
-        owner: "private_workflow_02795d76f57fcc9a",
+        owner: "sm-switch",
         requestId: "switch-001",
         acquiredAt: asTimestamp(1_700_000_000_010),
       });
@@ -106,13 +106,13 @@ describe("SqliteBindingStore Claude maintenance lease", () => {
       await expect(store.acquireBackendMaintenanceLease(leaseInput())).resolves.toMatchObject({
         kind: "acquired",
         duplicate: false,
-        lease: { backend: "claude", owner: "private_workflow_02795d76f57fcc9a", requestId: "switch-001" },
+        lease: { backend: "claude", owner: "sm-switch", requestId: "switch-001" },
       });
 
       await expect(store.admitMessageRun(admissionInput(sessionId, "mr_after_lease"))).resolves.toMatchObject({
         kind: "maintenance",
         backend: "claude",
-        lease: { owner: "private_workflow_02795d76f57fcc9a" },
+        lease: { owner: "sm-switch" },
       });
 
       expect(await store.findRunningMessageRunBySession(sessionId)).toBeNull();
@@ -162,14 +162,14 @@ describe("SqliteBindingStore Claude maintenance lease", () => {
       }))).resolves.toMatchObject({
         kind: "acquired",
         duplicate: true,
-        lease: { owner: "private_workflow_02795d76f57fcc9a", requestId: "switch-001" },
+        lease: { owner: "sm-switch", requestId: "switch-001" },
       });
       await expect(store.acquireBackendMaintenanceLease(leaseInput({
         owner: "another-owner",
         tokenHash: "sha256:another-token",
       }))).resolves.toMatchObject({
         kind: "held",
-        lease: { owner: "private_workflow_02795d76f57fcc9a" },
+        lease: { owner: "sm-switch" },
       });
 
       await expect(store.releaseBackendMaintenanceLease({

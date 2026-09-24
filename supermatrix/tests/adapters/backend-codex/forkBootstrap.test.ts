@@ -79,7 +79,7 @@ describe("codex fork bootstrap", () => {
     expect(prompt).toContain("CHILD_ID=<id> RESULT=<child result>");
   });
 
-  describe("private_workflow_02795d76f57fcc9a route-state resolution", () => {
+  describe("sm-switch route-state resolution", () => {
     const ORIGINAL_ROUTE_STATE_PATH = process.env["SM_CODEX_ROUTE_STATE_PATH"];
     let routeDir: string;
 
@@ -99,7 +99,7 @@ describe("codex fork bootstrap", () => {
     function activateDeepseekRoute(overrides: Record<string, unknown> = {}): void {
       const path = join(routeDir, "route-state.json");
       writeFileSync(path, JSON.stringify({
-        contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v1",
+        contractVersion: "sm-switch.route-state/v1",
         backend: "codex",
         route: "deepseek",
         defaultModel: "deepseek-v4-flash",
@@ -150,7 +150,7 @@ describe("codex fork bootstrap", () => {
     });
 
     test("unknown contract version fails open to the requested model", () => {
-      activateDeepseekRoute({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v9" });
+      activateDeepseekRoute({ contractVersion: "sm-switch.route-state/v9" });
       const args = forkArgs("gpt-5.6-sol", null);
       expect(args[args.indexOf("--model") + 1]).toBe("gpt-5.6-sol");
     });

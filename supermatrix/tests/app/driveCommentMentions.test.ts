@@ -308,7 +308,7 @@ describe("resolveDriveCommentMentionRoute registry predicates", () => {
             id: "todolist-agent-todo-comments",
             ownerSession: "tobedone",
             source: {
-              fileToken: "YOUR_RESOURCE_ID",
+              fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
               fileType: "bitable" as const,
               tableId: "tblREDACTEDTABLEID",
             },
@@ -332,7 +332,7 @@ describe("resolveDriveCommentMentionRoute registry predicates", () => {
     const request: DriveCommentMentionRequest = {
       source: {
         ...req("ignored").source,
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         tableId: "tblREDACTEDTABLEID",
         recordId: "recvrSCvk4eUxc",
@@ -469,7 +469,7 @@ describe("buildDriveCommentTargetPrompt", () => {
     const request: DriveCommentMentionRequest = {
       source: {
         ...req("ignored").source,
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         tableId: "tblREDACTEDTABLEID",
         recordId: "recvrSCvk4eUxc",
@@ -609,7 +609,7 @@ describe("createDriveCommentMentionProcessor", () => {
     await processor.handle({
       ...req("ignored").source,
       eventId: "evt_prod_bitable_comment_7673408506963233765",
-      fileToken: "YOUR_RESOURCE_ID",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable",
       tableId: "tblREDACTEDTABLEID",
       recordId: "recvrSCvk4eUxc",
@@ -773,7 +773,7 @@ describe("createDriveCommentMentionProcessor", () => {
               ownerSession: "tobedone",
               delivery: { type: "session", sessionName: "tobedone" },
               source: {
-                fileToken: "YOUR_RESOURCE_ID",
+                fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
                 fileType: "bitable" as const,
                 tableId: "tblREDACTEDTABLEID",
               },
@@ -863,7 +863,7 @@ describe("createDriveCommentMentionProcessor", () => {
 
     await processor.handle({
       ...req("ignored").source,
-      fileToken: "YOUR_RESOURCE_ID",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable",
       commentId: "7673460608817253339",
       replyId: "7673460608838208480",
@@ -884,7 +884,7 @@ describe("createDriveCommentMentionProcessor", () => {
     expect(responseLogFinishes).toEqual([{
       responseId: buildDriveCommentResponseLogId({
         ...req("ignored").source,
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         commentId: "7673460608817253339",
         replyId: "7673460608838208480",
@@ -898,7 +898,7 @@ describe("createDriveCommentMentionProcessor", () => {
     expect(finishes).toEqual([{
       dedupeKey: buildDriveCommentMentionDedupeKey({
         ...req("ignored").source,
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         commentId: "7673460608817253339",
         replyId: "7673460608838208480",
@@ -923,7 +923,7 @@ describe("createDriveCommentMentionProcessor", () => {
     const caller = session("sess_pinglun", "pinglunmaster");
     const source = {
       ...req("ignored").source,
-      fileToken: "YOUR_RESOURCE_ID",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable" as const,
       tableId: "tblREDACTEDTABLEID",
       commentId: "comment_queued",
@@ -954,7 +954,7 @@ describe("createDriveCommentMentionProcessor", () => {
               ownerSession: "tobedone",
               delivery: { type: "session" as const, sessionName: "tobedone" },
               source: {
-                fileToken: "YOUR_RESOURCE_ID",
+                fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
                 fileType: "bitable" as const,
                 tableId: "tblREDACTEDTABLEID",
               },
@@ -1093,7 +1093,7 @@ describe("createDriveCommentMentionProcessor", () => {
     const caller = session("sess_pinglun", "pinglunmaster");
     const source = {
       ...req("ignored").source,
-      fileToken: "YOUR_RESOURCE_ID",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable" as const,
       tableId: "tblREDACTEDTABLEID",
       commentId: "comment_sync_failed",
@@ -2104,7 +2104,7 @@ describe("createDriveCommentMentionProcessor script delivery", () => {
   function scriptDeliverySource() {
     return {
       ...req("ignored").source,
-      fileToken: "YOUR_RESOURCE_ID",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable" as const,
       tableId: "tblREDACTEDTABLEID",
       commentId: "comment_script",
@@ -2135,7 +2135,7 @@ describe("createDriveCommentMentionProcessor script delivery", () => {
               timeoutMs: 30_000,
             },
             source: {
-              fileToken: "YOUR_RESOURCE_ID",
+              fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
               fileType: "bitable" as const,
               tableId: "tblREDACTEDTABLEID",
             },
@@ -2318,7 +2318,7 @@ describe("[451] unmentioned poll intake admission", () => {
             id: "todolist-agent-todo-comments",
             enabled: true,
             source: {
-              fileToken: "YOUR_RESOURCE_ID",
+              fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
               fileType: "bitable" as const,
               tableId: "tblREDACTEDTABLEID",
             },
@@ -2335,7 +2335,7 @@ describe("[451] unmentioned poll intake admission", () => {
             id: "todolist-comment-kanban-consult",
             enabled: true,
             source: {
-              fileToken: "YOUR_RESOURCE_ID",
+              fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
               fileType: "bitable" as const,
               tableId: "tblREDACTEDTABLEID",
               recordId: "recvsPavOYlcOA",
@@ -2402,8 +2402,8 @@ describe("[451] unmentioned poll intake admission", () => {
 
     await processor.handle({
       ...req("ignored").source,
-      eventId: "poll:bitable:YOUR_RESOURCE_ID:comment_451_miss:reply_1:2000",
-      fileToken: "YOUR_RESOURCE_ID",
+      eventId: "poll:bitable:NFRabnLOJaldfVsWKbjcuR07nKe:comment_451_miss:reply_1:2000",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable",
       tableId: "tblREDACTEDTABLEID",
       recordId: "recOtherRecord",
@@ -2421,7 +2421,7 @@ describe("[451] unmentioned poll intake admission", () => {
     const request: DriveCommentMentionRequest = {
       source: {
         ...req("ignored").source,
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         tableId: "tblREDACTEDTABLEID",
         recordId: "recOtherRecord",
@@ -2492,8 +2492,8 @@ describe("[451] unmentioned poll intake admission", () => {
 
     const source = {
       ...req("ignored").source,
-      eventId: "poll:bitable:YOUR_RESOURCE_ID:comment_451_hit:reply_2:2000",
-      fileToken: "YOUR_RESOURCE_ID",
+      eventId: "poll:bitable:NFRabnLOJaldfVsWKbjcuR07nKe:comment_451_hit:reply_2:2000",
+      fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
       fileType: "bitable" as const,
       tableId: "tblREDACTEDTABLEID",
       recordId: "recvsPavOYlcOA",

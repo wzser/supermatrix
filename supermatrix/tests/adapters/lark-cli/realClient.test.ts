@@ -1662,7 +1662,7 @@ describe("parseDriveCommentEvent", () => {
       type: "drive.notice.comment_add_v1",
       event_id: "evt_bitable_identity_1",
       event: {
-        file_token: "YOUR_RESOURCE_ID",
+        file_token: "NFRabnLOJaldfVsWKbjcuR07nKe",
         file_type: "bitable",
         comment_id: "7673408506963233765",
         operator_id: { open_id: "ou_REDACTEDOPENID" },
@@ -1677,7 +1677,7 @@ describe("parseDriveCommentEvent", () => {
 
     expect(raw).toMatchObject({
       source: {
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         tableId: "tblREDACTEDTABLEID",
         recordId: "recvrSCvk4eUxc",
@@ -1714,7 +1714,7 @@ describe("parseDriveCommentEvent", () => {
       const context = await client.getDriveCommentContext({
         kind: "drive_comment",
         eventId: "evt_bitable_identity_1",
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         tableId: "tblREDACTEDTABLEID",
         recordId: "recvrSCvk4eUxc",
@@ -1738,7 +1738,7 @@ describe("parseDriveCommentEvent", () => {
       expect(calls[1]).toEqual([
         "base", "+record-get",
         "--as", "user",
-        "--base-token", "YOUR_RESOURCE_ID",
+        "--base-token", "NFRabnLOJaldfVsWKbjcuR07nKe",
         "--table-id", "tblREDACTEDTABLEID",
         "--record-id", "recvrSCvk4eUxc",
         "--format", "json",
@@ -1771,7 +1771,7 @@ describe("parseDriveCommentEvent", () => {
       const context = await client.getDriveCommentContext({
         kind: "drive_comment",
         eventId: "evt_record_row_projection",
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         tableId: "tblREDACTEDTABLEID",
         recordId: "recvrSqY2qbks1",
@@ -1821,7 +1821,7 @@ describe("parseDriveCommentEvent", () => {
       const context = await client.getDriveCommentContext({
         kind: "drive_comment",
         eventId: "evt_missing_anchor",
-        fileToken: "YOUR_RESOURCE_ID",
+        fileToken: "NFRabnLOJaldfVsWKbjcuR07nKe",
         fileType: "bitable",
         commentId: "7673460608817253339",
         replyId: "7673460608838208480",
@@ -1839,7 +1839,7 @@ describe("parseDriveCommentEvent", () => {
       expect(calls[1]).toEqual([
         "base", "+record-get",
         "--as", "user",
-        "--base-token", "YOUR_RESOURCE_ID",
+        "--base-token", "NFRabnLOJaldfVsWKbjcuR07nKe",
         "--table-id", "tblREDACTEDTABLEID",
         "--record-id", "recvrSqY2qbks1",
         "--format", "json",

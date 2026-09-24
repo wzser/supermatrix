@@ -607,7 +607,7 @@ describe("buildCodexAppServerRunPlan", () => {
     ).toThrow(/fork/u);
   });
 
-  describe("private_workflow_02795d76f57fcc9a route-state resolution", () => {
+  describe("sm-switch route-state resolution", () => {
     const ORIGINAL_ROUTE_STATE_PATH = process.env["SM_CODEX_ROUTE_STATE_PATH"];
     let routeDir: string;
 
@@ -627,7 +627,7 @@ describe("buildCodexAppServerRunPlan", () => {
     function activateDeepseekRoute(overrides: Record<string, unknown> = {}): void {
       const path = join(routeDir, "route-state.json");
       writeFileSync(path, JSON.stringify({
-        contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v1",
+        contractVersion: "sm-switch.route-state/v1",
         backend: "codex",
         route: "deepseek",
         defaultModel: "deepseek-v4-flash",
@@ -642,7 +642,7 @@ describe("buildCodexAppServerRunPlan", () => {
     function activateOpenAiRoute(overrides: Record<string, unknown> = {}): void {
       const path = join(routeDir, "route-state.json");
       writeFileSync(path, JSON.stringify({
-        contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v1",
+        contractVersion: "sm-switch.route-state/v1",
         backend: "codex",
         route: "openai",
         defaultModel: "gpt-5.6-sol",
@@ -705,7 +705,7 @@ describe("buildCodexAppServerRunPlan", () => {
     });
 
     test("unknown contract version fails open to the requested model", () => {
-      activateDeepseekRoute({ contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v9" });
+      activateDeepseekRoute({ contractVersion: "sm-switch.route-state/v9" });
       const plan = buildCodexAppServerRunPlan({
         messageRunId: TEST_MESSAGE_RUN_ID,
         session: mkSession({ model: "gpt-5.6-sol" }),

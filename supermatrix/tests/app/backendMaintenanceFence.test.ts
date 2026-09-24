@@ -83,7 +83,7 @@ function recordingClaudeBackend(): {
 async function acquireClaudeFence(store: ReturnType<typeof createFakeBindingStore>): Promise<void> {
   await expect(store.acquireBackendMaintenanceLease({
     backend: "claude",
-    owner: "private_workflow_02795d76f57fcc9a",
+    owner: "sm-switch",
     tokenHash: "sha256:lease-token",
     requestId: "switch-fence-test",
     acquiredAt: asTimestamp(1_700_000_000_010),
@@ -143,7 +143,7 @@ describe("Claude maintenance fence real admission paths", () => {
       groupId: USER_GROUP,
     });
 
-    expect(result).toMatchObject({ kind: "maintenance", backend: "claude", leaseOwner: "private_workflow_02795d76f57fcc9a" });
+    expect(result).toMatchObject({ kind: "maintenance", backend: "claude", leaseOwner: "sm-switch" });
     expect(recorded.calls).toEqual([]);
     expect(store._listMessageRuns()).toEqual([]);
   });

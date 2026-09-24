@@ -30,7 +30,7 @@
 - [ ] Confirm the child prompt is a freshly constructed allowlisted admission ticket containing only protocol, artifact/prompt/receipt digests, and declaration-extracted identity (for HDQ: `receivedEnvelopeSha256`, `dedupeKey`, `anchorHash`); it must contain no ingress marker, raw carrier, route/decision/details/evidence, local path, or full receipt. Confirm the full receipt exists only in the platform immutable-ingress audit artifact.
 - [ ] Confirm missing marker, duplicate marker, receipt missing/mismatch, document-root identity pointers, composite identity values, and artifact byte mutation return `target_accepted:false` and capture zero `spawnChild`/backend process starts; an invalid root-pointer declaration must also invoke zero receiver processes.
 - [ ] Do not POST a real WCA carrier, invoke the live HDQ database/consumer, drain a queue, replay an ingress, or send WeChat during this canary.
-- [ ] For HDQ receiver activation, use only `scripts/install-immutable-ingress-receiver.ts --apply --target huodaiduijie`; retain its durable deployment receipt and verify the live `capability_payload` by session name. Do not activate `private_workflow_6d0060b18f1258cc` unless it independently becomes a receiver.
+- [ ] For HDQ receiver activation, use only `scripts/install-immutable-ingress-receiver.ts --apply --target huodaiduijie`; retain its durable deployment receipt and verify the live `capability_payload` by session name. Do not activate `wechat-administrator` unless it independently becomes a receiver.
 
 ### 1. Cold start
 

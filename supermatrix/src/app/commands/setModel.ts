@@ -232,7 +232,7 @@ function isDefaultToken(token: string): boolean {
 }
 
 // Route-state awareness for the codex read view. The app layer must not import
-// adapters (scripts/check-deps.ts), so the private_workflow_02795d76f57fcc9a route-state/v1 consumer
+// adapters (scripts/check-deps.ts), so the sm-switch route-state/v1 consumer
 // (src/adapters/backend-codex/routeState.ts — the same one the dispatch path
 // uses) is injected from src/cli/bootstrap.ts. Returning null means "no
 // override": passthrough route, unreadable route-state (fail open), or an

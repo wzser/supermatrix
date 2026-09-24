@@ -45,7 +45,7 @@ export function buildCodexForkBootstrapArgs(input: CodexForkBootstrapInput): str
     "--dangerously-bypass-approvals-and-sandbox",
   ];
   const requestedModel = resolveCodexExecutionModel(input.model);
-  // private_workflow_02795d76f57fcc9a route-state resolution, same boundary as the main dispatch
+  // sm-switch route-state resolution, same boundary as the main dispatch
   // (buildCodexAppServerRunPlan): on the deepseek route the intent model is not
   // served by the proxy, so the fork bootstrap must resume on the served model
   // instead of being rejected with 400. Fail-open semantics are the resolver's.

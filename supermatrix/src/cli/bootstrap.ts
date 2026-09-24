@@ -536,7 +536,7 @@ export async function bootstrap(env: Record<string, string | undefined>): Promis
 
   // One account-aware probe is shared by boot reconciliation and all later
   // Codex admission paths so cache and evidence stay coherent. Route awareness
-  // wraps it at this single point: while an private_workflow_02795d76f57fcc9a route serves the runs,
+  // wraps it at this single point: while an sm-switch route serves the runs,
   // probing a catalog model it does not serve only produces a 400
   // model_not_served, so callers get an explicit `skipped` result instead.
   const codexModelAvailability = createRouteAwareCodexModelAvailability(
@@ -1008,11 +1008,11 @@ export async function bootstrap(env: Record<string, string | undefined>): Promis
   registry["help"].handler = createHelpHandler(registry);
   registry["list"].handler = createListHandler({ store, clock });
   registry["tokens"].handler = createTokensHandler({ store, clock });
-  // private_workflow_02795d76f57fcc9a owns the collection side; /usage only reads the snapshot it
-  // publishes next to the runtime DB (SuperMatrixRuntime/data/private_workflow_02795d76f57fcc9a/).
+  // sm-switch owns the collection side; /usage only reads the snapshot it
+  // publishes next to the runtime DB (SuperMatrixRuntime/data/sm-switch/).
   const quotaSnapshotPath =
     process.env["SM_QUOTA_SNAPSHOT_PATH"] ??
-    path.join(path.dirname(cfg.dbPath), "private_workflow_02795d76f57fcc9a", "quota-snapshot.json");
+    path.join(path.dirname(cfg.dbPath), "sm-switch", "quota-snapshot.json");
   registry["usage"].handler = createUsageHandler({
     clock,
     loadSnapshotText: async () => {

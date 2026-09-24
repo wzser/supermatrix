@@ -24,10 +24,10 @@ async function seedSessions(store: Awaited<ReturnType<typeof createTempStore>>["
   });
   await store.createSession({
     id: asSessionId("sess_wca_sender"),
-    name: "private_workflow_6d0060b18f1258cc",
+    name: "wechat-administrator",
     scope: "user",
     backend: "claude",
-    workdir: asAbsolutePath("/tmp/private_workflow_6d0060b18f1258cc"),
+    workdir: asAbsolutePath("/tmp/wechat-administrator"),
     purpose: "test sender",
     createdAt: asTimestamp(1),
     capabilityPayload: wcaPayload === undefined ? null : JSON.parse(wcaPayload ?? "null"),
@@ -45,7 +45,7 @@ describe("install immutable ingress receiver", () => {
       expect(receipt.capabilityPayload.eventBusContract).toEqual({ subscribe: "topic", subscribeGatesCompletion: false });
       expect(receipt.capabilityPayload.immutableIngress).toEqual(HDQ_RECEIVER_DECLARATION);
       expect(receipt.nonReceiver.immutableIngressAbsent).toBe(true);
-      expect(fixture.store.db.prepare("SELECT capability_payload FROM sessions WHERE name = 'private_workflow_6d0060b18f1258cc'").get()).toEqual({ capability_payload: null });
+      expect(fixture.store.db.prepare("SELECT capability_payload FROM sessions WHERE name = 'wechat-administrator'").get()).toEqual({ capability_payload: null });
       const second = installImmutableIngressReceiver({ db: fixture.store.db, operationId: "test-install-again", sourceCommit: "commit-test", nowMs: 2 });
       expect(second.changed).toBe(false);
       expect(second.afterCapabilityPayloadSha256).toBe(receipt.afterCapabilityPayloadSha256);
@@ -76,7 +76,7 @@ describe("install immutable ingress receiver", () => {
     const wrongTarget = await createTempStore();
     try {
       await seedSessions(wrongTarget.store);
-      expect(() => installImmutableIngressReceiver({ db: wrongTarget.store.db, operationId: "wrong-target", sourceCommit: "test", targetSessionName: "private_workflow_6d0060b18f1258cc" })).toThrow(/WCA is not a receiver/);
+      expect(() => installImmutableIngressReceiver({ db: wrongTarget.store.db, operationId: "wrong-target", sourceCommit: "test", targetSessionName: "wechat-administrator" })).toThrow(/WCA is not a receiver/);
     } finally {
       await wrongTarget.cleanup();
     }
@@ -93,7 +93,7 @@ describe("install immutable ingress receiver", () => {
     const wca = await createTempStore();
     try {
       await seedSessions(wca.store, null, JSON.stringify({ resultSinks: [], immutableIngress: HDQ_RECEIVER_DECLARATION }));
-      expect(() => installImmutableIngressReceiver({ db: wca.store.db, operationId: "wca", sourceCommit: "test" })).toThrow(/private_workflow_6d0060b18f1258cc.*not a receiver/);
+      expect(() => installImmutableIngressReceiver({ db: wca.store.db, operationId: "wca", sourceCommit: "test" })).toThrow(/wechat-administrator.*not a receiver/);
     } finally {
       await wca.cleanup();
     }
@@ -256,7 +256,7 @@ describe("install immutable ingress receiver", () => {
     try {
       await seedSessions(fixture.store);
       const target = await fixture.store.findSessionByName("huodaiduijie");
-      const nonReceiver = await fixture.store.findSessionByName("private_workflow_6d0060b18f1258cc");
+      const nonReceiver = await fixture.store.findSessionByName("wechat-administrator");
       const targetPayload = { resultSinks: [] };
       const targetPayloadSha256 = sha256(JSON.stringify(targetPayload));
       const nonReceiverPayloadSha256 = sha256(JSON.stringify({ resultSinks: [] }));
@@ -271,7 +271,7 @@ describe("install immutable ingress receiver", () => {
         afterCapabilityPayloadSha256: targetPayloadSha256,
         capabilityPayload: targetPayload,
         nonReceiver: {
-          sessionName: "private_workflow_6d0060b18f1258cc",
+          sessionName: "wechat-administrator",
           sessionId: nonReceiver!.id,
           capabilityPayloadSha256: nonReceiverPayloadSha256,
           unchanged: true,

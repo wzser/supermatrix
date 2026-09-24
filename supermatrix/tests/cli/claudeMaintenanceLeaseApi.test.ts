@@ -94,7 +94,7 @@ describe("Claude maintenance lease API", () => {
     });
   }
 
-  function requestBody(clientRequestId = "2026-08-05:private_workflow_02795d76f57fcc9a:claude:lease-test") {
+  function requestBody(clientRequestId = "2026-08-05:sm-switch:claude:lease-test") {
     return {
       client_request_id: clientRequestId,
       lease_token: LEASE_TOKEN,
@@ -150,8 +150,8 @@ describe("Claude maintenance lease API", () => {
       backend: "claude",
       state: "held",
       lease: {
-        owner: "private_workflow_02795d76f57fcc9a",
-        requestId: "2026-08-05:private_workflow_02795d76f57fcc9a:claude:lease-test",
+        owner: "sm-switch",
+        requestId: "2026-08-05:sm-switch:claude:lease-test",
         acquiredAt: expect.any(Number),
       },
     });
@@ -176,32 +176,32 @@ describe("Claude maintenance lease API", () => {
       backend: "claude",
       state: "acquired",
       duplicate: false,
-      lease: { owner: "private_workflow_02795d76f57fcc9a", requestId: "2026-08-05:private_workflow_02795d76f57fcc9a:claude:lease-test" },
+      lease: { owner: "sm-switch", requestId: "2026-08-05:sm-switch:claude:lease-test" },
     });
     expect(JSON.stringify(acquiredBody)).not.toContain(LEASE_TOKEN);
 
-    const duplicate = await post("acquire", requestBody("2026-08-05:private_workflow_02795d76f57fcc9a:claude:retry"));
+    const duplicate = await post("acquire", requestBody("2026-08-05:sm-switch:claude:retry"));
     expect(duplicate.status).toBe(200);
     await expect(duplicate.json()).resolves.toMatchObject({
       ok: true,
       state: "acquired",
       duplicate: true,
-      lease: { owner: "private_workflow_02795d76f57fcc9a", requestId: "2026-08-05:private_workflow_02795d76f57fcc9a:claude:lease-test" },
+      lease: { owner: "sm-switch", requestId: "2026-08-05:sm-switch:claude:lease-test" },
     });
 
     const held = await post("acquire", {
-      client_request_id: "2026-08-05:private_workflow_02795d76f57fcc9a:claude:other-token",
+      client_request_id: "2026-08-05:sm-switch:claude:other-token",
       lease_token: "other-opaque-lease-token-for-claude-test-0002",
     });
     expect(held.status).toBe(409);
     await expect(held.json()).resolves.toMatchObject({
       ok: false,
       error: "claude_maintenance_lease_held",
-      lease: { owner: "private_workflow_02795d76f57fcc9a" },
+      lease: { owner: "sm-switch" },
     });
 
     const wrongRelease = await post("release", {
-      client_request_id: "2026-08-05:private_workflow_02795d76f57fcc9a:claude:wrong-release",
+      client_request_id: "2026-08-05:sm-switch:claude:wrong-release",
       lease_token: "other-opaque-lease-token-for-claude-test-0002",
     });
     expect(wrongRelease.status).toBe(409);
@@ -210,7 +210,7 @@ describe("Claude maintenance lease API", () => {
       error: "claude_maintenance_lease_token_mismatch",
     });
 
-    const released = await post("release", requestBody("2026-08-05:private_workflow_02795d76f57fcc9a:claude:release"));
+    const released = await post("release", requestBody("2026-08-05:sm-switch:claude:release"));
     expect(released.status).toBe(200);
     await expect(released.json()).resolves.toEqual({
       ok: true,
@@ -218,7 +218,7 @@ describe("Claude maintenance lease API", () => {
       state: "released",
       duplicate: false,
     });
-    const duplicateRelease = await post("release", requestBody("2026-08-05:private_workflow_02795d76f57fcc9a:claude:release-retry"));
+    const duplicateRelease = await post("release", requestBody("2026-08-05:sm-switch:claude:release-retry"));
     expect(duplicateRelease.status).toBe(200);
     await expect(duplicateRelease.json()).resolves.toEqual({
       ok: true,
@@ -257,7 +257,7 @@ describe("Claude maintenance lease API", () => {
       startedAt: asTimestamp(2),
     });
 
-    const response = await post("acquire", requestBody("2026-08-05:private_workflow_02795d76f57fcc9a:claude:drain-check"));
+    const response = await post("acquire", requestBody("2026-08-05:sm-switch:claude:drain-check"));
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toEqual({
       ok: false,
@@ -272,7 +272,7 @@ describe("Claude maintenance lease API", () => {
       throw new Error("maintenance lease storage unavailable");
     };
 
-    const response = await post("acquire", requestBody("2026-08-05:private_workflow_02795d76f57fcc9a:claude:storage-error"));
+    const response = await post("acquire", requestBody("2026-08-05:sm-switch:claude:storage-error"));
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({
       ok: false,

@@ -28,11 +28,11 @@ function collection(refreshAllowed: boolean) {
   };
 }
 
-// Mirrors the live private_workflow_02795d76f57fcc9a snapshot (5 accounts across 3 vendors) so the
+// Mirrors the live sm-switch snapshot (5 accounts across 3 vendors) so the
 // rendering test fails if the real contract's shape drifts.
 function snapshot(overrides: Record<string, unknown> = {}) {
   return JSON.stringify({
-    contract: "private_workflow_02795d76f57fcc9a.quota-snapshot/v1",
+    contract: "sm-switch.quota-snapshot/v1",
     schemaVersion: 1,
     generatedAt: "2026-08-05T01:56:11.892Z",
     staleAfterSeconds: 900,
@@ -259,7 +259,7 @@ describe("usage handler", () => {
 
   test("renders unavailable accounts without inventing numbers", async () => {
     const text = JSON.stringify({
-      contract: "private_workflow_02795d76f57fcc9a.quota-snapshot/v1",
+      contract: "sm-switch.quota-snapshot/v1",
       schemaVersion: 1,
       generatedAt: "2026-08-05T01:56:11.892Z",
       staleAfterSeconds: 900,
@@ -292,7 +292,7 @@ describe("usage handler", () => {
 
   test("projects only quota fields, never credentials or paths", async () => {
     // Defense in depth: the contract carries no secrets today, but the renderer
-    // must not become the leak if private_workflow_02795d76f57fcc9a ever adds fields.
+    // must not become the leak if sm-switch ever adds fields.
     const raw = JSON.parse(snapshot()) as Record<string, unknown>;
     const vendors = raw["vendors"] as Array<Record<string, unknown>>;
     const account = (vendors[0]["accounts"] as Array<Record<string, unknown>>)[0];
@@ -313,11 +313,11 @@ describe("usage handler", () => {
   });
 
   test("refuses to render an unknown contract version", async () => {
-    const text = snapshot({ contract: "private_workflow_02795d76f57fcc9a.quota-snapshot/v2" });
+    const text = snapshot({ contract: "sm-switch.quota-snapshot/v2" });
     const result = await handlerFor(text)(ctx());
     if (!("replyText" in result)) throw new Error("expected replyText");
     expect(result.replyText).toContain("契约不匹配");
-    expect(result.replyText).toContain("private_workflow_02795d76f57fcc9a.quota-snapshot/v1");
+    expect(result.replyText).toContain("sm-switch.quota-snapshot/v1");
   });
 
   test("malformed json degrades to a message, not a throw", async () => {

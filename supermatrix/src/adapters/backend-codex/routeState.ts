@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * private_workflow_02795d76f57fcc9a route-state consumer (contract: private_workflow_02795d76f57fcc9a.route-state/v1).
+ * sm-switch route-state consumer (contract: sm-switch.route-state/v1).
  *
- * private_workflow_02795d76f57fcc9a writes /data/private_workflow_02795d76f57fcc9a/route-state.json atomically on every
+ * sm-switch writes /data/sm-switch/route-state.json atomically on every
  * account switch. When the codex route is "deepseek", the dispatched model
  * must be resolved here — explicitly, at the single conversation-creation
  * point — instead of being silently rewritten inside the proxy, so run
@@ -17,13 +17,13 @@ import { join } from "node:path";
  * a run.
  */
 
-export const ROUTE_STATE_CONTRACT_VERSION = "private_workflow_02795d76f57fcc9a.route-state/v1";
+export const ROUTE_STATE_CONTRACT_VERSION = "sm-switch.route-state/v1";
 
 export function defaultCodexRouteStatePath(): string {
   const override = process.env["SM_CODEX_ROUTE_STATE_PATH"]?.trim();
   if (override) return override;
   const runtimeRoot = process.env["SM_RUNTIME_ROOT"] || "/Users/LOCAL_USER/SuperMatrixRuntime";
-  return join(runtimeRoot, "data", "private_workflow_02795d76f57fcc9a", "route-state.json");
+  return join(runtimeRoot, "data", "sm-switch", "route-state.json");
 }
 
 type CodexRouteState = {
@@ -146,7 +146,7 @@ export function resolveCodexRouteModel(
 
 /**
  * True while a non-openai codex route is active — i.e. the model that serves a
- * codex run is decided by private_workflow_02795d76f57fcc9a routing, not by the session's own model
+ * codex run is decided by sm-switch routing, not by the session's own model
  * intent. Unlike `resolveCodexRouteOverride` this is model-independent: it
  * answers "is routing in charge right now", which is what callers that have no
  * intended model to compare against (a session with `model = null`) need.

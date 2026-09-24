@@ -160,7 +160,7 @@ describe("backend-api-connectivity Claude probe", () => {
 
 describe("backend-api-connectivity codex route-state awareness", () => {
   const deepseekRouteState = JSON.stringify({
-    contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v1",
+    contractVersion: "sm-switch.route-state/v1",
     backend: "codex",
     route: "deepseek",
     defaultModel: "deepseek-v4-flash",
@@ -183,7 +183,7 @@ describe("backend-api-connectivity codex route-state awareness", () => {
 
   test("reports codex skipped (not failed) when deepseek route serves no model", async () => {
     const noModelRouteState = JSON.stringify({
-      contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v1",
+      contractVersion: "sm-switch.route-state/v1",
       backend: "codex",
       route: "deepseek",
       defaultModel: null,
@@ -219,7 +219,7 @@ describe("backend-api-connectivity codex route-state awareness", () => {
 
   test("keeps gpt-5.5 behavior on an explicit openai route", async () => {
     const openaiRouteState = JSON.stringify({
-      contractVersion: "private_workflow_02795d76f57fcc9a.route-state/v1",
+      contractVersion: "sm-switch.route-state/v1",
       backend: "codex",
       route: "openai",
       defaultModel: null,

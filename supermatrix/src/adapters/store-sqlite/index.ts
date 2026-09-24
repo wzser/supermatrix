@@ -436,7 +436,7 @@ export class SqliteBindingStore implements BindingStore {
     const result = await applyMigrations(this.db);
     verifyRuntimeConfigAuditSchema(this.db);
 
-    // Create user_display_names cache table (owned by YOUR_EMPLOYEE_PARENT, read by /rank)
+    // Create user_display_names cache table (owned by hrhrhrhrhr, read by /rank)
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS user_display_names (
         sender_id    TEXT PRIMARY KEY,

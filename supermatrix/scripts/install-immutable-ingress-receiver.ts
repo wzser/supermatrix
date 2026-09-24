@@ -19,7 +19,7 @@ import type { Db } from "../src/adapters/store-sqlite/db.ts";
 import type { CapabilityPayload, ImmutableIngressDeclaration } from "../src/domain/childCapabilities.ts";
 
 export const HDQ_RECEIVER_SESSION_NAME = "huodaiduijie" as const;
-export const WCA_NON_RECEIVER_SESSION_NAME = "private_workflow_6d0060b18f1258cc" as const;
+export const WCA_NON_RECEIVER_SESSION_NAME = "wechat-administrator" as const;
 
 export const HDQ_RECEIVER_DECLARATION: ImmutableIngressDeclaration = {
   protocol: "supermatrix-immutable-ingress/v1",
@@ -272,7 +272,7 @@ export function installImmutableIngressReceiver(input: {
   const targetBefore = parseCapabilityPayload(target.capability_payload, target.name);
   const nonReceiverPayload = parseCapabilityPayload(nonReceiver.capability_payload, nonReceiver.name);
   if (Object.hasOwn(nonReceiverPayload, "immutableIngress") && nonReceiverPayload.immutableIngress != null) {
-    throw new Error("refusing to activate immutable ingress for private_workflow_6d0060b18f1258cc: session is not a receiver");
+    throw new Error("refusing to activate immutable ingress for wechat-administrator: session is not a receiver");
   }
 
   const receiptPaths = input.receiptDir
@@ -322,7 +322,7 @@ export function installImmutableIngressReceiver(input: {
     }
     const nonReceiverReadback = readSession(input.db, WCA_NON_RECEIVER_SESSION_NAME);
     if (nonReceiverReadback.capability_payload !== nonReceiver.capability_payload) {
-      throw new Error("private_workflow_6d0060b18f1258cc capability_payload changed unexpectedly");
+      throw new Error("wechat-administrator capability_payload changed unexpectedly");
     }
     const declarationSha256 = sha256(canonicalJson(HDQ_RECEIVER_DECLARATION));
     const receipt: ImmutableIngressDeploymentReceipt = {

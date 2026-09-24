@@ -774,8 +774,8 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
 
   test("first call clears both tables, records the switch, and recycles ACP", async () => {
     const res = await postSwitch({
-      from: "private_workflow_02795d76f57fcc9a",
-      client_request_id: "2026-07-31:private_workflow_02795d76f57fcc9a:kimi:work-to-personal",
+      from: "sm-switch",
+      client_request_id: "2026-07-31:sm-switch:kimi:work-to-personal",
       from_profile: "work",
       to_profile: "personal",
       switched_at: "2026-07-31T09:00:00Z",
@@ -792,9 +792,9 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
     expect(deps.state.clearCalls).toHaveLength(1);
     expect(deps.state.clearCalls[0]!.backend).toBe("kimi");
     expect(recycleCalls).toBe(1);
-    expect(deps.state.accountSwitches.get("2026-07-31:private_workflow_02795d76f57fcc9a:kimi:work-to-personal")).toMatchObject({
+    expect(deps.state.accountSwitches.get("2026-07-31:sm-switch:kimi:work-to-personal")).toMatchObject({
       backend: "kimi",
-      caller: "private_workflow_02795d76f57fcc9a",
+      caller: "sm-switch",
       fromProfile: "work",
       toProfile: "personal",
       switchedAt: "2026-07-31T09:00:00Z",
@@ -804,7 +804,7 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
   });
 
   test("same client_request_id replays as duplicate without re-clearing", async () => {
-    const body = { from: "private_workflow_02795d76f57fcc9a", client_request_id: "req-dup-1" };
+    const body = { from: "sm-switch", client_request_id: "req-dup-1" };
     await postSwitch(body);
 
     const res = await postSwitch(body);
@@ -825,7 +825,7 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
 
   test("busy kimi runs get 409 without consuming the idempotency key", async () => {
     deps.state.kimiBusyCount = 2;
-    const body = { from: "private_workflow_02795d76f57fcc9a", client_request_id: "req-busy-1" };
+    const body = { from: "sm-switch", client_request_id: "req-busy-1" };
 
     const busyRes = await postSwitch(body);
 
@@ -847,7 +847,7 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
 
   test("extra top-level fields are rejected with 400", async () => {
     const res = await postSwitch({
-      from: "private_workflow_02795d76f57fcc9a",
+      from: "sm-switch",
       client_request_id: "req-strict-1",
       token: "sneaky",
     });
@@ -863,7 +863,7 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
     const addr = server.address() as AddressInfo;
     baseUrl = `http://127.0.0.1:${addr.port}`;
 
-    const res = await postSwitch({ from: "private_workflow_02795d76f57fcc9a", client_request_id: "req-nodep-1" });
+    const res = await postSwitch({ from: "sm-switch", client_request_id: "req-nodep-1" });
 
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
@@ -881,7 +881,7 @@ describe("apiServer POST /api/backends/kimi/account-switched", () => {
       throw new Error("acp process exploded");
     };
 
-    const res = await postSwitch({ from: "private_workflow_02795d76f57fcc9a", client_request_id: "req-recycle-fail" });
+    const res = await postSwitch({ from: "sm-switch", client_request_id: "req-recycle-fail" });
 
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual({
@@ -3117,10 +3117,10 @@ describe("apiServer POST /api/spawn2.0", () => {
       });
       await fixture.store.createSession({
         id: asSessionId("sess_wca_sender_live"),
-        name: "private_workflow_6d0060b18f1258cc",
+        name: "wechat-administrator",
         scope: "user",
         backend: "claude",
-        workdir: asAbsolutePath("/tmp/private_workflow_6d0060b18f1258cc"),
+        workdir: asAbsolutePath("/tmp/wechat-administrator"),
         purpose: "test sender",
         createdAt: asTimestamp(1),
       });
@@ -5482,7 +5482,7 @@ describe("apiServer POST /api/run", () => {
   });
 
   test("returns 423 when the unified admission fence reports backend maintenance", async () => {
-    deps.state.runResult = { kind: "maintenance", backend: "claude", leaseOwner: "private_workflow_02795d76f57fcc9a" };
+    deps.state.runResult = { kind: "maintenance", backend: "claude", leaseOwner: "sm-switch" };
     const res = await fetch(`${baseUrl}/api/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -5493,7 +5493,7 @@ describe("apiServer POST /api/run", () => {
       ok: false,
       error: "backend_maintenance",
       backend: "claude",
-      leaseOwner: "private_workflow_02795d76f57fcc9a",
+      leaseOwner: "sm-switch",
     });
   });
 

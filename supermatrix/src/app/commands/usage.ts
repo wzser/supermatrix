@@ -5,7 +5,7 @@ import { formatRelativeChinese } from "../../domain/format.ts";
 
 export type UsageHandlerDeps = {
   /**
-   * Returns the raw private_workflow_02795d76f57fcc9a quota snapshot JSON, or null when the file does
+   * Returns the raw sm-switch quota snapshot JSON, or null when the file does
    * not exist yet. Reading lives outside the handler so the render path stays
    * testable without touching the runtime filesystem.
    */
@@ -13,7 +13,7 @@ export type UsageHandlerDeps = {
   clock: Clock;
 };
 
-export const QUOTA_SNAPSHOT_CONTRACT = "private_workflow_02795d76f57fcc9a.quota-snapshot/v1";
+export const QUOTA_SNAPSHOT_CONTRACT = "sm-switch.quota-snapshot/v1";
 
 const VENDOR_INDENT = "";
 const ACCOUNT_INDENT = "  ";
@@ -142,7 +142,7 @@ function parseSnapshot(text: string): ParsedSnapshot | { error: string } {
   try {
     raw = JSON.parse(text);
   } catch {
-    return { error: "额度快照不是合法 JSON，请联系 private_workflow_02795d76f57fcc9a 检查。" };
+    return { error: "额度快照不是合法 JSON，请联系 sm-switch 检查。" };
   }
   if (!isRecord(raw)) return { error: "额度快照格式异常（顶层不是对象）。" };
   if (raw["contract"] !== QUOTA_SNAPSHOT_CONTRACT) {
@@ -241,7 +241,7 @@ export function createUsageHandler(deps: UsageHandlerDeps): CommandHandler {
       };
     }
     if (text === null) {
-      return { replyText: "还没有额度快照（private_workflow_02795d76f57fcc9a 尚未生成），稍后再试。" };
+      return { replyText: "还没有额度快照（sm-switch 尚未生成），稍后再试。" };
     }
 
     const parsed = parseSnapshot(text);

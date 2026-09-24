@@ -163,7 +163,7 @@ export function buildCodexAppServerRunPlan(
     : null;
   const routeChangeNotice = null;
 
-  // private_workflow_02795d76f57fcc9a route-state resolution: on the deepseek route the served model
+  // sm-switch route-state resolution: on the deepseek route the served model
   // differs from the catalog default, and it must be pinned here so the plan
   // (thread params + usage fallback) records the model that actually serves
   // the run. Effort was already normalized against the requested model and

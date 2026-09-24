@@ -1,20 +1,19 @@
-# Super Matrix v0.3.4
+# Super Matrix v0.3.5
 
-## Onboarding V1 Framework Fix
+## Onboarding V1 Package Rebuild
 
-The exact onboarding-v1 repair from source commit `8541537c37a49b4940ddf92f257a9e87866cecd2` is included in this sanitized public package. It makes exit-zero parseable Lark CLI JSON successful, preserves explicit CLI failures, accepts the returned bot identity shape, and raises the bounded Claude probe budget for provider-routed probes.
+The sanitized onboarding-v1 package was rebuilt from the exact framework source commit `543c765986c17df82ffec023426d590eb3757a80`. This is a patch-level publication correction: it preserves the runtime behavior from v0.3.4 and carries the isolated bot-identity contract test change from that source commit.
 
 ## Updated Platform Capabilities
 
-- The public onboarding CLI now preserves valid exit-zero JSON results even when the response has no top-level `ok` field, while retaining explicit `ok:false` failures.
-- Bot authorization readback accepts the provider's `identities` shape.
-- Claude onboarding probes use the bounded `$0.25` budget required for the provider-routed minimal probe.
-- The package keeps the existing public provenance, platform manifest, isolated-runtime and installation boundaries.
+- The package and lockfile are versioned `0.3.5`, and the installation contract is bound to the matching tag, archive, checksum manifest and extraction prefix.
+- The public provenance manifest remains closed to the reviewed platform inputs and records the exact gitmaster publication input used for this rebuild.
+- The package excludes credentials, runtime state, private evidence, device authentication, group creation and service activation.
 
-## Upgrade From v0.3.2
+## Upgrade From v0.3.4
 
-No runtime migration is required. New installations should use the exact v0.3.4 Release assets and verify the published tag, archive digest and `SHA256SUMS` before extraction. Existing installations may remain unchanged until a separately authorized upgrade. Do not mix v0.3.1 and v0.3.4 Release assets.
+No runtime migration is required. New installations must use the exact v0.3.5 Release assets and verify the tag, archive digest and `SHA256SUMS` before extraction. Do not mix assets from other releases. Existing installations remain unchanged until a separately authorized upgrade.
 
 ## Verification Boundary
 
-The package was rebuilt from the v0.3.2 public snapshot plus only the sanitized two-file public onboarding-v1 diff from source commit `8541537c37a49b4940ddf92f257a9e87866cecd2`. Sanitization, provenance/manifest validation, package tests and archive readback are recorded in `SANITIZATION_REPORT.md` and the private release receipt. No target-device authentication, group creation or service activation is part of this release.
+The release passed the configured sanitization scan, archive member/readback checks and package-level validation. These checks do not constitute target-device authentication, group creation, service activation or live acceptance.

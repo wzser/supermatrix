@@ -57,7 +57,7 @@ _CATEGORY_PATH_PREFIXES = {
     "platform_knowledge_doc": [
         ["Supermatrix", "30 知识库", "FirstPrinciple"],
         ["Supermatrix", "30 知识库", "codingmaster / SuperMatrix Architecture KB"],
-        ["Supermatrix", "30 知识库", "private_workflow_6d0060b18f1258cc"],
+        ["Supermatrix", "30 知识库", "wechat-administrator"],
         ["Supermatrix", "30 知识库", "ads-master"],
         ["Supermatrix", "30 知识库", "deepsearch"],
         ["Supermatrix", "30 知识库", "广目天王-外部知识库"],

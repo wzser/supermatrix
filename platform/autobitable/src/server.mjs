@@ -59,9 +59,9 @@ const FIFTEEN_MINUTE_BATCHING_WINDOW_MS = 15 * 60_000;
 const DEFAULT_LEDGER_ACCESS_URL = "https://example.feishu.cn/base/YOUR_RESOURCE_ID?table=tblREDACTEDTABLEID";
 const DEFAULT_PROMPT_SPAWN_RECOVERY_MAX_AGE_MS = 5 * 60_000;
 const DEFAULT_QUEUED_PROMPT_MAX_AGE_MS = 30 * 60_000;
-const LGS_STATUS_WRITEBACK_WEBHOOK_ID = "private_workflow_e61fa9cd654b4b46";
-const LGS_STATUS_WRITEBACK_ASSET_ID = "private_workflow_8d0a1806828b259a";
-const LGS_STATUS_WRITEBACK_CONTRACT_PATH = "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/wendangwang/registry/assets/private_workflow_8d0a1806828b259a.json";
+const LGS_STATUS_WRITEBACK_WEBHOOK_ID = "wh_yolo_lgs_decision_resume";
+const LGS_STATUS_WRITEBACK_ASSET_ID = "yolo.lgs.decision-points";
+const LGS_STATUS_WRITEBACK_CONTRACT_PATH = "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/wendangwang/registry/assets/yolo.lgs.decision-points.json";
 const LGS_STATUS_WRITEBACK_FIELD = "续跑状态";
 const LGS_STATUS_WRITEBACK_FIELD_ID = "fldREDACTED55630b47d8ab5091";
 const LGS_STATUS_WRITEBACK_ALLOWED_VALUES = ["待决策", "已派发", "已完成", "派发失败"];
@@ -80,11 +80,11 @@ const PROCESS_LOCK_HOLDER_SOURCE = [
   `process.stdout.write('${PROCESS_LOCK_READY}\\n');`,
   "process.stdin.resume();"
 ].join("");
-const AFTER_SALES_REVIEW_SEND_WEBHOOK_ID = "private_workflow_49cdecf11ef52c9e";
-const SHIPMENT_TYPE_AUTO_JUDGE_WEBHOOK_ID = "private_workflow_5bbbbcbb41569882";
+const AFTER_SALES_REVIEW_SEND_WEBHOOK_ID = "wh_after_sales_review_send";
+const SHIPMENT_TYPE_AUTO_JUDGE_WEBHOOK_ID = "wh_huojianwang2hao_shipment_type_auto_judge";
 const SHIPMENT_JUDGE_BASE_TOKEN_ENV = "SHIPMENT_JUDGE_BASE_TOKEN";
 const SHIPMENT_JUDGE_CHILD_SESSION_NAME = "autobitable";
-const CREATE_SHIPMENT_WEBHOOK_ID = "private_workflow_41c9166426a2bdf7";
+const CREATE_SHIPMENT_WEBHOOK_ID = "wh_huojianwang2hao_create_shipment";
 const CREATE_SHIPMENT_CHILD_SESSION_NAME = "autobitable";
 const BUSINESS_REJECTION_WEBHOOK_IDS = new Set([
   CREATE_SHIPMENT_WEBHOOK_ID,
@@ -114,14 +114,14 @@ const NOTIFICATION_STDERR_NOISE_PATTERNS = [
   /^\(node:\d+\) ExperimentalWarning: SQLite is an experimental feature and might change at any time$/u,
   /^\(Use `node --trace-warnings \.\.\.` to show where the warning was created\)$/u
 ];
-const SM_SWITCH_MECHANICAL_WEBHOOK_ID = "private_workflow_72c63479a49e37b2";
+const SM_SWITCH_MECHANICAL_WEBHOOK_ID = "wh_sm_switch_backend_current_account_changed";
 const SM_SWITCH_BASE_TOKEN_ENV = "SM_SWITCH_BASE_TOKEN";
-const SM_SWITCH_MECHANICAL_TARGET_SESSION = "private_workflow_02795d76f57fcc9a";
+const SM_SWITCH_MECHANICAL_TARGET_SESSION = "sm-switch";
 const SM_SWITCH_MECHANICAL_SCRIPT_NAME = "sm_switch_bitable_current_account";
-const SM_SWITCH_MECHANICAL_SCRIPT_PATH = "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/autobitable/scripts/private_workflow_02795d76f57fcc9a-bitable-switch.mjs";
-const JIANHUO_DOC_PACKAGE_WEBHOOK_ID = "private_workflow_471b5f1114ef71f5";
+const SM_SWITCH_MECHANICAL_SCRIPT_PATH = "/Users/LOCAL_USER/SuperMatrixRuntime/workspaces/autobitable/scripts/sm-switch-bitable-switch.mjs";
+const JIANHUO_DOC_PACKAGE_WEBHOOK_ID = "wh_jianhuo_doc_package_sync";
 const JIANHUO_DOC_PACKAGE_RETRYABLE_RECEIPT_REASON = "feishu_media_upload_retry_exhausted";
-const PAYMENT_RECEIPT_WEBHOOK_ID = "private_workflow_61fe42b11dab6927";
+const PAYMENT_RECEIPT_WEBHOOK_ID = "wh_wechat_administrator_payment_receipt_send";
 const PAYMENT_RECEIPT_TEXT = "货款费用已支付，请查收。";
 const PAYMENT_RECEIPT_ACTION_KEYS = new Set([
   "wechat.image.send_gui_verified",
@@ -6212,7 +6212,7 @@ function truncateNotificationLine(value, maxLength) {
 }
 
 const WEBHOOK_FAILURE_STAGE_OVERRIDES = {
-  private_workflow_72c63479a49e37b2: "private_workflow_02795d76f57fcc9a 前置状态校验失败，未执行切换"
+  wh_sm_switch_backend_current_account_changed: "sm-switch 前置状态校验失败，未执行切换"
 };
 
 function runFailureStage(run, webhook) {
@@ -8208,7 +8208,7 @@ function hasExactKeys(value, expected) {
     && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
 }
 
-// evidence_dir / local_path 的唯一判据：必须是 private_workflow_6d0060b18f1258cc 工作区内的相对路径，
+// evidence_dir / local_path 的唯一判据：必须是 wechat-administrator 工作区内的相对路径，
 // 落在 runtime/payment-receipts/<record_id>/ 之下，且不含 `..`。
 export function paymentReceiptPathAccepted(expectedPrefix, value) {
   return typeof value === "string" && value.startsWith(expectedPrefix) && !value.includes("..");
@@ -8222,7 +8222,7 @@ export function paymentReceiptPathHint(expectedPrefix, value) {
   return [
     `expected a workspace-relative path starting with "${expectedPrefix}" and containing no ".."`,
     `received=${JSON.stringify(received)}`,
-    absolute ? "hint: absolute paths are rejected; send the path relative to the private_workflow_6d0060b18f1258cc workspace root" : null
+    absolute ? "hint: absolute paths are rejected; send the path relative to the wechat-administrator workspace root" : null
   ].filter(Boolean).join("; ");
 }
 
@@ -8232,8 +8232,8 @@ function validatePaymentReceiptRequest(run, groups, request, expected, allowTarg
     actions: request.actions
   });
   if (forbiddenKey) return `payment receipt V3 request contains forbidden legacy field ${forbiddenKey}`;
-  if (!hasExactKeys(request.destination, ["session"]) || request.destination.session !== "private_workflow_6d0060b18f1258cc") {
-    return "payment receipt V3 request destination must be private_workflow_6d0060b18f1258cc";
+  if (!hasExactKeys(request.destination, ["session"]) || request.destination.session !== "wechat-administrator") {
+    return "payment receipt V3 request destination must be wechat-administrator";
   }
   if (!hasExactKeys(request.source, ["kind", "owner", "event_id", "expected_target_chat_id"])) {
     return "payment receipt V3 request source shape is invalid";

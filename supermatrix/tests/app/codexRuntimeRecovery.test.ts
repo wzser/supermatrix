@@ -106,7 +106,7 @@ function scriptedRun(...scripts: AgentEvent[][]) {
   return { run, inputs, get calls() { return call; } };
 }
 
-/** Every catalog model is unreachable behind the active private_workflow_02795d76f57fcc9a route. */
+/** Every catalog model is unreachable behind the active sm-switch route. */
 function routeManagedAvailability(): CodexModelAvailability {
   return {
     probe: vi.fn(async (model: string): Promise<ModelAvailabilityResult> => ({
@@ -754,7 +754,7 @@ describe("recoverCodexRuntimeStream", () => {
     const scripted = scriptedRun(
       [{ kind: "error", message: ENTITLEMENT("gpt-5.5"), recoverable: false }],
     );
-    // While an private_workflow_02795d76f57fcc9a route serves the runs, no catalog model is probeable,
+    // While an sm-switch route serves the runs, no catalog model is probeable,
     // so there is no measured candidate to swap onto.
     const availability = routeManagedAvailability();
     const { deps, capturedMutations } = makeHarness(availability, session);

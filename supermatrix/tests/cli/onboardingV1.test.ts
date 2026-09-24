@@ -138,9 +138,6 @@ async function writeAuthPreflightCli(cli: string, applicationScopesOk = true): P
       identities: { user: { status: "ready", available: true, openId: "ou_owner", tokenStatus: "valid" } },
     },
     "whoami --as bot": {
-      appId: "cli_app",
-      profile: "isolated",
-      identity: "bot",
       identities: { bot: { status: "ready", available: true } },
     },
     "auth scopes --json": { userScopes: permissionManifest.identities.user.required },
@@ -249,7 +246,6 @@ describe("onboarding V1", () => {
       await expect(authPreflight(options, "cli_app", authPreflightEnvironment(root, cli))).resolves.toMatchObject({
         failures: [],
         userOpenId: "ou_owner",
-        botAppId: "cli_app",
       });
     } finally {
       await rm(root, { recursive: true, force: true });
@@ -487,8 +483,8 @@ fi
     const manifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/platform-manifest.json"), "utf8"));
     const packageVersion = (JSON.parse(await readFile(join(process.cwd(), "package.json"), "utf8")) as { version: string }).version;
     const packageProvenance = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/asset-provenance.json"), "utf8"));
-    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.2", "0.3.4"]).toContain(packageVersion);
-    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.2" || packageVersion === "0.3.4";
+    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.2", "0.3.4", "0.3.5"]).toContain(packageVersion);
+    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.2" || packageVersion === "0.3.4" || packageVersion === "0.3.5";
     const expectedPackageStatus = isFinalPackage ? "approved" : "pending-owner-review";
     expect(packageProvenance.modules.every((entry: { reviewStatus: string }) => entry.reviewStatus === expectedPackageStatus)).toBe(true);
     const finalPackageProvenance = isFinalPackage

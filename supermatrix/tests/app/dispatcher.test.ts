@@ -3486,7 +3486,7 @@ describe("dispatcher", () => {
 });
 
 // Intent-layer protection: sessions.model is what the session asked for, not
-// what happened to serve a run. While private_workflow_02795d76f57fcc9a routes codex away from openai,
+// what happened to serve a run. While sm-switch routes codex away from openai,
 // the runtime model is a routing fact and must not be learned back — it would
 // outlive the route and leave the session pinned to an off-catalog model.
 describe("dispatcher runtime model write-back", () => {

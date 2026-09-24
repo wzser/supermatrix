@@ -13,9 +13,9 @@ export default defineConfig({
     testTimeout: 5000,
     hookTimeout: 5000,
     env: {
-      // Keep codex run-plan tests hermetic from this machine's live private_workflow_02795d76f57fcc9a
+      // Keep codex run-plan tests hermetic from this machine's live sm-switch
       // route state; routeState tests pass explicit paths instead.
-      SM_CODEX_ROUTE_STATE_PATH: "/nonexistent/private_workflow_02795d76f57fcc9a-route-state.json",
+      SM_CODEX_ROUTE_STATE_PATH: "/nonexistent/sm-switch-route-state.json",
     },
   },
 });
