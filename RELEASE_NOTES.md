@@ -1,8 +1,8 @@
-# Super Matrix v0.3.2
+# Super Matrix v0.3.3
 
 ## Onboarding V1 Framework Fix
 
-The exact onboarding-v1 repair from source commit `abc41ad064e6eaa544d560721d26ea0d77f906b1` is included in this sanitized public package. It makes exit-zero parseable Lark CLI JSON successful, accepts the returned bot identity shape, and raises the bounded Claude probe budget for provider-routed probes.
+The exact final onboarding-v1 repair from source commit `9727a53e0ae34172ab943bf4f951b5dd643c47a8` is included in this sanitized public package. It preserves explicit Lark CLI ok:false failures even when the process exits zero.
 
 ## Updated Platform Capabilities
 
@@ -13,7 +13,7 @@ The exact onboarding-v1 repair from source commit `abc41ad064e6eaa544d560721d26e
 
 ## Upgrade From v0.3.1
 
-No runtime migration is required. New installations should use the exact v0.3.2 Release assets and verify the published tag, archive digest and `SHA256SUMS` before extraction. Existing installations may remain unchanged until a separately authorized upgrade. Do not mix v0.3.1 and v0.3.2 Release assets.
+No runtime migration is required. New installations should use the exact v0.3.3 Release assets and verify the published tag, archive digest and `SHA256SUMS` before extraction. Existing installations may remain unchanged until a separately authorized upgrade. Do not mix v0.3.1 and v0.3.3 Release assets.
 
 ## Verification Boundary
 

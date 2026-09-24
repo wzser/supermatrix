@@ -1,6 +1,6 @@
-# Sanitization Report: v0.3.2
+# Sanitization Report: v0.3.3
 
-Date: 2026-09-24. Product version: `v0.3.2`. Agent installation contract: `1.2.0`.
+Date: 2026-09-24. Product version: `v0.3.3`. Agent installation contract: `1.2.0`.
 
 ## Scope
 
@@ -10,7 +10,7 @@ This patch starts from the published v0.3.1 public snapshot and adds only the ex
 
 | Source | Approved commit |
 | --- | --- |
-| Core | `abc41ad064e6eaa544d560721d26ea0d77f906b1` (repair commit; parent `bda216512c0698c7f173441d230ba7295c10e039`) |
+| Core | `9727a53e0ae34172ab943bf4f951b5dd643c47a8` |
 | First Principle | `b23981b2433698ab8ea79c69a93c717203a22caa` |
 | Scheduler | `2138bd3934689f5ce08d95170e51a7f58e275fc0` |
 | Heartbeat | `1b7c4390376da000a9a0999219cd18f5d33e7a93` |
@@ -37,17 +37,17 @@ Publication requires zero unwaived findings from all of the following:
 3. Generic contact, product, resource, and decoded escaped-text checks.
 4. Reachable public commit contents, removed blobs, author/committer metadata, and annotated-tag metadata.
 
-Build evidence SHA-256: `01b37317a0b0e6bc27cc1803bf3f98d8a33c2ee8bad509c47cd66f3b9e250689`.
+Build evidence SHA-256: `c3e0fe112694c05f592c756f77482ab6c207c92cc7036949fcd8e3c0cedce9c9`.
 Frozen-input receipt SHA-256 is retained in the private release receipt; the exact source receipt covers the commit, parent, dirty-source status and closed three-file diff.
 Final-tree scan: 958 files, 0 findings; its exact digest is retained only in the private release receipt to avoid self-referential report hashing.
 
-The v0.3.2 patch preserves the v0.3.1 public snapshot as its publication base and carries only the exact onboarding-v1 repair scope: `src/cli/onboardingV1.ts`, `tests/cli/onboardingV1.test.ts`, and the source ledger `SM-SOURCE-CHANGES.md` (the ledger remains outside the closed public export allowlist). It does not rewrite history or delete public refs. Previously downloaded copies and third-party caches remain outside this repository's control.
+The v0.3.3 patch preserves the v0.3.1 public snapshot as its publication base and carries only the exact onboarding-v1 repair scope: `src/cli/onboardingV1.ts`, `tests/cli/onboardingV1.test.ts`, and the source ledger `SM-SOURCE-CHANGES.md` (the ledger remains outside the closed public export allowlist). It does not rewrite history or delete public refs. Previously downloaded copies and third-party caches remain outside this repository's control.
 
 ## Verification
 
 - A clean isolated package install used npm from the verified package lock; `npm ci` completed successfully.
 - The package passed the focused onboarding-v1 tests, typecheck, dependency lint and build against the rebuilt public tree. Archive member, provenance/manifest and final archive scan readbacks are recorded in the private release receipt.
-- The public package onboarding regression passed `32/32`; the release-gate compatibility line admits v0.3.2 as an approved final package while preserving the pending v0.1.0 source path. Gitmaster export tests and the final archive scan are retained in the private release receipt.
+- The exact source onboarding regression passed `33/33`; the package verification includes the focused suite, typecheck, dependency lint, manifest readback, archive member checks and final-tree scan. Gitmaster export tests and the final archive scan are retained in the private release receipt.
 - Production audits are point-in-time checks, not a permanent security guarantee. The installation runbook remains the authority for recipient-side package integrity, authorization, infrastructure, and live acceptance.
 
 ## Acceptance Boundary

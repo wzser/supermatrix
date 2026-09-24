@@ -150,10 +150,10 @@ class AgentInstallDocumentTest(unittest.TestCase):
             (ROOT / "public-overrides/supermatrix/docs/SETUP.md").read_text(encoding="utf-8"),
         ]
         for document in documents:
-            self.assertIn("v0.3.2", document)
+            self.assertIn("v0.3.3", document)
             self.assertNotIn("v0.3.0", document)
-        self.assertIn("supermatrix-v0.3.2.tar", self.document)
-        self.assertIn("supermatrix-v0.3.2/", self.document)
+        self.assertIn("supermatrix-v0.3.3.tar", self.document)
+        self.assertIn("supermatrix-v0.3.3/", self.document)
 
 
 if __name__ == "__main__":

@@ -347,14 +347,14 @@ export async function runCli(
     });
     const raw = redact(result.stdout);
     const parsed = JSON.parse(result.stdout) as CliResult;
-    return { ...parsed, ok: true, raw };
+    return { ...parsed, ok: parsed.ok === true || parsed.ok === undefined, raw };
   } catch (error) {
     const e = error as NodeJS.ErrnoException & { stdout?: string; stderr?: string };
     const raw = redact(e.stdout ?? e.stderr ?? e.message ?? String(error));
     try {
       const parsed = JSON.parse(e.stdout ?? "") as CliResult;
       const exitCode = typeof e.code === "number" ? e.code : undefined;
-      return { ...parsed, ok: parsed.ok === true || exitCode === 0, raw };
+      return { ...parsed, ok: parsed.ok === true || (parsed.ok === undefined && exitCode === 0), raw };
     } catch {
       return { ok: false, error: { type: e.code === "ETIMEDOUT" ? "timeout" : "cli" }, raw };
     }

@@ -164,6 +164,17 @@ describe("onboarding V1", () => {
     }
   });
 
+  test("preserves an explicit CLI ok false even when the process exits zero", async () => {
+    const root = await mkdtemp("/tmp/sm-onboard-cli-result-false-");
+    const cli = join(root, "lark-cli");
+    try {
+      await writeFile(cli, "#!/bin/sh\nprintf '%s\\n' '{\"ok\":false,\"error\":{\"type\":\"auth\"}}'\n", { mode: 0o700 });
+      await expect(runCli(cli, "isolated", ["auth", "status", "--json"])).resolves.toMatchObject({ ok: false });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   test("copies a real temporary tree with executable bits and no special bits", async () => {
     const root = await mkdtemp("/tmp/sm-onboard-copy-tree-");
     const source = join(root, "source");
@@ -362,8 +373,8 @@ fi
     const manifest = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/platform-manifest.json"), "utf8"));
     const packageVersion = (JSON.parse(await readFile(join(process.cwd(), "package.json"), "utf8")) as { version: string }).version;
     const packageProvenance = JSON.parse(await readFile(join(process.cwd(), "config/onboarding-v1/asset-provenance.json"), "utf8"));
-    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.2"]).toContain(packageVersion);
-    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.2";
+    expect(["0.1.0", "0.3.0", "0.3.1", "0.3.3"]).toContain(packageVersion);
+    const isFinalPackage = packageVersion === "0.3.0" || packageVersion === "0.3.1" || packageVersion === "0.3.3";
     const expectedPackageStatus = isFinalPackage ? "approved" : "pending-owner-review";
     expect(packageProvenance.modules.every((entry: { reviewStatus: string }) => entry.reviewStatus === expectedPackageStatus)).toBe(true);
     const finalPackageProvenance = isFinalPackage
